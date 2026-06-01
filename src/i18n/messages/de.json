@@ -1,0 +1,43 @@
+{
+  "common": {
+    "appName": "B&B Associés — Sammelportal",
+    "cabinet": "B&B Associés · Treuhand · Carouge / Genf",
+    "languageLabel": "Sprache"
+  },
+  "home": {
+    "title": "Portal zur Dokumentensammlung für Kunden",
+    "subtitle": "Laden Sie Ihre Unterlagen sicher für die Vorbereitung Ihrer Steuererklärung hoch.",
+    "clientSpace": "Mein Kundenbereich",
+    "dashboard": "Kanzlei-Dashboard"
+  },
+  "espace": {
+    "title": "Meine Dokumenten-Checkliste",
+    "intro": "Hier sind die für Ihr Dossier erwarteten Unterlagen. Laden Sie jedes Dokument hoch; es wird vor der Validierung geprüft.",
+    "demoNote": "Demonstrationsdaten (nicht mit der Datenbank verbunden).",
+    "status": {
+      "MANQUANT": "Fehlt",
+      "DEPOSE": "Hochgeladen",
+      "EN_VALIDATION": "In Prüfung",
+      "CONFORME": "Konform",
+      "NON_CONFORME": "Erneut einzureichen"
+    },
+    "required": "Erforderlich",
+    "optional": "Optional",
+    "upload": "Hochladen",
+    "completude": "Vollständigkeit des Dossiers"
+  },
+  "dashboard": {
+    "title": "Dashboard — Dossierverfolgung",
+    "demoNote": "Veranschaulichende Kennzahlen auf Basis von Demonstrationsdaten.",
+    "metrics": {
+      "autonomy": "Autonome Fertigstellung",
+      "reliability": "KI-Zuverlässigkeit (Schwelle 90%)",
+      "timeSaved": "Eingesparte Kanzleizeit",
+      "complete": "Vollständige Dossiers"
+    },
+    "clients": "Kunden",
+    "completude": "Vollständigkeit",
+    "nextReminder": "Nächste Erinnerung",
+    "manager": "Sachbearbeiter"
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "common": {
+    "appName": "B&B Associés — Collection portal",
+    "cabinet": "B&B Associés · Fiduciary · Carouge / Geneva",
+    "languageLabel": "Language"
+  },
+  "home": {
+    "title": "Client document collection portal",
+    "subtitle": "Securely upload your documents for the preparation of your tax return.",
+    "clientSpace": "My client area",
+    "dashboard": "Firm dashboard"
+  },
+  "espace": {
+    "title": "My document checklist",
+    "intro": "Here are the documents expected for your file. Upload each one; it will be reviewed before validation.",
+    "demoNote": "Demonstration data (flow not connected to the database).",
+    "status": {
+      "MANQUANT": "Missing",
+      "DEPOSE": "Uploaded",
+      "EN_VALIDATION": "Under review",
+      "CONFORME": "Compliant",
+      "NON_CONFORME": "To resubmit"
+    },
+    "required": "Required",
+    "optional": "Optional",
+    "upload": "Upload",
+    "completude": "File completeness"
+  },
+  "dashboard": {
+    "title": "Dashboard — file tracking",
+    "demoNote": "Illustrative indicators computed on demonstration data.",
+    "metrics": {
+      "autonomy": "Autonomous completion",
+      "reliability": "AI reliability (90% threshold)",
+      "timeSaved": "Firm time saved",
+      "complete": "Complete files"
+    },
+    "clients": "Clients",
+    "completude": "Completeness",
+    "nextReminder": "Next reminder",
+    "manager": "Manager"
+  }
+}

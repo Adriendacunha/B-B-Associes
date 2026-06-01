@@ -1,0 +1,43 @@
+{
+  "common": {
+    "appName": "B&B Associés — Espace de collecte",
+    "cabinet": "B&B Associés · Fiduciaire · Carouge / Genève",
+    "languageLabel": "Langue"
+  },
+  "home": {
+    "title": "Espace client de collecte documentaire",
+    "subtitle": "Déposez vos pièces en toute sécurité pour la préparation de votre déclaration fiscale.",
+    "clientSpace": "Mon espace client",
+    "dashboard": "Tableau de bord cabinet"
+  },
+  "espace": {
+    "title": "Ma checklist documentaire",
+    "intro": "Voici les pièces attendues pour votre dossier. Déposez chaque document ; il sera vérifié avant validation.",
+    "demoNote": "Données de démonstration (parcours non connecté à la base).",
+    "status": {
+      "MANQUANT": "Manquant",
+      "DEPOSE": "Déposé",
+      "EN_VALIDATION": "En validation",
+      "CONFORME": "Conforme",
+      "NON_CONFORME": "À refournir"
+    },
+    "required": "Obligatoire",
+    "optional": "Facultatif",
+    "upload": "Déposer",
+    "completude": "Complétude du dossier"
+  },
+  "dashboard": {
+    "title": "Tableau de bord — suivi des dossiers",
+    "demoNote": "Indicateurs illustratifs calculés sur des données de démonstration.",
+    "metrics": {
+      "autonomy": "Complétion en autonomie",
+      "reliability": "Fiabilité IA (seuil 90%)",
+      "timeSaved": "Temps cabinet économisé",
+      "complete": "Dossiers complets"
+    },
+    "clients": "Clients",
+    "completude": "Complétude",
+    "nextReminder": "Prochaine relance",
+    "manager": "Gestionnaire"
+  }
+}
