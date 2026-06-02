@@ -51,6 +51,28 @@ Scripts utiles :
 
 ---
 
+## Déploiement sur Vercel (prévisualisation en ligne)
+
+Le projet est prêt pour Vercel (le client Prisma est généré au build via le script
+`postinstall`). Les pages de démonstration (`/`, `/espace`, `/tableau-de-bord`)
+fonctionnent **sans aucune variable d'environnement**.
+
+1. Aller sur [vercel.com/new](https://vercel.com/new), se connecter avec GitHub.
+2. **Importer** le dépôt `adriendacunha/b-b-associes` (autoriser l'app Vercel à
+   accéder au dépôt si demandé).
+3. **Production Branch** : `claude/bb-associes-doc-collection-nET6F`.
+4. Framework détecté automatiquement (**Next.js**) — laisser les réglages par défaut.
+5. (Optionnel) Variables d'environnement : aucune n'est requise pour la démo.
+   Les ajouter plus tard pour brancher la base et les intégrations (voir `.env.example`).
+6. **Deploy**. Vercel fournit une URL publique `https://<projet>.vercel.app`.
+
+> ⚠️ Une URL `*.vercel.app` est **publique**. Le dépôt étant privé, le déploiement
+> reste sous votre compte, mais l'URL déployée est accessible à qui la possède.
+> Pour restreindre l'accès : activer la **Vercel Authentication** (Protection par mot
+> de passe / SSO) dans les réglages du projet.
+
+---
+
 ## Architecture du code
 
 ```
