@@ -6,8 +6,8 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const nextConfig = {
   reactStrictMode: true,
   // Sortie autonome pour un conteneur léger auto-hébergeable EN SUISSE (§9) —
-  // alternative à Vercel (dont les régions ne sont pas en Suisse). Voir Dockerfile.
-  output: 'standalone',
+  // alternative à Vercel. Sur Vercel (VERCEL=1), on laisse l'adaptateur natif.
+  output: process.env.VERCEL ? undefined : 'standalone',
   // pdf-parse (pdfjs) et tesseract.js utilisent des workers : ne pas les bundler
   // par webpack (sinon chemins de worker introuvables côté serveur).
   serverExternalPackages: ['pdf-parse', 'tesseract.js'],
