@@ -29,6 +29,27 @@
     "firstConnection": "Erstanmeldung? Aktivieren Sie Ihr Konto über den per E-Mail erhaltenen Link.",
     "noCampaign": "Derzeit keine Sammelkampagne geöffnet."
   },
+  "relances": {
+    "title": "Erinnerungen",
+    "sendInvitation": "Einladung senden",
+    "remindNow": "Jetzt erinnern",
+    "processDue": "Fällige Erinnerungen verarbeiten",
+    "pending": "ausstehende(r) Posten",
+    "remindersSent": "Erinnerung(en) gesendet",
+    "invitationSent": "Einladung(en) gesendet",
+    "outbox": "Postausgang",
+    "complete": "Dossier vollständig — Erinnerungen gestoppt."
+  },
+  "emails": {
+    "title": "Postausgang (Gesendete Elemente)",
+    "subtitle": "Protokoll ausgehender E-Mails. Im Demomodus werden E-Mails hier festgehalten; in der Produktion über Microsoft Graph gesendet.",
+    "recipient": "Empfänger",
+    "subject": "Betreff",
+    "status": "Status",
+    "date": "Datum",
+    "channel": "Kanal",
+    "empty": "Noch keine E-Mail gesendet."
+  },
   "upload": {
     "deposit": "Datei hochladen",
     "send": "Senden",

@@ -210,13 +210,20 @@ des défauts raisonnables, tous centralisés et modifiables :
   Identifiants de démonstration (créés par le seed) :
   - Cabinet : `collab@bbassocies.ch` / `changeme-collab` · `admin@bbassocies.ch` / `changeme-admin`
   - Clients : `jean.dupont@example.ch` / `changeme-client` · `anna.muller@example.ch` / `changeme-client`
+- **Relances e-mail (§6)** : invitation + relances manuelles, et **moteur automatique**
+  (`processDueReminders`) respectant la cadence configurable (arrêt si complet, suspension,
+  ciblage des seules pièces en attente). Envoi via Microsoft Graph si configuré, sinon
+  **boîte d'envoi interne** `/emails` (« Éléments envoyés »). Journalisé `EMAIL_SENT`.
+- **Tableau de bord réel (§11/§15.3)** : complétude, statut, prochaine relance et les
+  4 métriques calculés sur les **vraies données** (fiabilité IA depuis `HumanReview`).
 
 ## Reste à faire (Phase 1 → Phase 2)
 
 - **2FA (TOTP)** pour les collaborateurs (champ `User.totpSecret` déjà prévu) +
   réinitialisation de mot de passe par e-mail (§8).
 - OCR réel (Tesseract) en amont de l'analyse IA, et dépôt OneDrive via Graph en prod.
-- Scheduler de relances branché sur `cadence.ts` + envoi Graph (§6).
+- **Cron** déclenchant `processDueReminders` (ex. Vercel Cron) pour des relances
+  réellement automatiques en exploitation (la logique est prête).
 - Multilingue complet de l'interface (les 3 catalogues sont en place) et exports
   Crésus/Banana (ZIP + CSV, §10) — prévus Phase 2/3.
 ```

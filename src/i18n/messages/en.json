@@ -29,6 +29,27 @@
     "firstConnection": "First time? Activate your account using the link sent by email.",
     "noCampaign": "No collection campaign open at the moment."
   },
+  "relances": {
+    "title": "Reminders",
+    "sendInvitation": "Send invitation",
+    "remindNow": "Remind now",
+    "processDue": "Process due reminders",
+    "pending": "item(s) pending",
+    "remindersSent": "reminder(s) sent",
+    "invitationSent": "invitation(s) sent",
+    "outbox": "Outbox",
+    "complete": "File complete — reminders stopped."
+  },
+  "emails": {
+    "title": "Outbox (Sent items)",
+    "subtitle": "Log of outgoing emails. In demo mode emails are recorded here; in production they are sent via Microsoft Graph.",
+    "recipient": "Recipient",
+    "subject": "Subject",
+    "status": "Status",
+    "date": "Date",
+    "channel": "Channel",
+    "empty": "No email sent yet."
+  },
   "upload": {
     "deposit": "Upload a file",
     "send": "Send",

@@ -137,6 +137,12 @@ enum EmailTemplateKey {
   DOSSIER_COMPLET
 }
 
+enum EmailStatus {
+  SENT // envoyé via Microsoft Graph (§6.2)
+  LOGGED // consigné dans la boîte d'envoi interne (mode démo, sans Graph)
+  FAILED
+}
+
 // ─────────────────────────────── Staff (cabinet) ────────────────────────────
 
 model User {
@@ -244,6 +250,7 @@ model Campaign {
 
   checklistItems ChecklistItem[]
   reminders      Reminder[]
+  emails         EmailMessage[]
 
   @@unique([clientId, fiscalYear])
 }
@@ -372,6 +379,26 @@ model EmailTemplate {
   updatedAt DateTime         @updatedAt
 
   @@unique([key, locale])
+}
+
+// Boîte d'envoi : journal de tout e-mail sortant (« Éléments envoyés », §6.2).
+// En prod l'envoi passe par Microsoft Graph ; en démo il est simplement consigné.
+model EmailMessage {
+  id          String            @id @default(cuid())
+  campaignId  String?
+  campaign    Campaign?         @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  recipient   String
+  locale      Locale            @default(FR)
+  templateKey EmailTemplateKey?
+  subject     String
+  body        String
+  status      EmailStatus       @default(LOGGED)
+  channel     String // "graph" | "demo-outbox"
+  error       String?
+  createdAt   DateTime          @default(now())
+
+  @@index([campaignId])
+  @@index([createdAt])
 }
 
 // ─────────────────────────── Journal d'audit (§8) ───────────────────────────

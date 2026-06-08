@@ -5,6 +5,8 @@ import { resolveLocalized, type AppLocale, type LocalizedText } from '@/lib/i18n
 import { completude } from '@/lib/metrics/mvp';
 import { CATEGORY_FOLDERS, ORDERED_CATEGORIES } from '@/lib/onedrive/paths';
 import { uploadDocument } from '@/app/actions/document';
+import { sendInvitation, sendReminderNow } from '@/app/actions/email';
+import { Link } from '@/i18n/routing';
 
 const STATUS_STYLE: Record<string, string> = {
   MANQUANT: 'bg-slate-100 text-slate-600',
@@ -30,6 +32,7 @@ export async function CampaignChecklist({
   const t = await getTranslations('campagne');
   const tStatus = await getTranslations('espace');
   const tUp = await getTranslations('upload');
+  const tR = await getTranslations('relances');
 
   const campaign = await prisma.campaign.findUnique({
     where: { id: campaignId },
@@ -51,6 +54,16 @@ export async function CampaignChecklist({
     requiredTotal: requiredItems.length,
     conformes: requiredItems.filter((i) => i.status === 'CONFORME').length,
   });
+
+  // Compteurs relances (vue cabinet uniquement).
+  const pendingCount = items.filter((i) => i.status === 'MANQUANT' || i.status === 'NON_CONFORME').length;
+  const isComplete = requiredItems.length > 0 && requiredItems.every((i) => i.status === 'CONFORME');
+  const [invitationCount, reminderCount] = showMeta
+    ? await Promise.all([
+        prisma.emailMessage.count({ where: { campaignId, templateKey: 'INVITATION' } }),
+        prisma.emailMessage.count({ where: { campaignId, templateKey: { in: ['RELANCE_1', 'RELANCE_2', 'RELANCE_3'] } } }),
+      ])
+    : [0, 0];
 
   const byCategory = ORDERED_CATEGORIES.map((cat) => ({
     category: cat,
@@ -92,6 +105,44 @@ export async function CampaignChecklist({
           <div className="h-full rounded bg-brand" style={{ width: `${Math.round(comp.ratio * 100)}%` }} />
         </div>
       </div>
+
+      {showMeta && (
+        <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-slate-700">{tR('title')}</h2>
+            <Link href="/emails" className="text-xs text-brand hover:underline">
+              {tR('outbox')} →
+            </Link>
+          </div>
+          <p className="mb-3 text-xs text-slate-500">
+            {pendingCount} {tR('pending')} · {invitationCount} {tR('invitationSent')} · {reminderCount} {tR('remindersSent')}
+          </p>
+          {isComplete ? (
+            <p className="text-xs font-medium text-green-700">{tR('complete')}</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <form action={sendInvitation}>
+                <input type="hidden" name="campaignId" value={campaignId} />
+                <input type="hidden" name="locale" value={locale} />
+                <button type="submit" className="rounded border border-brand px-3 py-1 text-xs font-medium text-brand hover:bg-brand hover:text-white">
+                  {tR('sendInvitation')}
+                </button>
+              </form>
+              <form action={sendReminderNow}>
+                <input type="hidden" name="campaignId" value={campaignId} />
+                <input type="hidden" name="locale" value={locale} />
+                <button
+                  type="submit"
+                  disabled={pendingCount === 0}
+                  className="rounded bg-brand px-3 py-1 text-xs font-medium text-white hover:bg-brand-light disabled:opacity-40"
+                >
+                  {tR('remindNow')}
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-5">
         {byCategory.map((group) => (

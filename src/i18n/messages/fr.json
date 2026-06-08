@@ -29,6 +29,27 @@
     "firstConnection": "Première connexion ? Activez votre compte via le lien reçu par e-mail.",
     "noCampaign": "Aucune campagne de collecte ouverte pour le moment."
   },
+  "relances": {
+    "title": "Relances",
+    "sendInvitation": "Envoyer l’invitation",
+    "remindNow": "Relancer maintenant",
+    "processDue": "Traiter les relances dues",
+    "pending": "pièce(s) en attente",
+    "remindersSent": "relance(s) envoyée(s)",
+    "invitationSent": "invitation(s) envoyée(s)",
+    "outbox": "Boîte d’envoi",
+    "complete": "Dossier complet — relances arrêtées."
+  },
+  "emails": {
+    "title": "Boîte d’envoi (Éléments envoyés)",
+    "subtitle": "Journal des e-mails sortants. En mode démo, les e-mails sont consignés ici ; en production, ils partent via Microsoft Graph.",
+    "recipient": "Destinataire",
+    "subject": "Objet",
+    "status": "Statut",
+    "date": "Date",
+    "channel": "Canal",
+    "empty": "Aucun e-mail envoyé pour le moment."
+  },
   "upload": {
     "deposit": "Déposer un fichier",
     "send": "Envoyer",

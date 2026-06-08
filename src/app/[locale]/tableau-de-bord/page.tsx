@@ -1,6 +1,8 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { demoDashboard } from '@/lib/demo/sample';
+import { getDashboardData } from '@/lib/dashboard/data';
+import { processDueReminders } from '@/app/actions/email';
 import { requireStaff } from '@/lib/auth/session';
+import { Link } from '@/i18n/routing';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,21 +20,32 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   setRequestLocale(locale);
   await requireStaff(locale); // tableau de bord cabinet (§11)
   const t = await getTranslations('dashboard');
-  const d = demoDashboard();
+  const tR = await getTranslations('relances');
+  const d = await getDashboardData();
   const pct = (n: number) => `${Math.round(n * 100)}%`;
 
   return (
     <div className="space-y-6">
-      <header className="space-y-1">
+      <header className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold text-brand">{t('title')}</h1>
-        <p className="text-xs italic text-slate-400">{t('demoNote')}</p>
+        <div className="flex items-center gap-3">
+          <Link href="/emails" className="text-xs text-brand hover:underline">
+            {tR('outbox')} →
+          </Link>
+          <form action={processDueReminders}>
+            <input type="hidden" name="locale" value={locale} />
+            <button type="submit" className="rounded bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-light">
+              {tR('processDue')}
+            </button>
+          </form>
+        </div>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Metric label={t('metrics.autonomy')} value={pct(d.autonomyRate)} />
-        <Metric label={t('metrics.reliability')} value={pct(d.reliabilityRate)} />
+        <Metric label={t('metrics.reliability')} value={pct(d.overallReliability)} />
         <Metric label={t('metrics.timeSaved')} value={`${Math.round(d.minutesSaved / 60)} h`} />
-        <Metric label={t('metrics.complete')} value={`${d.completeCount}/${d.clients.length}`} />
+        <Metric label={t('metrics.complete')} value={`${d.completeCount}/${d.totalCampaigns}`} />
       </div>
 
       {/* Tableau (≥ sm) avec défilement horizontal si l'écran est étroit. */}
@@ -51,6 +64,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
               <tr key={c.clientCode}>
                 <td className="px-4 py-3">
                   <span className="font-mono text-xs text-slate-400">{c.clientCode}</span> {c.displayName}
+                  <span className="ml-2 text-[10px] uppercase text-slate-400">{c.status}</span>
                 </td>
                 <td className="px-4 py-3 text-slate-600">{c.manager}</td>
                 <td className="px-4 py-3">
@@ -61,16 +75,14 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
                     <span className="text-xs text-slate-500">{c.completude.label}</span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-slate-600">
-                  {c.nextReminderDays === null ? '—' : `J+${c.nextReminderDays}`}
-                </td>
+                <td className="px-4 py-3 text-slate-600">{c.nextReminderDays === null ? '—' : `J+${c.nextReminderDays}`}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Cartes empilées (< sm) : plus lisibles que le tableau sur mobile. */}
+      {/* Cartes empilées (< sm). */}
       <ul className="space-y-3 sm:hidden">
         {d.clients.map((c) => (
           <li key={c.clientCode} className="rounded-lg border border-slate-200 bg-white p-4">
@@ -79,7 +91,7 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
               <span className="font-mono text-xs text-slate-400">{c.clientCode}</span>
             </div>
             <div className="mt-1 text-xs text-slate-500">
-              {t('manager')} : {c.manager}
+              {t('manager')} : {c.manager} · {c.status}
             </div>
             <div className="mt-3 flex items-center gap-2">
               <div className="h-1.5 flex-1 overflow-hidden rounded bg-slate-100">
