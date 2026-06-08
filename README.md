@@ -10,10 +10,14 @@ Ce dépôt contient le **socle de la Phase 1 (MVP)** décrite dans le brief : mo
 données complet, logique métier centrale **testée**, référentiel de pièces genevois,
 modèles d'e-mails et squelette d'application Next.js multilingue.
 
-> **Statut** : socle fonctionnel et testé (40 tests verts, `next build` OK). Les
-> intégrations externes (Microsoft Graph, API Claude, base PostgreSQL) sont
-> implémentées au niveau interface/contrat et nécessitent la configuration des
-> secrets et du tenant pour être exécutées de bout en bout (voir §Points à confirmer).
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fadriendacunha%2Fb-b-associes&env=DATABASE_URL,DIRECT_URL&envDescription=Connexion%20PostgreSQL%20(et%20URL%20directe%20pour%20les%20migrations)%20%E2%80%94%20voir%20.env.example&stores=%5B%7B%22type%22%3A%22postgres%22%7D%5D)
+
+> Le build Vercel **migre et seed** la base automatiquement (voir §Déploiement).
+
+> **Statut** : socle fonctionnel et testé (57 tests verts, `next build` OK). Le
+> parcours Phase 1 (profilage → checklist → dépôt → verdict IA → validation) est
+> opérationnel sur PostgreSQL. Les intégrations externes (Microsoft Graph, API
+> Claude) ont un mode démo par défaut et s'activent par variables d'environnement.
 
 ---
 
@@ -51,25 +55,47 @@ Scripts utiles :
 
 ---
 
-## Déploiement sur Vercel (prévisualisation en ligne)
+## Déploiement sur Vercel (clé en main, avec base de données)
 
-Le projet est prêt pour Vercel (le client Prisma est généré au build via le script
-`postinstall`). Les pages de démonstration (`/`, `/espace`, `/tableau-de-bord`)
-fonctionnent **sans aucune variable d'environnement**.
+Le déploiement est **automatisé** : le build Vercel (`scripts/vercel-build.mjs`,
+référencé par `vercel.json`) applique les **migrations** puis **seed** la base
+(idempotent) avant de builder, dès qu'une base est attachée. Sans base, il bâtit
+quand même les pages de démonstration.
 
-1. Aller sur [vercel.com/new](https://vercel.com/new), se connecter avec GitHub.
-2. **Importer** le dépôt `adriendacunha/b-b-associes` (autoriser l'app Vercel à
-   accéder au dépôt si demandé).
-3. **Production Branch** : `claude/bb-associes-doc-collection-nET6F`.
-4. Framework détecté automatiquement (**Next.js**) — laisser les réglages par défaut.
-5. (Optionnel) Variables d'environnement : aucune n'est requise pour la démo.
-   Les ajouter plus tard pour brancher la base et les intégrations (voir `.env.example`).
-6. **Deploy**. Vercel fournit une URL publique `https://<projet>.vercel.app`.
+### Étapes
 
-> ⚠️ Une URL `*.vercel.app` est **publique**. Le dépôt étant privé, le déploiement
-> reste sous votre compte, mais l'URL déployée est accessible à qui la possède.
-> Pour restreindre l'accès : activer la **Vercel Authentication** (Protection par mot
-> de passe / SSO) dans les réglages du projet.
+1. **Importer** le dépôt sur Vercel — [vercel.com/new](https://vercel.com/new),
+   connexion GitHub, choisir `adriendacunha/b-b-associes`
+   (branche `claude/bb-associes-doc-collection-nET6F`). Next.js est détecté seul.
+2. **Ajouter une base PostgreSQL.** Le plus simple : onglet **Storage → Create
+   Database → Postgres** (Vercel Postgres / Neon). Vercel injecte alors les
+   variables `POSTGRES_*` dans le projet.
+3. **Renseigner 2 variables d'environnement** (Project → Settings → Environment
+   Variables) :
+
+   | Variable | Valeur |
+   |---|---|
+   | `DATABASE_URL` | URL **poolée** de la base (= `POSTGRES_PRISMA_URL` si Vercel Postgres) |
+   | `DIRECT_URL` | URL **directe** non poolée (= `POSTGRES_URL_NON_POOLING`) |
+
+   > Sur une base Postgres « classique » (Infomaniak/Exoscale en Suisse, §9),
+   > mettez la **même** chaîne dans les deux.
+
+4. **Redéployer** (Deployments → Redeploy). Le build migre + seed automatiquement.
+   L'URL `https://<projet>.vercel.app` expose alors le portail complet, base incluse.
+
+### Variables optionnelles (intégrations réelles — sinon mode démo)
+
+| Variable | Effet si absente |
+|---|---|
+| `ANTHROPIC_API_KEY` | analyse documentaire via **analyseur de démonstration** (stub) au lieu de l'API Claude (§7) |
+| `MS_GRAPH_*` | dépôt OneDrive **simulé** (chemin calculé, pas d'envoi) (§5/§6.2) |
+
+Voir `.env.example` pour la liste complète.
+
+> ⚠️ Une URL `*.vercel.app` est **publique**. Les données seedées sont des
+> **données de démonstration**. Pour restreindre l'accès : Project → Settings →
+> **Deployment Protection → Vercel Authentication**.
 
 ---
 

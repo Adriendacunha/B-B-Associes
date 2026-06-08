@@ -14,8 +14,12 @@ generator client {
 
 datasource db {
   // PostgreSQL hébergé en Suisse (§9, §12).
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // `url`       : connexion d'exécution (peut être "poolée" en serverless, ex. Vercel/Neon).
+  // `directUrl` : connexion DIRECTE (non poolée) utilisée par les migrations.
+  //               Sur un Postgres classique, mettez la même valeur que `url`.
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ─────────────────────────────── Énumérations ───────────────────────────────
