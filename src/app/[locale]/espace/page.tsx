@@ -1,0 +1,76 @@
+import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { prisma } from '@/lib/db';
+import { clientLogin } from '@/app/actions/auth';
+import { getCurrentPrincipal } from '@/lib/auth/session';
+import { CampaignChecklist } from '@/components/CampaignChecklist';
+import type { AppLocale } from '@/lib/i18n/locales';
+
+export const dynamic = 'force-dynamic';
+
+export default async function EspacePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { locale } = await params;
+  const { error } = await searchParams;
+  setRequestLocale(locale);
+  const t = await getTranslations('auth');
+  const te = await getTranslations('espace');
+
+  const principal = await getCurrentPrincipal();
+
+  // Non connecté → formulaire de connexion client.
+  if (!principal || principal.type !== 'CLIENT') {
+    return (
+      <div className="mx-auto max-w-sm">
+        <h1 className="mb-4 text-2xl font-bold text-brand">{t('clientTitle')}</h1>
+        {error && (
+          <p className="mb-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+            {error === 'locked' ? t('errorLocked') : error === 'token' ? t('errorToken') : t('errorInvalid')}
+          </p>
+        )}
+        <form action={clientLogin} className="space-y-3 rounded-lg border border-slate-200 bg-white p-5">
+          <input type="hidden" name="locale" value={locale} />
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium text-slate-500">{t('email')}</span>
+            <input type="email" name="email" required autoComplete="username" className="select" />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs font-medium text-slate-500">{t('password')}</span>
+            <input type="password" name="password" required autoComplete="current-password" className="select" />
+          </label>
+          <button type="submit" className="w-full rounded bg-brand px-4 py-2 font-medium text-white hover:bg-brand-light">
+            {t('signIn')}
+          </button>
+        </form>
+        <p className="mt-3 text-xs text-slate-500">{t('firstConnection')}</p>
+      </div>
+    );
+  }
+
+  // Connecté → sa campagne la plus récente.
+  const campaign = await prisma.campaign.findFirst({
+    where: { clientId: principal.client.id },
+    orderBy: { fiscalYear: 'desc' },
+    select: { id: true },
+  });
+
+  return (
+    <div className="space-y-4">
+      <header>
+        <h1 className="text-2xl font-bold text-brand">{te('title')}</h1>
+        <p className="text-sm text-slate-600">{te('intro')}</p>
+      </header>
+      {campaign ? (
+        <CampaignChecklist campaignId={campaign.id} locale={locale as AppLocale} showMeta={false} />
+      ) : (
+        <p className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
+          {t('noCampaign')}
+        </p>
+      )}
+    </div>
+  );
+}

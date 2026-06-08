@@ -1,0 +1,448 @@
+// B&B Associés — Espace client de collecte documentaire
+// Modèle de données Phase 1 (MVP, humain dans la boucle). Voir README §Architecture.
+//
+// Conventions :
+//  - Les textes multilingues (FR/EN/DE) sont stockés en JSON `{ fr, en, de }`
+//    (voir lib/i18n). Le français est la langue par défaut (§3).
+//  - Le référentiel de pièces (PieceDefinition) est ÉDITABLE par le cabinet (§4.2).
+//  - Le champ `niveauDeService` (Client) et `modeValidation` (PieceDefinition)
+//    existent dès la Phase 1 mais restent en mode "expert / humain requis" (§2, §4.2).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // PostgreSQL hébergé en Suisse (§9, §12).
+  // `url`       : connexion d'exécution (peut être "poolée" en serverless, ex. Vercel/Neon).
+  // `directUrl` : connexion DIRECTE (non poolée) utilisée par les migrations.
+  //               Sur un Postgres classique, mettez la même valeur que `url`.
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────── Énumérations ───────────────────────────────
+
+enum StaffRole {
+  ADMIN // Administrateur cabinet (associé) — tous droits + paramètres (§2)
+  COLLABORATEUR // Gestionnaire de dossiers (§2)
+}
+
+enum PrincipalType {
+  STAFF // collaborateur / admin (table User)
+  CLIENT // client (table Client)
+}
+
+enum ClientType {
+  SOCIETE
+  INDEPENDANT
+  PARTICULIER
+  HOIRIE
+}
+
+enum NiveauDeService {
+  EXPERT // Validation humaine + contact collaborateur (offre par défaut MVP, §2)
+  AUTO // Parcours 100% automatisé (non ouvert commercialement en MVP, §2/§15)
+}
+
+enum Locale {
+  FR // langue par défaut (§3)
+  EN
+  DE
+}
+
+enum ResidenceStatus {
+  RESIDENT_CH
+  FRONTALIER
+  QUASI_RESIDENT
+}
+
+// Sous-catégories de l'arborescence OneDrive (§5.2). L'ordre du préfixe numérique
+// est porté par lib/onedrive/paths.ts.
+enum PieceCategory {
+  REVENUS // 01 - Revenus
+  TITRES_FORTUNE // 02 - Titres et fortune
+  IMMOBILIER // 03 - Immobilier
+  DEDUCTIONS // 04 - Deductions
+  FAMILLE // 05 - Famille
+  INDEP_SOCIETE // 06 - Independant-Societe
+  A_TRIER // 99 - A trier-Non classe
+}
+
+enum ModeValidation {
+  HUMAIN_REQUIS // L'IA propose, un collaborateur tranche (défaut MVP, §4.2/§15.1)
+  AUTO_AUTORISE // Validation auto possible si fiabilité IA > seuil (§15.4)
+}
+
+enum CampaignStatus {
+  NON_COMMENCE
+  EN_COURS
+  EN_ATTENTE_CLIENT
+  A_VALIDER // pièces en file de validation manuelle
+  COMPLET
+  SUSPENDU
+}
+
+enum ChecklistItemStatus {
+  MANQUANT
+  DEPOSE // fichier reçu, en attente d'analyse IA
+  EN_VALIDATION // verdict IA rendu, en attente de décision humaine (MVP)
+  CONFORME // validé (auto ou humain) + déposé sur OneDrive
+  NON_CONFORME // rejeté, à refournir
+}
+
+enum DocumentStatus {
+  RECU
+  ANALYSE_IA
+  EN_VALIDATION
+  VALIDE
+  REJETE
+  DEPOSE_ONEDRIVE
+  PURGE // fichier temporaire supprimé après dépôt OneDrive (§9)
+}
+
+enum ReviewDecision {
+  VALIDE
+  REJETE
+}
+
+enum ActorType {
+  CLIENT
+  COLLABORATEUR
+  ADMIN
+  IA
+  SYSTEM
+}
+
+enum ReminderAction {
+  EMAIL_CLIENT
+  ESCALADE_INTERNE // notification au collaborateur référent (§6.1, J+28)
+}
+
+enum ReminderStatus {
+  PLANIFIE
+  ENVOYE
+  ANNULE // dossier complété ou relances suspendues
+}
+
+enum EmailTemplateKey {
+  INVITATION
+  RELANCE_1
+  RELANCE_2
+  RELANCE_3
+  ESCALADE_INTERNE
+  ACCUSE_RECEPTION
+  NON_CONFORMITE
+  DOSSIER_COMPLET
+}
+
+enum EmailStatus {
+  SENT // envoyé via Microsoft Graph (§6.2)
+  LOGGED // consigné dans la boîte d'envoi interne (mode démo, sans Graph)
+  FAILED
+}
+
+// ─────────────────────────────── Staff (cabinet) ────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         StaffRole @default(COLLABORATEUR)
+  locale       Locale    @default(FR)
+  totpSecret   String? // 2FA TOTP recommandée pour les collaborateurs (§8/§12)
+  active       Boolean   @default(true)
+  // Verrouillage après tentatives échouées (§8).
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  managedClients Client[]       @relation("GestionnaireReferent")
+  reviews        HumanReview[]
+  auditLogs      AuditLog[]
+}
+
+// ─────────────────────────────── Clients ────────────────────────────────────
+
+model Client {
+  id          String          @id @default(cuid())
+  // Code court utilisé dans l'arborescence et le nommage des fichiers (§5.3).
+  clientCode  String          @unique
+  displayName String // nom affiché (accents conservés, §5.3)
+  type        ClientType
+  email       String          @unique
+  locale      Locale          @default(FR)
+  residence   ResidenceStatus @default(RESIDENT_CH)
+
+  // Prépare les deux offres (§2). MVP : tous en EXPERT.
+  niveauDeService NiveauDeService @default(EXPERT)
+
+  // Accès espace client (compte mot de passe, §8). passwordHash nul tant que
+  // le compte n'est pas activé via le lien d'invitation.
+  passwordHash      String?
+  emailVerified     DateTime?
+  activationToken   String?   @unique
+  failedLoginCount  Int       @default(0)
+  lockedUntil       DateTime?
+
+  // Gestionnaire référent (§2 — attribution à confirmer §14.2).
+  gestionnaireId String?
+  gestionnaire   User?   @relation("GestionnaireReferent", fields: [gestionnaireId], references: [id])
+
+  campaigns Campaign[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+// ─────────────────────────── Référentiel de pièces ──────────────────────────
+// Éditable par le cabinet (ajout/retrait/renommage, association à un profil) — §4.2.
+
+model PieceDefinition {
+  id       String        @id @default(cuid())
+  code     String        @unique // CodePiece (ex. CERT-SALAIRE, 3A) — clé des métriques §15.3
+  category PieceCategory
+
+  // Profils concernés (ClientType + tags). Ex. ["PARTICULIER", "FRONTALIER"].
+  profils String[]
+
+  requiredByDefault Boolean        @default(true)
+  // Drapeau central pour la bascule vers l'offre auto (§4.2/§15.4). MVP : HUMAIN_REQUIS.
+  modeValidation    ModeValidation @default(HUMAIN_REQUIS)
+  acceptedFormats   String[]       @default(["pdf", "jpg", "png"])
+  // Décalage d'année attendu vs année de campagne (0 = année fiscale courante).
+  expectedYearOffset Int           @default(0)
+
+  // Textes multilingues { fr, en, de } (§3).
+  nom         Json
+  description Json
+  texteAide   Json
+  exampleDocUrl String? // modèle anonymisé (§7.3)
+
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  checklistItems ChecklistItem[]
+}
+
+// ─────────────────────────────── Campagnes ──────────────────────────────────
+
+model Campaign {
+  id         String         @id @default(cuid())
+  clientId   String
+  client     Client         @relation(fields: [clientId], references: [id])
+  fiscalYear Int
+  status     CampaignStatus @default(NON_COMMENCE)
+
+  // Réponses de profilage (§4.1) — snapshot par campagne, sert au report N+1 (§4.3).
+  profile Json
+
+  dueDate          DateTime? // date d'échéance (§6.1) — calendrier fiscal GE (§14.7)
+  remindersPaused  Boolean   @default(false)
+  onedriveFolder   String? // chemin racine créé sur OneDrive (§5.1)
+  openedAt         DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  checklistItems ChecklistItem[]
+  reminders      Reminder[]
+  emails         EmailMessage[]
+
+  @@unique([clientId, fiscalYear])
+}
+
+model ChecklistItem {
+  id                String              @id @default(cuid())
+  campaignId        String
+  campaign          Campaign            @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  pieceDefinitionId String
+  pieceDefinition   PieceDefinition     @relation(fields: [pieceDefinitionId], references: [id])
+
+  // Snapshot au moment de la génération (le référentiel peut évoluer ensuite).
+  pieceCode          String
+  category           PieceCategory
+  required           Boolean             @default(true)
+  expectedFiscalYear Int
+  modeValidation     ModeValidation      @default(HUMAIN_REQUIS)
+  status             ChecklistItemStatus @default(MANQUANT)
+
+  documents Document[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@unique([campaignId, pieceDefinitionId])
+}
+
+// ─────────────────────────────── Documents ──────────────────────────────────
+
+model Document {
+  id              String         @id @default(cuid())
+  checklistItemId String
+  checklistItem   ChecklistItem  @relation(fields: [checklistItemId], references: [id], onDelete: Cascade)
+
+  version          Int            @default(1) // dédup _v2/_v3 (§5.3)
+  originalFilename String
+  // Clé dans le stockage objet temporaire chiffré (avant validation, §5/§9).
+  tempStorageKey   String?
+  finalOnedrivePath String? // chemin final OneDrive après validation
+  finalFilename     String? // nom normalisé (§5.3)
+  mimeType         String
+  sizeBytes        Int
+  uploadedByClient Boolean        @default(true)
+  status           DocumentStatus @default(RECU)
+
+  aiVerdict   AiVerdict?
+  humanReview HumanReview?
+
+  uploadedAt DateTime  @default(now())
+  purgedAt   DateTime?
+
+  @@index([checklistItemId])
+}
+
+// Verdict IA structuré (§7.2). Format aligné sur le schéma JSON demandé au modèle.
+model AiVerdict {
+  id             String   @id @default(cuid())
+  documentId     String   @unique
+  document       Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  conforme       Boolean
+  typeDetecte    String?
+  anneeDetectee  Int?
+  scoreLisibilite Float? // 0..1
+  anomalies      Json     @default("[]") // string[]
+  messageClient  Json // { fr, en, de }
+  model          String
+  rawResponse    Json
+  createdAt      DateTime @default(now())
+}
+
+// Décision humaine (MVP : humain dans la boucle, §15.1).
+// `agreedWithAi` est LA donnée de fiabilité IA par CodePiece (§15.3 métrique 2).
+model HumanReview {
+  id           String         @id @default(cuid())
+  documentId   String         @unique
+  document     Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  reviewerId   String
+  reviewer     User           @relation(fields: [reviewerId], references: [id])
+
+  decision     ReviewDecision
+  agreedWithAi Boolean // le collaborateur a-t-il confirmé le verdict IA ?
+  comment      String?
+  createdAt    DateTime       @default(now())
+}
+
+// ─────────────────────────── Relances e-mail (§6) ───────────────────────────
+
+// Règle de cadence ÉDITABLE (§6.1). Les valeurs par défaut (J0/J+7/J+14/J+21/J+28)
+// sont posées par le seed mais modifiables par l'admin.
+model ReminderRule {
+  id          String         @id @default(cuid())
+  label       String
+  stepOrder   Int            @unique
+  offsetDays  Int // délai en jours depuis l'ouverture de campagne
+  action      ReminderAction @default(EMAIL_CLIENT)
+  templateKey EmailTemplateKey
+  active      Boolean        @default(true)
+
+  reminders Reminder[]
+}
+
+// Relance planifiée/envoyée pour une campagne donnée.
+model Reminder {
+  id          String         @id @default(cuid())
+  campaignId  String
+  campaign    Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  ruleId      String
+  rule        ReminderRule   @relation(fields: [ruleId], references: [id])
+
+  scheduledFor DateTime
+  sentAt       DateTime?
+  status       ReminderStatus @default(PLANIFIE)
+  // Pièces manquantes/non conformes ciblées au moment de l'envoi (§6.1).
+  targetedPieceCodes String[]
+
+  @@index([campaignId, status])
+}
+
+// Modèles d'e-mails personnalisables, 3 langues (§6.3).
+model EmailTemplate {
+  id        String           @id @default(cuid())
+  key       EmailTemplateKey
+  locale    Locale
+  subject   String
+  body      String // gabarit avec variables {{client}}, {{piecesManquantes}}, ...
+  updatedAt DateTime         @updatedAt
+
+  @@unique([key, locale])
+}
+
+// Boîte d'envoi : journal de tout e-mail sortant (« Éléments envoyés », §6.2).
+// En prod l'envoi passe par Microsoft Graph ; en démo il est simplement consigné.
+model EmailMessage {
+  id          String            @id @default(cuid())
+  campaignId  String?
+  campaign    Campaign?         @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  recipient   String
+  locale      Locale            @default(FR)
+  templateKey EmailTemplateKey?
+  subject     String
+  body        String
+  status      EmailStatus       @default(LOGGED)
+  channel     String // "graph" | "demo-outbox"
+  error       String?
+  createdAt   DateTime          @default(now())
+
+  @@index([campaignId])
+  @@index([createdAt])
+}
+
+// ─────────────────────────── Journal d'audit (§8) ───────────────────────────
+// Append-only et chaîné (hash du précédent) pour l'inaltérabilité.
+
+model AuditLog {
+  id         String    @id @default(cuid())
+  actorType  ActorType
+  actorId    String? // User.id pour le staff ; Client.id pour un client ; null pour IA/SYSTEM
+  user       User?     @relation(fields: [actorUserId], references: [id])
+  actorUserId String?
+
+  action     String // ex. "DOCUMENT_UPLOAD", "REVIEW_VALIDATE", "EMAIL_SENT"
+  entityType String // ex. "Document", "Campaign"
+  entityId   String?
+  metadata   Json      @default("{}")
+
+  // Chaînage d'inaltérabilité (§8) — voir lib/audit.
+  prevHash   String?
+  hash       String    @unique
+
+  createdAt  DateTime  @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+// Paramètres globaux du cabinet (cadence, seuils, fenêtres d'envoi…) — éditables.
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+// Sessions applicatives (§8). L'identifiant de session sert de jeton de cookie
+// httpOnly ; expiration absolue + déconnexion automatique après inactivité.
+model Session {
+  id            String        @id @default(cuid())
+  principalType PrincipalType
+  subjectId     String // User.id (STAFF) ou Client.id (CLIENT)
+  expiresAt     DateTime
+  createdAt     DateTime      @default(now())
+  lastSeenAt    DateTime      @default(now())
+
+  @@index([subjectId])
+  @@index([expiresAt])
+}
