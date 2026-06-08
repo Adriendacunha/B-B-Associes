@@ -18,6 +18,11 @@ export function clientLink(locale: Locale): string {
   return `${APP_URL}/${locale.toLowerCase()}/espace`;
 }
 
+/** Lien d'activation de compte (première connexion d'un bêta-testeur, §8/§15.2). */
+export function activationLink(locale: Locale, token: string): string {
+  return `${APP_URL}/${locale.toLowerCase()}/activation?token=${token}`;
+}
+
 export function missingItems(
   items: { status: string; pieceDefinition: { nom: unknown } }[],
   locale: Locale,

@@ -224,6 +224,22 @@ système appelant `/api/cron/*` avec `Authorization: Bearer $CRON_SECRET`.
 
 ---
 
+## Onboarder un bêta-testeur (§15.2)
+
+Une fois l'app déployée (Vercel ou Docker/Suisse) :
+
+1. Le cabinet se connecte (`/login`) puis ouvre **Clients / bêta-testeurs** (`/clients`).
+2. **Créer le client** (code, nom, e-mail, langue) → un **lien d'activation** s'affiche.
+3. Transmettre ce lien au bêta-testeur (par e-mail manuel ; ou automatiquement via
+   Microsoft Graph si `MS_GRAPH_*` est configuré). Le testeur **définit son mot de
+   passe** et accède à son espace.
+4. Le cabinet ouvre une **campagne** pour ce client (**Ouvrir une campagne** → profilage).
+5. Le testeur dépose ses pièces ; le cabinet **valide** dans la file (`/validation`).
+
+> Pour mesurer la **fiabilité IA réelle** (§15.3), configurer `ANTHROPIC_API_KEY`
+> (sinon l'analyseur de démonstration est utilisé). Pour des e-mails réels, configurer
+> `MS_GRAPH_*` (sinon les e-mails sont consignés dans la boîte d'envoi `/emails`).
+
 ## Périmètre du MVP / bêta-test (§15)
 
 - **Humain dans la boucle** : l'IA *propose*, un collaborateur *valide* avant dépôt.

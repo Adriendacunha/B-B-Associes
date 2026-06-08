@@ -11,6 +11,27 @@
     "dashboard": "Firm dashboard",
     "validation": "Validation queue"
   },
+  "clients": {
+    "title": "Clients / beta testers",
+    "subtitle": "Create a client and send them their activation link (§15.2).",
+    "new": "New client",
+    "code": "Client code",
+    "name": "Display name",
+    "email": "Email",
+    "language": "Language",
+    "type": "Type",
+    "residence": "Residence",
+    "manager": "Manager",
+    "create": "Create client",
+    "state": "State",
+    "activated": "Activated",
+    "pending": "Pending activation",
+    "activationLink": "Activation link (to send to the client)",
+    "openCampaign": "Open a campaign",
+    "createdOk": "Client created. Copy their activation link below.",
+    "errExiste": "This client code or email already exists.",
+    "errChamps": "Please fill in all required fields."
+  },
   "auth": {
     "staffTitle": "Firm sign-in",
     "clientTitle": "Sign in to your area",
