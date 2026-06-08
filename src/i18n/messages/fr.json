@@ -8,7 +8,29 @@
     "title": "Espace client de collecte documentaire",
     "subtitle": "Déposez vos pièces en toute sécurité pour la préparation de votre déclaration fiscale.",
     "clientSpace": "Mon espace client",
-    "dashboard": "Tableau de bord cabinet"
+    "dashboard": "Tableau de bord cabinet",
+    "validation": "File de validation"
+  },
+  "upload": {
+    "deposit": "Déposer un fichier",
+    "send": "Envoyer",
+    "aiProposes": "Verdict IA proposé",
+    "conforme": "conforme",
+    "nonConforme": "non conforme",
+    "depositedAs": "Déposé sur OneDrive :"
+  },
+  "validation": {
+    "title": "File de validation",
+    "subtitle": "Vérifiez le verdict proposé par l’IA et tranchez (humain dans la boucle, §15.1).",
+    "empty": "Aucun document en attente de validation.",
+    "client": "Client",
+    "piece": "Pièce",
+    "ai": "Analyse IA",
+    "anomalies": "Anomalies",
+    "readability": "Lisibilité",
+    "model": "Modèle",
+    "validate": "Valider",
+    "reject": "Rejeter"
   },
   "espace": {
     "title": "Ma checklist documentaire",

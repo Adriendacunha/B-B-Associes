@@ -8,7 +8,29 @@
     "title": "Client document collection portal",
     "subtitle": "Securely upload your documents for the preparation of your tax return.",
     "clientSpace": "My client area",
-    "dashboard": "Firm dashboard"
+    "dashboard": "Firm dashboard",
+    "validation": "Validation queue"
+  },
+  "upload": {
+    "deposit": "Upload a file",
+    "send": "Send",
+    "aiProposes": "Proposed AI verdict",
+    "conforme": "compliant",
+    "nonConforme": "non-compliant",
+    "depositedAs": "Deposited to OneDrive:"
+  },
+  "validation": {
+    "title": "Validation queue",
+    "subtitle": "Review the AI's proposed verdict and decide (human in the loop, §15.1).",
+    "empty": "No document awaiting validation.",
+    "client": "Client",
+    "piece": "Item",
+    "ai": "AI analysis",
+    "anomalies": "Anomalies",
+    "readability": "Readability",
+    "model": "Model",
+    "validate": "Approve",
+    "reject": "Reject"
   },
   "espace": {
     "title": "My document checklist",

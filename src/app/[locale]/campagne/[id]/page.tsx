@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { resolveLocalized, type AppLocale, type LocalizedText } from '@/lib/i18n/locales';
 import { completude } from '@/lib/metrics/mvp';
 import { CATEGORY_FOLDERS, ORDERED_CATEGORIES } from '@/lib/onedrive/paths';
+import { uploadDocument } from '@/app/actions/document';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,12 +26,18 @@ export default async function CampagnePage({
   const loc = locale as AppLocale;
   const t = await getTranslations('campagne');
   const tStatus = await getTranslations('espace');
+  const tUp = await getTranslations('upload');
 
   const campaign = await prisma.campaign.findUnique({
     where: { id },
     include: {
       client: { include: { gestionnaire: true } },
-      checklistItems: { include: { pieceDefinition: true } },
+      checklistItems: {
+        include: {
+          pieceDefinition: true,
+          documents: { orderBy: { version: 'desc' }, take: 1, include: { aiVerdict: true } },
+        },
+      },
     },
   });
   if (!campaign) notFound();
@@ -87,29 +94,71 @@ export default async function CampagnePage({
           <section key={group.category}>
             <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{group.label}</h2>
             <ul className="space-y-2">
-              {group.items.map((item) => (
-                <li key={item.id} className="rounded-lg border border-slate-200 bg-white p-3">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-slate-800">
-                          {resolveLocalized(item.pieceDefinition.nom as unknown as LocalizedText, loc)}
-                        </span>
-                        <span className="font-mono text-[10px] text-slate-300">{item.pieceCode}</span>
-                        <span className="text-[10px] uppercase text-slate-400">
-                          {item.required ? tStatus('required') : tStatus('optional')}
-                        </span>
+              {group.items.map((item) => {
+                const latest = item.documents[0];
+                const verdict = latest?.aiVerdict;
+                const canUpload = item.status === 'MANQUANT' || item.status === 'NON_CONFORME';
+                return (
+                  <li key={item.id} className="rounded-lg border border-slate-200 bg-white p-3">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-slate-800">
+                            {resolveLocalized(item.pieceDefinition.nom as unknown as LocalizedText, loc)}
+                          </span>
+                          <span className="font-mono text-[10px] text-slate-300">{item.pieceCode}</span>
+                          <span className="text-[10px] uppercase text-slate-400">
+                            {item.required ? tStatus('required') : tStatus('optional')}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                          {resolveLocalized(item.pieceDefinition.description as unknown as LocalizedText, loc)}
+                        </p>
                       </div>
-                      <p className="mt-0.5 text-xs text-slate-500">
-                        {resolveLocalized(item.pieceDefinition.description as unknown as LocalizedText, loc)}
-                      </p>
+                      <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${STATUS_STYLE[item.status]}`}>
+                        {tStatus(`status.${item.status}`)}
+                      </span>
                     </div>
-                    <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${STATUS_STYLE[item.status]}`}>
-                      {tStatus(`status.${item.status}`)}
-                    </span>
-                  </div>
-                </li>
-              ))}
+
+                    {/* Verdict IA proposé (file de validation) */}
+                    {item.status === 'EN_VALIDATION' && verdict && (
+                      <p className="mt-2 text-xs text-amber-700">
+                        {tUp('aiProposes')} :{' '}
+                        <span className="font-medium">
+                          {verdict.conforme ? tUp('conforme') : tUp('nonConforme')}
+                        </span>
+                        {Array.isArray(verdict.anomalies) && (verdict.anomalies as string[]).length > 0 && (
+                          <span className="text-slate-400"> · {(verdict.anomalies as string[]).join(', ')}</span>
+                        )}
+                      </p>
+                    )}
+
+                    {/* Document validé → nom de fichier OneDrive */}
+                    {item.status === 'CONFORME' && latest?.finalFilename && (
+                      <p className="mt-2 break-all text-xs text-green-700">
+                        {tUp('depositedAs')} <span className="font-mono">{latest.finalFilename}</span>
+                      </p>
+                    )}
+
+                    {/* Dépôt client */}
+                    {canUpload && (
+                      <form action={uploadDocument} className="mt-2 flex items-center gap-2">
+                        <input type="hidden" name="checklistItemId" value={item.id} />
+                        <input type="hidden" name="locale" value={locale} />
+                        <input
+                          type="file"
+                          name="file"
+                          required
+                          className="text-xs file:mr-2 file:rounded file:border-0 file:bg-slate-100 file:px-2 file:py-1 file:text-xs"
+                        />
+                        <button type="submit" className="rounded bg-brand px-3 py-1 text-xs font-medium text-white hover:bg-brand-light">
+                          {tUp('send')}
+                        </button>
+                      </form>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </section>
         ))}
