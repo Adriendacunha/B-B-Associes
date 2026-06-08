@@ -133,6 +133,16 @@ export async function uploadValidatedFile(
   return { id: json.id, webUrl: json.webUrl };
 }
 
+/** Télécharge le contenu d'un fichier OneDrive (pour l'export de dossier §10). */
+export async function downloadValidatedFile(targetPath: string): Promise<Buffer> {
+  const cfg = loadConfig();
+  const clean = targetPath.replace(/^\//, '');
+  const encoded = encodeURIComponent(clean).replace(/%2F/g, '/');
+  const res = await graphFetch(`/drives/${cfg.driveId}/root:/${encoded}:/content`, { method: 'GET' }, cfg);
+  if (!res.ok) throw new Error(`Téléchargement OneDrive échoué: ${res.status} ${await res.text()}`);
+  return Buffer.from(await res.arrayBuffer());
+}
+
 /**
  * Envoie un e-mail via `sendMail` depuis la boîte partagée du cabinet (§6.2).
  * Les e-mails apparaissent dans les « Éléments envoyés » de la boîte.
