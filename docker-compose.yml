@@ -1,0 +1,61 @@
+# Déploiement auto-hébergé EN SUISSE (§9). À lancer sur un VPS d'un datacenter
+# suisse (Infomaniak, Exoscale, Hidora). Le reverse-proxy (Caddy) termine le TLS
+# (chiffrement en transit) ; PostgreSQL conserve les données chiffrées au repos
+# via le chiffrement disque de l'hôte + STORAGE_ENCRYPTION_KEY pour les fichiers.
+#
+# Démarrage :
+#   cp .env.example .env   # renseigner les secrets (DB, CRON_SECRET, STORAGE_…)
+#   docker compose up -d --build
+#   docker compose run --rm app node_modules/.bin/tsx prisma/seed.ts   # seed initial
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bb}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-bb}
+      POSTGRES_DB: ${POSTGRES_DB:-bb_associes}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-bb}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-bb}:${POSTGRES_PASSWORD:-bb}@db:5432/${POSTGRES_DB:-bb_associes}?schema=public
+      DIRECT_URL: postgresql://${POSTGRES_USER:-bb}:${POSTGRES_PASSWORD:-bb}@db:5432/${POSTGRES_DB:-bb_associes}?schema=public
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      STORAGE_ENCRYPTION_KEY: ${STORAGE_ENCRYPTION_KEY}
+      CRON_SECRET: ${CRON_SECRET}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      MS_GRAPH_TENANT_ID: ${MS_GRAPH_TENANT_ID:-}
+      MS_GRAPH_CLIENT_ID: ${MS_GRAPH_CLIENT_ID:-}
+      MS_GRAPH_CLIENT_SECRET: ${MS_GRAPH_CLIENT_SECRET:-}
+    expose:
+      - '3000'
+
+  # Reverse-proxy TLS (Let's Encrypt automatique). Renseigner le domaine + e-mail.
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - '80:80'
+      - '443:443'
+    command: caddy reverse-proxy --from ${PUBLIC_DOMAIN:-localhost} --to app:3000
+    volumes:
+      - caddy-data:/data
+
+volumes:
+  db-data:
+  caddy-data:

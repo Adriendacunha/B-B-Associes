@@ -181,10 +181,17 @@ des défauts raisonnables, tous centralisés et modifiables :
 
 ## Conformité (§9)
 
-- Données applicatives et **traitement IA** à héberger **en Suisse** (PostgreSQL CH,
-  stockage objet CH pour les fichiers temporaires chiffrés).
-- Fichiers temporaires chiffrés **avant validation**, **purgés** après dépôt OneDrive
-  (champs `Document.tempStorageKey` / `purgedAt`, statut `PURGE`).
+- **Hébergement en Suisse** : déploiement **auto-hébergeable** via `Dockerfile` +
+  `docker-compose.yml` (app + PostgreSQL + reverse-proxy Caddy/TLS) sur un datacenter
+  suisse (Infomaniak/Exoscale/Hidora) — voir §Déploiement auto-hébergé. C'est la voie
+  recommandée pour de vraies données fiscales (Vercel n'a pas de région CH).
+- **Chiffrement au repos** des fichiers temporaires : **AES-256-GCM** dès que
+  `STORAGE_ENCRYPTION_KEY` est défini (`lib/storage/crypto`). _Vérifié : fichier
+  ciphertext sur disque, déchiffré uniquement à l'usage._ Chiffrement **en transit**
+  par le reverse-proxy TLS.
+- **Conservation / purge** (§9, §14.3) : `lib/retention` + cron `GET /api/cron/retention`
+  supprime la copie temporaire des pièces finalisées au-delà de `RETENTION_DAYS`
+  (défaut 180 j) — seule subsiste la copie OneDrive. Journalisé `RETENTION_RUN`.
 - API Claude utilisée en **Zero Data Retention** (à contractualiser, §14.4).
 - Journal d'audit inaltérable et exportable (§8).
 
@@ -196,9 +203,24 @@ des défauts raisonnables, tous centralisés et modifiables :
   réservé au cabinet. Le réviseur enregistré est le collaborateur **réellement connecté**.
 - **Jetons de session** : secret aléatoire 256 bits (cookie httpOnly, `SameSite=Lax`,
   `Secure` en prod), expiration glissante. Verrouillage après 5 échecs.
-- **À durcir avant production** : hébergement DB **en Suisse** (pas Vercel Postgres),
-  chiffrement du stockage temporaire au repos, sérialisation/vérification planifiée de
-  la chaîne d'audit, throttling IP au login, CI + tests d'intégration, 2FA (TOTP).
+- **À durcir ensuite** : sérialisation/vérification planifiée de la chaîne d'audit,
+  throttling IP au login, 2FA (TOTP).
+
+## Déploiement auto-hébergé (Suisse)
+
+Sur un VPS d'un datacenter suisse :
+
+```bash
+cp .env.example .env   # renseigner DB, STORAGE_ENCRYPTION_KEY (openssl rand -hex 32),
+                       # CRON_SECRET, PUBLIC_DOMAIN, secrets Graph/Claude
+docker compose up -d --build
+docker compose run --rm app node_modules/.bin/tsx prisma/seed.ts   # seed initial
+```
+
+Caddy obtient un certificat TLS automatiquement pour `PUBLIC_DOMAIN`. Les migrations
+s'appliquent au démarrage du conteneur ; le build Next **standalone** embarque l'OCR
+(`tessdata/`) et le moteur Prisma. Crons (relances, purge) à déclencher via cron
+système appelant `/api/cron/*` avec `Authorization: Bearer $CRON_SECRET`.
 
 ---
 
