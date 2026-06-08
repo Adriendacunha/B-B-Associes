@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { storeTemp, readTemp, purgeTemp } from '@/lib/storage/temp';
@@ -10,6 +11,7 @@ import { appendAuditLog } from '@/lib/audit/log';
 import { humanAgreesWithAi, reviewOutcome, campaignStatusFrom, type ReviewDecision } from '@/lib/review/decision';
 import { buildFileName, buildFinalPath, type PieceCategory } from '@/lib/onedrive/paths';
 import { resolveLocalized, type AppLocale, type LocalizedText } from '@/lib/i18n/locales';
+import { getCurrentPrincipal, requireStaff } from '@/lib/auth/session';
 
 const MAX_BYTES = 15 * 1024 * 1024; // 15 Mo : pièces fiscales = petits fichiers
 
@@ -32,11 +34,21 @@ export async function uploadDocument(formData: FormData): Promise<void> {
   }
   if (file.size > MAX_BYTES) throw new Error('Fichier trop volumineux (max 15 Mo).');
 
+  // Authentification requise (§8). Un client ne peut déposer que sur SA campagne ;
+  // un collaborateur peut déposer pour n'importe quel client.
+  const principal = await getCurrentPrincipal();
+  if (!principal) redirect(`/${locale}/espace`);
+
   const item = await prisma.checklistItem.findUnique({
     where: { id: checklistItemId },
     include: { campaign: { include: { client: true } }, pieceDefinition: true },
   });
   if (!item) throw new Error('Pièce introuvable.');
+
+  if (principal.type === 'CLIENT' && item.campaign.clientId !== principal.client.id) {
+    throw new Error('Accès refusé : cette pièce ne vous appartient pas.');
+  }
+  const uploadedByClient = principal.type === 'CLIENT';
 
   const buffer = Buffer.from(await file.arrayBuffer());
   const ext = extOf(file.name);
@@ -51,14 +63,14 @@ export async function uploadDocument(formData: FormData): Promise<void> {
       tempStorageKey,
       mimeType: file.type || 'application/octet-stream',
       sizeBytes: buffer.length,
-      uploadedByClient: true,
+      uploadedByClient,
       status: 'RECU',
     },
   });
 
   await appendAuditLog(prisma, {
-    actorType: 'CLIENT',
-    actorId: item.campaign.clientId,
+    actorType: principal.type === 'CLIENT' ? 'CLIENT' : principal.user.role === 'ADMIN' ? 'ADMIN' : 'COLLABORATEUR',
+    actorId: principal.type === 'CLIENT' ? principal.client.id : principal.user.id,
     action: 'DOCUMENT_UPLOAD',
     entityType: 'Document',
     entityId: doc.id,
@@ -127,6 +139,10 @@ export async function reviewDocument(formData: FormData): Promise<void> {
     throw new Error('Décision invalide.');
   }
 
+  // Validation réservée au cabinet ; le réviseur est le collaborateur CONNECTÉ
+  // (donnée clé de la métrique agreedWithAi §15.3.2).
+  const reviewer = await requireStaff(locale);
+
   const doc = await prisma.document.findUnique({
     where: { id: documentId },
     include: {
@@ -135,11 +151,6 @@ export async function reviewDocument(formData: FormData): Promise<void> {
     },
   });
   if (!doc || !doc.aiVerdict) throw new Error('Document ou verdict introuvable.');
-
-  const reviewer =
-    (await prisma.user.findFirst({ where: { email: 'collab@bbassocies.ch' } })) ??
-    (await prisma.user.findFirst());
-  if (!reviewer) throw new Error('Aucun collaborateur disponible.');
 
   const agreed = humanAgreesWithAi(decision, doc.aiVerdict.conforme);
   const outcome = reviewOutcome(decision);
@@ -216,7 +227,7 @@ export async function reviewDocument(formData: FormData): Promise<void> {
   });
 
   await appendAuditLog(prisma, {
-    actorType: 'COLLABORATEUR',
+    actorType: reviewer.role === 'ADMIN' ? 'ADMIN' : 'COLLABORATEUR',
     actorId: reviewer.id,
     action: decision === 'VALIDE' ? 'REVIEW_VALIDATE' : 'REVIEW_REJECT',
     entityType: 'Document',

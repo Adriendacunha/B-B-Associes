@@ -5,6 +5,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { buildChecklistItems, type BuildablePiece } from '@/lib/checklist/build';
 import { appendAuditLog } from '@/lib/audit/log';
+import { requireStaff } from '@/lib/auth/session';
 import type { ClientProfile } from '@/lib/checklist/profiling';
 
 export interface CreateCampaignInput {
@@ -20,6 +21,8 @@ export interface CreateCampaignInput {
  * redirige vers la vue de campagne.
  */
 export async function createCampaign(input: CreateCampaignInput): Promise<void> {
+  await requireStaff(input.locale); // réservé au cabinet (§2/§8)
+
   const client = await prisma.client.findUnique({ where: { clientCode: input.clientCode } });
   if (!client) throw new Error(`Client introuvable: ${input.clientCode}`);
 

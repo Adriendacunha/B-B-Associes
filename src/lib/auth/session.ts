@@ -2,6 +2,7 @@
 // est le jeton ; aucune donnée sensible côté client. Expiration glissante :
 // chaque accès repousse l'échéance, d'où une déconnexion après inactivité.
 
+import { randomBytes } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { Client, User } from '@prisma/client';
@@ -15,7 +16,10 @@ type PrincipalType = 'STAFF' | 'CLIENT';
 /** Crée une session et pose le cookie (à appeler depuis une server action). */
 export async function createSession(principalType: PrincipalType, subjectId: string): Promise<void> {
   const expiresAt = sessionExpiry();
-  const session = await prisma.session.create({ data: { principalType, subjectId, expiresAt } });
+  // Jeton de session cryptographiquement aléatoire (256 bits) — sert de secret de
+  // cookie ; on n'utilise PAS le cuid par défaut (entropie insuffisante).
+  const token = randomBytes(32).toString('base64url');
+  const session = await prisma.session.create({ data: { id: token, principalType, subjectId, expiresAt } });
   const store = await cookies();
   store.set(SESSION_COOKIE, session.id, {
     httpOnly: true,

@@ -183,6 +183,18 @@ des défauts raisonnables, tous centralisés et modifiables :
 - API Claude utilisée en **Zero Data Retention** (à contractualiser, §14.4).
 - Journal d'audit inaltérable et exportable (§8).
 
+### Sécurité (état)
+
+- **Autorisation au niveau des mutations** : chaque server action sensible vérifie la
+  session (`requireStaff` / contrôle d'appartenance client) — pas seulement la page.
+  Un client ne peut déposer que sur **sa** campagne ; valider/relancer/exporter est
+  réservé au cabinet. Le réviseur enregistré est le collaborateur **réellement connecté**.
+- **Jetons de session** : secret aléatoire 256 bits (cookie httpOnly, `SameSite=Lax`,
+  `Secure` en prod), expiration glissante. Verrouillage après 5 échecs.
+- **À durcir avant production** : hébergement DB **en Suisse** (pas Vercel Postgres),
+  chiffrement du stockage temporaire au repos, sérialisation/vérification planifiée de
+  la chaîne d'audit, throttling IP au login, CI + tests d'intégration, 2FA (TOTP).
+
 ---
 
 ## Périmètre du MVP / bêta-test (§15)
