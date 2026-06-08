@@ -29,6 +29,11 @@
     "firstConnection": "First time? Activate your account using the link sent by email.",
     "noCampaign": "No collection campaign open at the moment."
   },
+  "export": {
+    "title": "Accounting export",
+    "zip": "Export file (ZIP)",
+    "csv": "Export summary (CSV)"
+  },
   "relances": {
     "title": "Reminders",
     "sendInvitation": "Send invitation",

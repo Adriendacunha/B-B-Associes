@@ -29,6 +29,11 @@
     "firstConnection": "Erstanmeldung? Aktivieren Sie Ihr Konto über den per E-Mail erhaltenen Link.",
     "noCampaign": "Derzeit keine Sammelkampagne geöffnet."
   },
+  "export": {
+    "title": "Buchhaltungsexport",
+    "zip": "Dossier exportieren (ZIP)",
+    "csv": "Zusammenfassung exportieren (CSV)"
+  },
   "relances": {
     "title": "Erinnerungen",
     "sendInvitation": "Einladung senden",

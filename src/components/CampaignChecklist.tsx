@@ -33,6 +33,7 @@ export async function CampaignChecklist({
   const tStatus = await getTranslations('espace');
   const tUp = await getTranslations('upload');
   const tR = await getTranslations('relances');
+  const tX = await getTranslations('export');
 
   const campaign = await prisma.campaign.findUnique({
     where: { id: campaignId },
@@ -141,6 +142,26 @@ export async function CampaignChecklist({
               </form>
             </div>
           )}
+        </div>
+      )}
+
+      {showMeta && (
+        <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <h2 className="mb-2 text-sm font-semibold text-slate-700">{tX('title')}</h2>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={`/api/export/dossier/${campaignId}?locale=${locale}`}
+              className="rounded border border-brand px-3 py-1 text-xs font-medium text-brand hover:bg-brand hover:text-white"
+            >
+              {tX('zip')}
+            </a>
+            <a
+              href={`/api/export/dossier/${campaignId}?format=csv&locale=${locale}`}
+              className="rounded border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+            >
+              {tX('csv')}
+            </a>
+          </div>
         </div>
       )}
 

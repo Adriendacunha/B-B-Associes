@@ -150,6 +150,7 @@ export async function reviewDocument(formData: FormData): Promise<void> {
   let finalOnedrivePath: string | null = null;
   let finalFilename: string | null = null;
   let purgedAt: Date | null = null;
+  let keepTempKey: string | null = doc.tempStorageKey; // conservé en démo pour l'export (§10)
 
   if (decision === 'VALIDE') {
     const folderParams = {
@@ -173,18 +174,24 @@ export async function reviewDocument(formData: FormData): Promise<void> {
     });
 
     // Dépôt réel sur OneDrive uniquement si Microsoft Graph est configuré (§5/§14.1).
+    let depositedToGraph = false;
     if (process.env.MS_GRAPH_CLIENT_ID && doc.tempStorageKey) {
       try {
         const { uploadValidatedFile } = await import('@/lib/graph/client');
         const content = await readTemp(doc.tempStorageKey);
         await uploadValidatedFile(finalOnedrivePath, content, doc.mimeType);
+        depositedToGraph = true;
       } catch (e) {
-        // En MVP non configuré, on conserve le chemin calculé (dépôt simulé).
         console.warn('Dépôt OneDrive ignoré (Graph non configuré ou erreur):', (e as Error).message);
       }
     }
-    if (doc.tempStorageKey) await purgeTemp(doc.tempStorageKey);
-    purgedAt = new Date();
+    // On ne purge le fichier temporaire QUE s'il est bien déposé sur OneDrive (§9).
+    // En mode démo (sans Graph), on le conserve pour permettre l'export ZIP (§10).
+    if (depositedToGraph && doc.tempStorageKey) {
+      await purgeTemp(doc.tempStorageKey);
+      purgedAt = new Date();
+      keepTempKey = null;
+    }
   }
 
   await prisma.$transaction(async (tx) => {
@@ -193,7 +200,7 @@ export async function reviewDocument(formData: FormData): Promise<void> {
     });
     await tx.document.update({
       where: { id: documentId },
-      data: { status: outcome.documentStatus, finalOnedrivePath, finalFilename, purgedAt },
+      data: { status: outcome.documentStatus, finalOnedrivePath, finalFilename, purgedAt, tempStorageKey: keepTempKey },
     });
     await tx.checklistItem.update({ where: { id: item.id }, data: { status: outcome.itemStatus } });
 

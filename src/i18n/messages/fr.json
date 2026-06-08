@@ -29,6 +29,11 @@
     "firstConnection": "Première connexion ? Activez votre compte via le lien reçu par e-mail.",
     "noCampaign": "Aucune campagne de collecte ouverte pour le moment."
   },
+  "export": {
+    "title": "Export comptable",
+    "zip": "Exporter le dossier (ZIP)",
+    "csv": "Exporter le récapitulatif (CSV)"
+  },
   "relances": {
     "title": "Relances",
     "sendInvitation": "Envoyer l’invitation",

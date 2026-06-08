@@ -217,6 +217,12 @@ des défauts raisonnables, tous centralisés et modifiables :
   **boîte d'envoi interne** `/emails` (« Éléments envoyés »). Journalisé `EMAIL_SENT`.
 - **Tableau de bord réel (§11/§15.3)** : complétude, statut, prochaine relance et les
   4 métriques calculés sur les **vraies données** (fiabilité IA depuis `HumanReview`).
+- **Exports Crésus / Banana (§10)** : `lib/export/dossier` produit un **CSV
+  récapitulatif** (client, pièces, statut, dates — séparateur `;`, BOM UTF-8) et un
+  **ZIP** des pièces validées correctement nommées (§5.3) + ce CSV. Téléchargement
+  réservé au cabinet via `GET /api/export/dossier/[campaignId]` (`?format=csv` pour le
+  CSV seul). En prod, les fichiers sont récupérés depuis OneDrive ; en démo, depuis le
+  stockage temporaire conservé. Journalisé `EXPORT_DOSSIER` / `EXPORT_CSV`. _Vérifié e2e._
 - **Relances 100 % automatiques (§6.1)** : moteur partagé `lib/reminders/run` exposé
   via un **cron sécurisé** `GET /api/cron/reminders` (en-tête `Authorization: Bearer
   CRON_SECRET`), déclaré dans `vercel.json` (Vercel Cron, quotidien 07:00 UTC).
@@ -236,6 +242,6 @@ des défauts raisonnables, tous centralisés et modifiables :
 - Dépôt OneDrive réel via Microsoft Graph en production (la logique est prête).
 - Édition du référentiel de pièces / cadence / gabarits d'e-mails dans une UI admin
   (aujourd'hui via le seed).
-- Multilingue complet de l'interface (les 3 catalogues sont en place) et exports
-  Crésus/Banana (ZIP + CSV, §10) — prévus Phase 2/3.
+- Multilingue complet de l'interface (les 3 catalogues sont en place).
+- 2FA (TOTP) collaborateurs + réinitialisation de mot de passe par e-mail (§8).
 ```
