@@ -48,10 +48,15 @@ Scripts utiles :
 
 | Script | Rôle |
 |---|---|
-| `npm test` | tests unitaires (logique métier pure) |
+| `npm test` | tests unitaires (logique métier pure, sans base) |
+| `npm run test:integration` | tests d'intégration (nécessite `DATABASE_URL` migrée + seedée) |
 | `npm run typecheck` | vérification TypeScript de tout le projet |
 | `npm run build` | build de production Next.js |
 | `npm run db:seed` | charge le référentiel + données de démonstration |
+
+**Intégration continue** : `.github/workflows/ci.yml` exécute à chaque push/PR
+(1) types + tests unitaires + build, et (2) tests d'intégration contre un PostgreSQL
+éphémère (migrations + seed + `*.itest.ts`).
 
 ---
 
