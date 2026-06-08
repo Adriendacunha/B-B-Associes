@@ -216,12 +216,18 @@ des défauts raisonnables, tous centralisés et modifiables :
   **boîte d'envoi interne** `/emails` (« Éléments envoyés »). Journalisé `EMAIL_SENT`.
 - **Tableau de bord réel (§11/§15.3)** : complétude, statut, prochaine relance et les
   4 métriques calculés sur les **vraies données** (fiabilité IA depuis `HumanReview`).
+- **Extraction de texte / OCR (§7.2)** : `lib/ocr/extract` — texte (UTF-8), **PDF
+  numériques** (pdf-parse, sans réseau) et **OCR** des images / PDF scannés
+  (Tesseract via `tessdata/` local, hors-ligne). Best-effort : toute défaillance
+  retombe proprement sans bloquer le dépôt. Le verdict IA s'appuie désormais sur le
+  **contenu réel** du document. _Vérifié : un PDF au nom neutre est jugé conforme
+  d'après son texte (année + type détectés)._
 
 ## Reste à faire (Phase 1 → Phase 2)
 
 - **2FA (TOTP)** pour les collaborateurs (champ `User.totpSecret` déjà prévu) +
   réinitialisation de mot de passe par e-mail (§8).
-- OCR réel (Tesseract) en amont de l'analyse IA, et dépôt OneDrive via Graph en prod.
+- Dépôt OneDrive réel via Microsoft Graph en production (la logique est prête).
 - **Cron** déclenchant `processDueReminders` (ex. Vercel Cron) pour des relances
   réellement automatiques en exploitation (la logique est prête).
 - Multilingue complet de l'interface (les 3 catalogues sont en place) et exports

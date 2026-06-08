@@ -5,6 +5,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { storeTemp, readTemp, purgeTemp } from '@/lib/storage/temp';
 import { analyzeDocument } from '@/lib/ai/analyze';
+import { extractText } from '@/lib/ocr/extract';
 import { appendAuditLog } from '@/lib/audit/log';
 import { humanAgreesWithAi, reviewOutcome, campaignStatusFrom, type ReviewDecision } from '@/lib/review/decision';
 import { buildFileName, buildFinalPath, type PieceCategory } from '@/lib/onedrive/paths';
@@ -65,10 +66,9 @@ export async function uploadDocument(formData: FormData): Promise<void> {
     createdAt: new Date(),
   });
 
-  // Extraction texte : MVP = lecture directe pour les fichiers texte ; pour les PDF
-  // scannés, brancher Tesseract/OCR ici (§7.2). À défaut, le nom de fichier sert d'indice.
-  const isText = (file.type || '').startsWith('text/');
-  const text = isText ? buffer.toString('utf8').slice(0, 20000) : '';
+  // Extraction du texte (§7.2) : texte / PDF numérique / OCR pour scans & images.
+  const extraction = await extractText(buffer, file.type, file.name);
+  const text = extraction.text;
 
   const result = await analyzeDocument({
     pieceCode: item.pieceCode,
@@ -106,7 +106,7 @@ export async function uploadDocument(formData: FormData): Promise<void> {
     action: 'AI_VERDICT',
     entityType: 'Document',
     entityId: doc.id,
-    metadata: { conforme: result.conforme, anomalies: result.anomalies, model: result.model },
+    metadata: { conforme: result.conforme, anomalies: result.anomalies, model: result.model, extraction: extraction.method },
     createdAt: new Date(),
   });
 
