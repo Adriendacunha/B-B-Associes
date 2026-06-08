@@ -11,6 +11,27 @@
     "dashboard": "Tableau de bord cabinet",
     "validation": "File de validation"
   },
+  "clients": {
+    "title": "Clients / bêta-testeurs",
+    "subtitle": "Créez un client et transmettez-lui son lien d’activation (§15.2).",
+    "new": "Nouveau client",
+    "code": "Code client",
+    "name": "Nom affiché",
+    "email": "E-mail",
+    "language": "Langue",
+    "type": "Type",
+    "residence": "Résidence",
+    "manager": "Gestionnaire",
+    "create": "Créer le client",
+    "state": "État",
+    "activated": "Activé",
+    "pending": "En attente d’activation",
+    "activationLink": "Lien d’activation (à transmettre au client)",
+    "openCampaign": "Ouvrir une campagne",
+    "createdOk": "Client créé. Copiez son lien d’activation ci-dessous.",
+    "errExiste": "Ce code client ou cet e-mail existe déjà.",
+    "errChamps": "Veuillez renseigner tous les champs obligatoires."
+  },
   "auth": {
     "staffTitle": "Connexion cabinet",
     "clientTitle": "Connexion à votre espace",

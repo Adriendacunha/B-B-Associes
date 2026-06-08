@@ -11,6 +11,27 @@
     "dashboard": "Kanzlei-Dashboard",
     "validation": "Validierungswarteschlange"
   },
+  "clients": {
+    "title": "Kunden / Betatester",
+    "subtitle": "Erstellen Sie einen Kunden und senden Sie ihm seinen Aktivierungslink (§15.2).",
+    "new": "Neuer Kunde",
+    "code": "Kundencode",
+    "name": "Anzeigename",
+    "email": "E-Mail",
+    "language": "Sprache",
+    "type": "Typ",
+    "residence": "Wohnsitz",
+    "manager": "Sachbearbeiter",
+    "create": "Kunde erstellen",
+    "state": "Status",
+    "activated": "Aktiviert",
+    "pending": "Aktivierung ausstehend",
+    "activationLink": "Aktivierungslink (an den Kunden senden)",
+    "openCampaign": "Kampagne eröffnen",
+    "createdOk": "Kunde erstellt. Kopieren Sie unten seinen Aktivierungslink.",
+    "errExiste": "Dieser Kundencode oder diese E-Mail existiert bereits.",
+    "errChamps": "Bitte füllen Sie alle Pflichtfelder aus."
+  },
   "auth": {
     "staffTitle": "Kanzlei-Anmeldung",
     "clientTitle": "Bei Ihrem Bereich anmelden",

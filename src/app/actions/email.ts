@@ -5,7 +5,7 @@ import type { EmailTemplateKey } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { sendEmail, loadTemplate } from '@/lib/email/mailer';
 import { buildEmailVars, renderEmail, pendingPieces } from '@/lib/email/compose';
-import { clientLink, formatDate, missingItems, loadCampaignContext } from '@/lib/email/context';
+import { clientLink, activationLink, formatDate, missingItems, loadCampaignContext } from '@/lib/email/context';
 import { runDueReminders } from '@/lib/reminders/run';
 import { requireStaff } from '@/lib/auth/session';
 
@@ -17,10 +17,16 @@ export async function sendInvitation(formData: FormData): Promise<void> {
   const c = await loadCampaignContext(campaignId);
   if (!c) throw new Error('Campagne introuvable.');
 
+  // Un compte non activé reçoit le lien d'ACTIVATION (définition du mot de passe) ;
+  // un compte déjà actif reçoit le lien vers son espace (§8/§15.2).
+  const link =
+    !c.client.passwordHash && c.client.activationToken
+      ? activationLink(c.client.locale, c.client.activationToken)
+      : clientLink(c.client.locale);
   const tpl = await loadTemplate('INVITATION', c.client.locale);
   const vars = buildEmailVars({
     clientName: c.client.displayName,
-    link: clientLink(c.client.locale),
+    link,
     dueDate: formatDate(c.dueDate),
     managerName: c.client.gestionnaire?.name,
   });
