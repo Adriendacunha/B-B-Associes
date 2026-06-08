@@ -26,6 +26,15 @@
     "upload": "Déposer",
     "completude": "Complétude du dossier"
   },
+  "campagne": {
+    "title": "Campagne de collecte",
+    "fiscalYear": "Année fiscale",
+    "statusLabel": "Statut",
+    "client": "Client",
+    "manager": "Gestionnaire",
+    "completude": "Complétude",
+    "newCampaign": "Ouvrir une campagne"
+  },
   "dashboard": {
     "title": "Tableau de bord — suivi des dossiers",
     "demoNote": "Indicateurs illustratifs calculés sur des données de démonstration.",

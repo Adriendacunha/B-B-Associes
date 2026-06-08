@@ -77,8 +77,10 @@ fonctionnent **sans aucune variable d'environnement**.
 
 ```
 src/
-  app/[locale]/            Pages Next.js (i18n) : accueil, /espace, /tableau-de-bord
-  components/              Composants UI (sélecteur de langue…)
+  app/[locale]/            Pages Next.js (i18n) : accueil, /espace, /tableau-de-bord,
+                           /profilage (formulaire), /campagne/[id] (vue DB-backed)
+  app/actions/            Server actions (createCampaign : persiste + journalise)
+  components/              Composants UI (sélecteur de langue, ProfilageForm…)
   i18n/                    Routing + catalogues de messages FR/EN/DE
   data/
     piece-referential.ts   Référentiel ÉDITABLE des pièces genevoises (§4.2)
@@ -87,10 +89,12 @@ src/
     onedrive/paths.ts      Arborescence + nommage de fichiers OneDrive (§5)  ✓ testé
     reminders/cadence.ts   Moteur de relance configurable (§6.1)            ✓ testé
     checklist/profiling.ts Profilage → checklist dynamique (§4.1/§4.3)      ✓ testé
+    checklist/build.ts     Profil + référentiel → lignes de checklist (§4)  ✓ testé
     ai/verification.ts     Contrat prompt + schéma JSON du verdict IA (§7.2) ✓ testé
     ai/client.ts           Appel réel à l'API Claude (ZDR, §7/§9)
     metrics/mvp.ts         Les 4 métriques MVP (§15.3)                       ✓ testé
     audit/chain.ts         Journal d'audit inaltérable chaîné (§8)           ✓ testé
+    audit/log.ts           Écriture chaînée du journal en base (§8)
     graph/client.ts        Microsoft Graph : OneDrive + sendMail (§5/§6.2)
     auth/password.ts       Hachage de mot de passe (§8)
     demo/sample.ts         Données de démonstration des pages
@@ -164,6 +168,13 @@ des défauts raisonnables, tous centralisés et modifiables :
   décrochage, temps cabinet économisé.
 
 ---
+
+## Fait
+
+- **Profilage → checklist dynamique (§4)** : formulaire `/profilage` avec aperçu
+  en direct, server action `createCampaign` qui persiste la campagne + la checklist
+  en base et journalise l'opération (audit chaîné §8), vue de campagne `/campagne/[id]`
+  regroupée par catégorie OneDrive. _Testé de bout en bout sur PostgreSQL._
 
 ## Reste à faire (Phase 1 → Phase 2)
 

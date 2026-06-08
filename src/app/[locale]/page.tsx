@@ -5,6 +5,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('home');
+  const tc = await getTranslations('campagne');
 
   return (
     <div className="space-y-8">
@@ -12,7 +13,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <h1 className="text-3xl font-bold text-brand">{t('title')}</h1>
         <p className="max-w-2xl text-slate-600">{t('subtitle')}</p>
       </section>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Link
+          href="/profilage"
+          className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition hover:border-brand hover:shadow"
+        >
+          <h2 className="text-lg font-semibold text-brand">{tc('newCampaign')}</h2>
+        </Link>
         <Link
           href="/espace"
           className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm transition hover:border-brand hover:shadow"

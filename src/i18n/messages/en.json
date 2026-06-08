@@ -26,6 +26,15 @@
     "upload": "Upload",
     "completude": "File completeness"
   },
+  "campagne": {
+    "title": "Collection campaign",
+    "fiscalYear": "Tax year",
+    "statusLabel": "Status",
+    "client": "Client",
+    "manager": "Manager",
+    "completude": "Completeness",
+    "newCampaign": "Open a campaign"
+  },
   "dashboard": {
     "title": "Dashboard — file tracking",
     "demoNote": "Illustrative indicators computed on demonstration data.",

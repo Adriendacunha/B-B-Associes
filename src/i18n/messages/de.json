@@ -26,6 +26,15 @@
     "upload": "Hochladen",
     "completude": "Vollständigkeit des Dossiers"
   },
+  "campagne": {
+    "title": "Sammelkampagne",
+    "fiscalYear": "Steuerjahr",
+    "statusLabel": "Status",
+    "client": "Kunde",
+    "manager": "Sachbearbeiter",
+    "completude": "Vollständigkeit",
+    "newCampaign": "Kampagne eröffnen"
+  },
   "dashboard": {
     "title": "Dashboard — Dossierverfolgung",
     "demoNote": "Veranschaulichende Kennzahlen auf Basis von Demonstrationsdaten.",
