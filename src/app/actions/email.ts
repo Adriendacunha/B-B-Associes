@@ -7,11 +7,13 @@ import { sendEmail, loadTemplate } from '@/lib/email/mailer';
 import { buildEmailVars, renderEmail, pendingPieces } from '@/lib/email/compose';
 import { clientLink, formatDate, missingItems, loadCampaignContext } from '@/lib/email/context';
 import { runDueReminders } from '@/lib/reminders/run';
+import { requireStaff } from '@/lib/auth/session';
 
 /** Envoi de l'e-mail d'invitation + ouverture de la campagne (§6, J0). */
 export async function sendInvitation(formData: FormData): Promise<void> {
   const campaignId = String(formData.get('campaignId') ?? '');
   const uiLocale = String(formData.get('locale') ?? 'fr');
+  await requireStaff(uiLocale);
   const c = await loadCampaignContext(campaignId);
   if (!c) throw new Error('Campagne introuvable.');
 
@@ -40,6 +42,7 @@ const RELANCE_SEQUENCE: EmailTemplateKey[] = ['RELANCE_1', 'RELANCE_2', 'RELANCE
 export async function sendReminderNow(formData: FormData): Promise<void> {
   const campaignId = String(formData.get('campaignId') ?? '');
   const uiLocale = String(formData.get('locale') ?? 'fr');
+  await requireStaff(uiLocale);
   const c = await loadCampaignContext(campaignId);
   if (!c) throw new Error('Campagne introuvable.');
 
@@ -72,6 +75,7 @@ export async function sendReminderNow(formData: FormData): Promise<void> {
  */
 export async function processDueReminders(formData: FormData): Promise<void> {
   const uiLocale = String(formData.get('locale') ?? 'fr');
+  await requireStaff(uiLocale);
   await runDueReminders();
   revalidatePath(`/${uiLocale}/tableau-de-bord`);
   revalidatePath(`/${uiLocale}/emails`);

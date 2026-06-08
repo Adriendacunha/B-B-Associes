@@ -436,6 +436,8 @@ model Setting {
 // Sessions applicatives (§8). L'identifiant de session sert de jeton de cookie
 // httpOnly ; expiration absolue + déconnexion automatique après inactivité.
 model Session {
+  // `id` = jeton de cookie. Toujours fourni par createSession sous forme d'un
+  // secret aléatoire 256 bits (le @default cuid n'est jamais utilisé).
   id            String        @id @default(cuid())
   principalType PrincipalType
   subjectId     String // User.id (STAFF) ou Client.id (CLIENT)
