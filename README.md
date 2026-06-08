@@ -90,6 +90,7 @@ quand même les pages de démonstration.
 |---|---|
 | `ANTHROPIC_API_KEY` | analyse documentaire via **analyseur de démonstration** (stub) au lieu de l'API Claude (§7) |
 | `MS_GRAPH_*` | dépôt OneDrive **simulé** (chemin calculé, pas d'envoi) (§5/§6.2) |
+| `CRON_SECRET` | le **cron de relances** (`/api/cron/reminders`) répond 503 tant qu'il n'est pas défini ; le déclenchement manuel depuis le tableau de bord reste possible (§6.1) |
 
 Voir `.env.example` pour la liste complète.
 
@@ -216,6 +217,11 @@ des défauts raisonnables, tous centralisés et modifiables :
   **boîte d'envoi interne** `/emails` (« Éléments envoyés »). Journalisé `EMAIL_SENT`.
 - **Tableau de bord réel (§11/§15.3)** : complétude, statut, prochaine relance et les
   4 métriques calculés sur les **vraies données** (fiabilité IA depuis `HumanReview`).
+- **Relances 100 % automatiques (§6.1)** : moteur partagé `lib/reminders/run` exposé
+  via un **cron sécurisé** `GET /api/cron/reminders` (en-tête `Authorization: Bearer
+  CRON_SECRET`), déclaré dans `vercel.json` (Vercel Cron, quotidien 07:00 UTC).
+  Idempotent (ne renvoie jamais deux fois le même palier). _Vérifié e2e : 401 sans
+  secret ; avec secret, envoie RELANCE_1/2/3 selon la cadence, 0 au second passage._
 - **Extraction de texte / OCR (§7.2)** : `lib/ocr/extract` — texte (UTF-8), **PDF
   numériques** (pdf-parse, sans réseau) et **OCR** des images / PDF scannés
   (Tesseract via `tessdata/` local, hors-ligne). Best-effort : toute défaillance
@@ -228,8 +234,8 @@ des défauts raisonnables, tous centralisés et modifiables :
 - **2FA (TOTP)** pour les collaborateurs (champ `User.totpSecret` déjà prévu) +
   réinitialisation de mot de passe par e-mail (§8).
 - Dépôt OneDrive réel via Microsoft Graph en production (la logique est prête).
-- **Cron** déclenchant `processDueReminders` (ex. Vercel Cron) pour des relances
-  réellement automatiques en exploitation (la logique est prête).
+- Édition du référentiel de pièces / cadence / gabarits d'e-mails dans une UI admin
+  (aujourd'hui via le seed).
 - Multilingue complet de l'interface (les 3 catalogues sont en place) et exports
   Crésus/Banana (ZIP + CSV, §10) — prévus Phase 2/3.
 ```
