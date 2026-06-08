@@ -11,6 +11,24 @@
     "dashboard": "Tableau de bord cabinet",
     "validation": "File de validation"
   },
+  "auth": {
+    "staffTitle": "Connexion cabinet",
+    "clientTitle": "Connexion à votre espace",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "signIn": "Se connecter",
+    "signOut": "Se déconnecter",
+    "loggedInAs": "Connecté :",
+    "errorInvalid": "Identifiants incorrects.",
+    "errorLocked": "Compte temporairement verrouillé après plusieurs tentatives. Réessayez plus tard.",
+    "errorToken": "Lien d’activation invalide ou expiré.",
+    "errorWeak": "Le mot de passe doit comporter au moins 8 caractères.",
+    "activateTitle": "Activer votre compte",
+    "newPassword": "Choisir un mot de passe",
+    "activate": "Activer",
+    "firstConnection": "Première connexion ? Activez votre compte via le lien reçu par e-mail.",
+    "noCampaign": "Aucune campagne de collecte ouverte pour le moment."
+  },
   "upload": {
     "deposit": "Déposer un fichier",
     "send": "Envoyer",

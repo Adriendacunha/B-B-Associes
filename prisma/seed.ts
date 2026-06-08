@@ -99,10 +99,12 @@ async function seedDemo() {
     { clientCode: 'C0002', displayName: 'Müller Anna', email: 'anna.muller@example.ch', logement: 'PROPRIETAIRE' as const },
   ];
 
+  // Mot de passe démo pour permettre la connexion immédiate (à changer en prod).
+  const clientPass = await hashPassword('changeme-client');
   for (const c of betaClients) {
     const client = await prisma.client.upsert({
       where: { clientCode: c.clientCode },
-      update: {},
+      update: { passwordHash: clientPass, emailVerified: new Date() },
       create: {
         clientCode: c.clientCode,
         displayName: c.displayName,
@@ -112,12 +114,16 @@ async function seedDemo() {
         residence: 'RESIDENT_CH',
         niveauDeService: 'EXPERT', // MVP : tous en expert (§2/§15)
         gestionnaireId: collab.id,
+        passwordHash: clientPass,
+        emailVerified: new Date(),
       },
     });
     console.log(`  • client bêta ${client.clientCode} - ${client.displayName} (gestionnaire: ${collab.name})`);
   }
 
-  console.log(`✓ démo : admin=${admin.email}, collaborateur=${collab.email}, ${betaClients.length} clients bêta`);
+  console.log('✓ démo — identifiants de connexion :');
+  console.log('   cabinet  : admin@bbassocies.ch / changeme-admin   ·   collab@bbassocies.ch / changeme-collab');
+  console.log('   clients  : jean.dupont@example.ch / changeme-client   ·   anna.muller@example.ch / changeme-client');
 }
 
 async function main() {

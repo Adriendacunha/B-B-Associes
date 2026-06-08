@@ -11,6 +11,24 @@
     "dashboard": "Firm dashboard",
     "validation": "Validation queue"
   },
+  "auth": {
+    "staffTitle": "Firm sign-in",
+    "clientTitle": "Sign in to your area",
+    "email": "Email address",
+    "password": "Password",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "loggedInAs": "Signed in:",
+    "errorInvalid": "Invalid credentials.",
+    "errorLocked": "Account temporarily locked after several attempts. Try again later.",
+    "errorToken": "Invalid or expired activation link.",
+    "errorWeak": "Password must be at least 8 characters.",
+    "activateTitle": "Activate your account",
+    "newPassword": "Choose a password",
+    "activate": "Activate",
+    "firstConnection": "First time? Activate your account using the link sent by email.",
+    "noCampaign": "No collection campaign open at the moment."
+  },
   "upload": {
     "deposit": "Upload a file",
     "send": "Send",

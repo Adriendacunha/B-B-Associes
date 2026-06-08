@@ -1,5 +1,8 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { demoDashboard } from '@/lib/demo/sample';
+import { requireStaff } from '@/lib/auth/session';
+
+export const dynamic = 'force-dynamic';
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
@@ -13,6 +16,7 @@ function Metric({ label, value }: { label: string; value: string }) {
 export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireStaff(locale); // tableau de bord cabinet (§11)
   const t = await getTranslations('dashboard');
   const d = demoDashboard();
   const pct = (n: number) => `${Math.round(n * 100)}%`;

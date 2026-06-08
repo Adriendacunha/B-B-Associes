@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { prisma } from '@/lib/db';
 import { reviewDocument } from '@/app/actions/document';
+import { requireStaff } from '@/lib/auth/session';
 import { resolveLocalized, type AppLocale, type LocalizedText } from '@/lib/i18n/locales';
 
 export const dynamic = 'force-dynamic';
@@ -8,6 +9,7 @@ export const dynamic = 'force-dynamic';
 export default async function ValidationPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  await requireStaff(locale); // file de validation — collaborateurs (§15.1)
   const loc = locale as AppLocale;
   const t = await getTranslations('validation');
 

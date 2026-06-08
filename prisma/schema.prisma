@@ -29,6 +29,11 @@ enum StaffRole {
   COLLABORATEUR // Gestionnaire de dossiers (§2)
 }
 
+enum PrincipalType {
+  STAFF // collaborateur / admin (table User)
+  CLIENT // client (table Client)
+}
+
 enum ClientType {
   SOCIETE
   INDEPENDANT
@@ -143,6 +148,9 @@ model User {
   locale       Locale    @default(FR)
   totpSecret   String? // 2FA TOTP recommandée pour les collaborateurs (§8/§12)
   active       Boolean   @default(true)
+  // Verrouillage après tentatives échouées (§8).
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -396,4 +404,18 @@ model Setting {
   key       String   @id
   value     Json
   updatedAt DateTime @updatedAt
+}
+
+// Sessions applicatives (§8). L'identifiant de session sert de jeton de cookie
+// httpOnly ; expiration absolue + déconnexion automatique après inactivité.
+model Session {
+  id            String        @id @default(cuid())
+  principalType PrincipalType
+  subjectId     String // User.id (STAFF) ou Client.id (CLIENT)
+  expiresAt     DateTime
+  createdAt     DateTime      @default(now())
+  lastSeenAt    DateTime      @default(now())
+
+  @@index([subjectId])
+  @@index([expiresAt])
 }

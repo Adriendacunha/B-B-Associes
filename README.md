@@ -198,17 +198,25 @@ des défauts raisonnables, tous centralisés et modifiables :
 ## Fait
 
 - **Profilage → checklist dynamique (§4)** : formulaire `/profilage` avec aperçu
-  en direct, server action `createCampaign` qui persiste la campagne + la checklist
-  en base et journalise l'opération (audit chaîné §8), vue de campagne `/campagne/[id]`
-  regroupée par catégorie OneDrive. _Testé de bout en bout sur PostgreSQL._
+  en direct, `createCampaign` qui persiste la campagne + la checklist et journalise.
+- **Dépôt + verdict IA + file de validation (§7/§15.1)** : dépôt par pièce, analyse
+  (API Claude ou analyseur de démonstration), file `/validation` où le collaborateur
+  tranche (`HumanReview.agreedWithAi`), nommage + dépôt OneDrive à la validation.
+- **Authentification (§8)** : sessions par cookie httpOnly (table `Session`), connexion
+  cabinet (`/login`) et client (`/espace`), activation de compte par lien (`/activation`),
+  verrouillage après échecs, déconnexion, expiration glissante (inactivité), protection
+  des routes cabinet, journalisation `LOGIN`/`LOGOUT`/`LOGIN_FAILED`. _Testé e2e._
+
+  Identifiants de démonstration (créés par le seed) :
+  - Cabinet : `collab@bbassocies.ch` / `changeme-collab` · `admin@bbassocies.ch` / `changeme-admin`
+  - Clients : `jean.dupont@example.ch` / `changeme-client` · `anna.muller@example.ch` / `changeme-client`
 
 ## Reste à faire (Phase 1 → Phase 2)
 
-- Authentification opérationnelle (Auth.js/Lucia) + activation de compte par lien (§8).
-- Pipeline d'upload réel : stockage objet temporaire → OCR → `ai/client.ts` → file de
-  validation → `graph/client.ts` (dépôt). BullMQ/Redis pour l'asynchrone (§12).
-- Écran de file de validation (collaborateur) enregistrant `HumanReview.agreedWithAi`.
-- Scheduler de relances branché sur `cadence.ts` + envoi Graph.
+- **2FA (TOTP)** pour les collaborateurs (champ `User.totpSecret` déjà prévu) +
+  réinitialisation de mot de passe par e-mail (§8).
+- OCR réel (Tesseract) en amont de l'analyse IA, et dépôt OneDrive via Graph en prod.
+- Scheduler de relances branché sur `cadence.ts` + envoi Graph (§6).
 - Multilingue complet de l'interface (les 3 catalogues sont en place) et exports
   Crésus/Banana (ZIP + CSV, §10) — prévus Phase 2/3.
 ```
