@@ -122,6 +122,7 @@ export async function uploadDocument(formData: FormData): Promise<void> {
     createdAt: new Date(),
   });
 
+  revalidatePath(`/${locale}/espace`); // rafraîchit la vue du client après dépôt
   revalidatePath(`/${locale}/campagne/${item.campaignId}`);
   revalidatePath(`/${locale}/validation`);
 }
