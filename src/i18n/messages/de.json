@@ -89,7 +89,8 @@
     "rejectReason": "Ablehnungsgrund",
     "help": "Hilfe zur Korrektur",
     "replace": "Ersetzen",
-    "uploading": "Hochladen & Analyse…"
+    "uploading": "Hochladen & Analyse…",
+    "multiHint": "Mehrere Dateien möglich (zu einem PDF zusammengefügt)."
   },
   "validation": {
     "title": "Validierungswarteschlange",

@@ -89,7 +89,8 @@
     "rejectReason": "Motif du refus",
     "help": "Aide pour corriger",
     "replace": "Remplacer",
-    "uploading": "Téléversement & analyse…"
+    "uploading": "Téléversement & analyse…",
+    "multiHint": "Plusieurs fichiers possibles (fusionnés en un seul PDF)."
   },
   "validation": {
     "title": "File de validation",
