@@ -50,6 +50,12 @@ export async function uploadDocument(formData: FormData): Promise<void> {
   }
   const uploadedByClient = principal.type === 'CLIENT';
 
+  // Remplacement : on supprime un éventuel dépôt précédent ENCORE en attente
+  // (non encore tranché par un collaborateur) pour éviter les doublons.
+  await prisma.document.deleteMany({
+    where: { checklistItemId, status: { in: ['RECU', 'ANALYSE_IA', 'EN_VALIDATION'] } },
+  });
+
   const buffer = Buffer.from(await file.arrayBuffer());
   const version = (await prisma.document.count({ where: { checklistItemId } })) + 1;
 

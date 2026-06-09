@@ -87,7 +87,9 @@
     "rename": "Umbenennen",
     "renamePlaceholder": "Neuer Name",
     "rejectReason": "Ablehnungsgrund",
-    "help": "Hilfe zur Korrektur"
+    "help": "Hilfe zur Korrektur",
+    "replace": "Ersetzen",
+    "uploading": "Hochladen & Analyse…"
   },
   "validation": {
     "title": "Validierungswarteschlange",

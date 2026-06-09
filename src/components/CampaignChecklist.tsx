@@ -6,6 +6,7 @@ import { completude } from '@/lib/metrics/mvp';
 import { CATEGORY_FOLDERS, ORDERED_CATEGORIES } from '@/lib/onedrive/paths';
 import { uploadDocument, renameDocument } from '@/app/actions/document';
 import { formatAnomalies } from '@/lib/ai/anomalies';
+import { UploadButton } from '@/components/UploadButton';
 import { sendInvitation, sendReminderNow } from '@/app/actions/email';
 import { Link } from '@/i18n/routing';
 
@@ -174,7 +175,10 @@ export async function CampaignChecklist({
               {group.items.map((item) => {
                 const latest = item.documents[0];
                 const verdict = latest?.aiVerdict;
-                const canUpload = item.status === 'MANQUANT' || item.status === 'NON_CONFORME';
+                // On autorise aussi le remplacement d'une pièce encore en validation
+                // (ex. signalée « non conforme » par l'IA) sans attendre le cabinet.
+                const canUpload =
+                  item.status === 'MANQUANT' || item.status === 'NON_CONFORME' || item.status === 'EN_VALIDATION';
                 return (
                   <li key={item.id} className="rounded-lg border border-slate-200 bg-white p-3">
                     <div className="flex items-start justify-between gap-4">
@@ -270,9 +274,11 @@ export async function CampaignChecklist({
                           required
                           className="text-xs file:mr-2 file:rounded file:border-0 file:bg-slate-100 file:px-2 file:py-1 file:text-xs"
                         />
-                        <button type="submit" className="rounded bg-brand px-3 py-1 text-xs font-medium text-white hover:bg-brand-light">
-                          {tUp('send')}
-                        </button>
+                        <UploadButton
+                          idle={item.status === 'EN_VALIDATION' ? tUp('replace') : tUp('send')}
+                          pending={tUp('uploading')}
+                          className="rounded bg-brand px-3 py-1 text-xs font-medium text-white hover:bg-brand-light"
+                        />
                       </form>
                     )}
                   </li>
