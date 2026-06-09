@@ -11,6 +11,14 @@ const nextConfig = {
   // pdf-parse (pdfjs) et tesseract.js utilisent des workers : ne pas les bundler
   // par webpack (sinon chemins de worker introuvables côté serveur).
   serverExternalPackages: ['pdf-parse', 'tesseract.js'],
+  experimental: {
+    // Les server actions limitent le corps à 1 Mo par défaut : on relève à 16 Mo
+    // pour les dépôts de pièces (cohérent avec MAX_BYTES = 15 Mo). Sinon l'upload
+    // d'un PDF > 1 Mo échoue silencieusement.
+    serverActions: {
+      bodySizeLimit: '16mb',
+    },
+  },
   // Les documents fiscaux sont sensibles : on évite toute mise en cache agressive
   // côté CDN pour les routes applicatives (voir §9 du brief — conformité nLPD/RGPD).
   poweredByHeader: false,

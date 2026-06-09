@@ -83,6 +83,10 @@ export async function extractPdfText(buffer: Buffer): Promise<string> {
 /** OCR best-effort via Tesseract. Renvoie null si indisponible. */
 async function runOcr(buffer: Buffer): Promise<string | null> {
   if (process.env.OCR_DISABLED === '1') return null;
+  // Sur Vercel (serverless), les workers Tesseract sont peu fiables : OCR opt-in
+  // via OCR_ENABLED=1. Les PDF numériques restent gérés par pdf-parse ; en
+  // auto-hébergement (Docker/Suisse), l'OCR est actif par défaut.
+  if (process.env.VERCEL && process.env.OCR_ENABLED !== '1') return null;
   try {
     const { createWorker } = await import('tesseract.js');
     const worker = await createWorker(OCR_LANGS, 1, { langPath: TESSDATA, gzip: false, cachePath: '/tmp/tess-cache' });
