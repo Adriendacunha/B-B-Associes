@@ -28,11 +28,13 @@ function extOf(filename: string): string {
 export async function uploadDocument(formData: FormData): Promise<void> {
   const checklistItemId = String(formData.get('checklistItemId') ?? '');
   const locale = String(formData.get('locale') ?? 'fr') as AppLocale;
-  const file = formData.get('file');
-  if (!checklistItemId || !(file instanceof File) || file.size === 0) {
+  // Multi-fichiers : plusieurs fichiers pour une même pièce → fusionnés en un PDF.
+  const files = formData.getAll('file').filter((f): f is File => f instanceof File && f.size > 0);
+  if (!checklistItemId || files.length === 0) {
     throw new Error('Fichier ou pièce manquant.');
   }
-  if (file.size > MAX_BYTES) throw new Error('Fichier trop volumineux (max 15 Mo).');
+  const totalSize = files.reduce((s, f) => s + f.size, 0);
+  if (totalSize > MAX_BYTES) throw new Error('Fichier(s) trop volumineux (max 15 Mo au total).');
 
   // Authentification requise (§8). Un client ne peut déposer que sur SA campagne ;
   // un collaborateur peut déposer pour n'importe quel client.
@@ -56,15 +58,28 @@ export async function uploadDocument(formData: FormData): Promise<void> {
     where: { checklistItemId, status: { in: ['RECU', 'ANALYSE_IA', 'EN_VALIDATION'] } },
   });
 
-  const buffer = Buffer.from(await file.arrayBuffer());
+  let buffer: Buffer;
+  let mimeType: string;
+  let originalFilename: string;
+  if (files.length === 1) {
+    buffer = Buffer.from(await files[0].arrayBuffer());
+    mimeType = files[0].type || 'application/octet-stream';
+    originalFilename = files[0].name;
+  } else {
+    const { mergeToPdf } = await import('@/lib/pdf/merge');
+    const parts = await Promise.all(files.map(async (f) => ({ type: f.type, name: f.name, bytes: Buffer.from(await f.arrayBuffer()) })));
+    buffer = await mergeToPdf(parts);
+    mimeType = 'application/pdf';
+    originalFilename = `${files[0].name.replace(/\.[^.]+$/, '')}.pdf`;
+  }
   const version = (await prisma.document.count({ where: { checklistItemId } })) + 1;
 
   const doc = await prisma.document.create({
     data: {
       checklistItemId,
       version,
-      originalFilename: file.name,
-      mimeType: file.type || 'application/octet-stream',
+      originalFilename,
+      mimeType,
       sizeBytes: buffer.length,
       uploadedByClient,
       status: 'RECU',
@@ -79,12 +94,12 @@ export async function uploadDocument(formData: FormData): Promise<void> {
     action: 'DOCUMENT_UPLOAD',
     entityType: 'Document',
     entityId: doc.id,
-    metadata: { pieceCode: item.pieceCode, filename: file.name, version },
+    metadata: { pieceCode: item.pieceCode, filename: originalFilename, files: files.length, version },
     createdAt: new Date(),
   });
 
   // Extraction du texte (§7.2) : texte / PDF numérique / OCR pour scans & images.
-  const extraction = await extractText(buffer, file.type, file.name);
+  const extraction = await extractText(buffer, mimeType, originalFilename);
   const text = extraction.text;
 
   const result = await analyzeDocument({
@@ -95,7 +110,7 @@ export async function uploadDocument(formData: FormData): Promise<void> {
     clientDisplayName: item.campaign.client.displayName,
     acceptedFormats: item.pieceDefinition.acceptedFormats,
     clientLocale: item.campaign.client.locale.toLowerCase() as AppLocale,
-    filename: file.name,
+    filename: originalFilename,
     text,
   });
 

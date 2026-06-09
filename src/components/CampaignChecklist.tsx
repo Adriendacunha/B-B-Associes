@@ -265,15 +265,17 @@ export async function CampaignChecklist({
                     )}
 
                     {canUpload && (
-                      <form action={uploadDocument} className="mt-2 flex items-center gap-2">
+                      <form action={uploadDocument} className="mt-2 flex flex-wrap items-center gap-2">
                         <input type="hidden" name="checklistItemId" value={item.id} />
                         <input type="hidden" name="locale" value={locale} />
                         <input
                           type="file"
                           name="file"
                           required
+                          multiple
                           className="text-xs file:mr-2 file:rounded file:border-0 file:bg-slate-100 file:px-2 file:py-1 file:text-xs"
                         />
+                        <span className="w-full text-[10px] text-slate-400">{tUp('multiHint')}</span>
                         <UploadButton
                           idle={item.status === 'EN_VALIDATION' ? tUp('replace') : tUp('send')}
                           pending={tUp('uploading')}

@@ -89,7 +89,8 @@
     "rejectReason": "Reason for refusal",
     "help": "How to fix it",
     "replace": "Replace",
-    "uploading": "Uploading & analysing…"
+    "uploading": "Uploading & analysing…",
+    "multiHint": "Multiple files allowed (merged into a single PDF)."
   },
   "validation": {
     "title": "Validation queue",
