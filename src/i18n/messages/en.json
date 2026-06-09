@@ -85,7 +85,9 @@
     "depositedAs": "Deposited to OneDrive:",
     "view": "View document",
     "rename": "Rename",
-    "renamePlaceholder": "New name"
+    "renamePlaceholder": "New name",
+    "rejectReason": "Reason for refusal",
+    "help": "How to fix it"
   },
   "validation": {
     "title": "Validation queue",

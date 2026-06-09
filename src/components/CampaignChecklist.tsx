@@ -5,6 +5,7 @@ import { resolveLocalized, type AppLocale, type LocalizedText } from '@/lib/i18n
 import { completude } from '@/lib/metrics/mvp';
 import { CATEGORY_FOLDERS, ORDERED_CATEGORIES } from '@/lib/onedrive/paths';
 import { uploadDocument, renameDocument } from '@/app/actions/document';
+import { formatAnomalies } from '@/lib/ai/anomalies';
 import { sendInvitation, sendReminderNow } from '@/app/actions/email';
 import { Link } from '@/i18n/routing';
 
@@ -201,9 +202,26 @@ export async function CampaignChecklist({
                         {tUp('aiProposes')} :{' '}
                         <span className="font-medium">{verdict.conforme ? tUp('conforme') : tUp('nonConforme')}</span>
                         {Array.isArray(verdict.anomalies) && (verdict.anomalies as string[]).length > 0 && (
-                          <span className="text-slate-400"> · {(verdict.anomalies as string[]).join(', ')}</span>
+                          <span className="text-slate-500"> · {formatAnomalies(verdict.anomalies as string[], locale)}</span>
                         )}
                       </p>
+                    )}
+
+                    {/* Motif de refus expliqué au client (§7.3). */}
+                    {item.status === 'NON_CONFORME' && verdict && (
+                      <div className="mt-2 rounded border border-red-200 bg-red-50 p-2 text-xs">
+                        <p className="font-semibold text-red-700">{tUp('rejectReason')}</p>
+                        <p className="text-red-700">
+                          {resolveLocalized(verdict.messageClient as unknown as LocalizedText, locale)}
+                        </p>
+                        {Array.isArray(verdict.anomalies) && (verdict.anomalies as string[]).length > 0 && (
+                          <p className="mt-1 text-red-600">• {formatAnomalies(verdict.anomalies as string[], locale)}</p>
+                        )}
+                        <p className="mt-1 text-slate-600">
+                          <span className="font-medium">{tUp('help')} :</span>{' '}
+                          {resolveLocalized(item.pieceDefinition.texteAide as unknown as LocalizedText, locale)}
+                        </p>
+                      </div>
                     )}
 
                     {item.status === 'CONFORME' && latest?.finalFilename && (
