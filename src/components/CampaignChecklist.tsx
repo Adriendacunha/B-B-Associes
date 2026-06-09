@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db';
 import { resolveLocalized, type AppLocale, type LocalizedText } from '@/lib/i18n/locales';
 import { completude } from '@/lib/metrics/mvp';
 import { CATEGORY_FOLDERS, ORDERED_CATEGORIES } from '@/lib/onedrive/paths';
-import { uploadDocument } from '@/app/actions/document';
+import { uploadDocument, renameDocument } from '@/app/actions/document';
 import { sendInvitation, sendReminderNow } from '@/app/actions/email';
 import { Link } from '@/i18n/routing';
 
@@ -222,6 +222,24 @@ export async function CampaignChecklist({
                       >
                         📄 {tUp('view')}
                       </a>
+                    )}
+
+                    {/* Renommage manuel d'une pièce en cours de validation. */}
+                    {latest && item.status === 'EN_VALIDATION' && (
+                      <form action={renameDocument} className="mt-1 flex flex-wrap items-center gap-2">
+                        <input type="hidden" name="documentId" value={latest.id} />
+                        <input type="hidden" name="locale" value={locale} />
+                        <input
+                          type="text"
+                          name="newName"
+                          defaultValue={latest.originalFilename}
+                          placeholder={tUp('renamePlaceholder')}
+                          className="select max-w-[14rem] text-xs"
+                        />
+                        <button type="submit" className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50">
+                          {tUp('rename')}
+                        </button>
+                      </form>
                     )}
 
                     {canUpload && (

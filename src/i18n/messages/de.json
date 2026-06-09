@@ -83,7 +83,9 @@
     "conforme": "konform",
     "nonConforme": "nicht konform",
     "depositedAs": "In OneDrive abgelegt:",
-    "view": "Dokument ansehen"
+    "view": "Dokument ansehen",
+    "rename": "Umbenennen",
+    "renamePlaceholder": "Neuer Name"
   },
   "validation": {
     "title": "Validierungswarteschlange",

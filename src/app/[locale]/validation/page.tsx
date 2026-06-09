@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { reviewDocument } from '@/app/actions/document';
+import { reviewDocument, renameDocument } from '@/app/actions/document';
 import { requireStaff } from '@/lib/auth/session';
 import { resolveLocalized, type AppLocale, type LocalizedText } from '@/lib/i18n/locales';
 
@@ -87,6 +87,22 @@ export default async function ValidationPage({ params }: { params: Promise<{ loc
                     {resolveLocalized(v.messageClient as unknown as LocalizedText, loc)}
                   </p>
                 </div>
+
+                {/* Renommage manuel (relance l'analyse) */}
+                <form action={renameDocument} className="mt-3 flex flex-wrap items-center gap-2">
+                  <input type="hidden" name="documentId" value={doc.id} />
+                  <input type="hidden" name="locale" value={locale} />
+                  <input
+                    type="text"
+                    name="newName"
+                    defaultValue={doc.originalFilename}
+                    placeholder={tUp('renamePlaceholder')}
+                    className="select max-w-xs text-xs"
+                  />
+                  <button type="submit" className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                    {tUp('rename')}
+                  </button>
+                </form>
 
                 {/* Décision humaine (un seul formulaire, deux boutons) */}
                 <form action={reviewDocument} className="mt-3 flex gap-2">

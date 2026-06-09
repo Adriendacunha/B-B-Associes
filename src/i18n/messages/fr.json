@@ -83,7 +83,9 @@
     "conforme": "conforme",
     "nonConforme": "non conforme",
     "depositedAs": "Déposé sur OneDrive :",
-    "view": "Voir le document"
+    "view": "Voir le document",
+    "rename": "Renommer",
+    "renamePlaceholder": "Nouveau nom"
   },
   "validation": {
     "title": "File de validation",
