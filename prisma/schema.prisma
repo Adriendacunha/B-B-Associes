@@ -297,11 +297,22 @@ model Document {
 
   aiVerdict   AiVerdict?
   humanReview HumanReview?
+  blob        DocumentBlob?
 
   uploadedAt DateTime  @default(now())
   purgedAt   DateTime?
 
   @@index([checklistItemId])
+}
+
+// Contenu binaire du document AVANT validation (§5/§9), chiffré au repos.
+// Table séparée pour ne pas alourdir les requêtes sur Document, et pour persister
+// au-delà du /tmp éphémère des environnements serverless. Purgé après dépôt OneDrive.
+model DocumentBlob {
+  documentId String   @id
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content    Bytes
+  createdAt  DateTime @default(now())
 }
 
 // Verdict IA structuré (§7.2). Format aligné sur le schéma JSON demandé au modèle.

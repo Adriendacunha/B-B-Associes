@@ -1,10 +1,10 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { prisma } from '@/lib/db';
 import { runRetention } from './run';
-import { storeTemp, readTemp } from '@/lib/storage/temp';
+import { putDocumentContent, getDocumentContent } from '@/lib/storage/document';
 
-// Intégration §9 : la purge supprime la copie temporaire des pièces finalisées
-// au-delà du délai, en préservant les pièces récentes.
+// Intégration §9 : la purge supprime la copie temporaire (DocumentBlob) des pièces
+// finalisées au-delà du délai, en préservant les pièces récentes.
 
 const createdClientIds: string[] = [];
 
@@ -19,19 +19,18 @@ async function makeFinalizedDoc(uploadedDaysAgo: number) {
   const item = await prisma.checklistItem.create({
     data: { campaignId: campaign.id, pieceDefinitionId: piece.id, pieceCode: piece.code, category: piece.category, required: true, expectedFiscalYear: 2025, status: 'CONFORME' },
   });
-  const tempStorageKey = await storeTemp(Buffer.from('contenu pièce'), 'pdf');
   const doc = await prisma.document.create({
     data: {
       checklistItemId: item.id,
       version: 1,
       originalFilename: 'p.pdf',
-      tempStorageKey,
       mimeType: 'application/pdf',
       sizeBytes: 13,
       status: 'DEPOSE_ONEDRIVE',
       uploadedAt: new Date(Date.now() - uploadedDaysAgo * 86_400_000),
     },
   });
+  await putDocumentContent(doc.id, Buffer.from('contenu pièce'));
   return doc.id;
 }
 
@@ -50,12 +49,11 @@ describe('runRetention (intégration §9)', () => {
     await runRetention();
 
     const oldDoc = await prisma.document.findUniqueOrThrow({ where: { id: oldDocId } });
-    const recentDoc = await prisma.document.findUniqueOrThrow({ where: { id: recentDocId } });
-
-    expect(oldDoc.tempStorageKey).toBeNull();
     expect(oldDoc.purgedAt).not.toBeNull();
-    // le fichier de la pièce récente est toujours lisible
-    expect(recentDoc.tempStorageKey).not.toBeNull();
-    expect((await readTemp(recentDoc.tempStorageKey!)).toString()).toBe('contenu pièce');
+    expect(await getDocumentContent(oldDocId)).toBeNull(); // contenu purgé
+
+    // le contenu de la pièce récente est toujours lisible
+    const recent = await getDocumentContent(recentDocId);
+    expect(recent?.toString()).toBe('contenu pièce');
   });
 });

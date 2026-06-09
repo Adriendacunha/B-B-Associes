@@ -82,7 +82,8 @@
     "aiProposes": "Verdict IA proposé",
     "conforme": "conforme",
     "nonConforme": "non conforme",
-    "depositedAs": "Déposé sur OneDrive :"
+    "depositedAs": "Déposé sur OneDrive :",
+    "view": "Voir le document"
   },
   "validation": {
     "title": "File de validation",

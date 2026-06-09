@@ -82,7 +82,8 @@
     "aiProposes": "Vorgeschlagenes KI-Urteil",
     "conforme": "konform",
     "nonConforme": "nicht konform",
-    "depositedAs": "In OneDrive abgelegt:"
+    "depositedAs": "In OneDrive abgelegt:",
+    "view": "Dokument ansehen"
   },
   "validation": {
     "title": "Validierungswarteschlange",

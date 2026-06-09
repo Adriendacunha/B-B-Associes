@@ -7,12 +7,29 @@
 import { prisma } from '@/lib/db';
 import { selectRequiredPieces, type ClientProfile } from '@/lib/checklist/profiling';
 import { buildFileName } from '@/lib/onedrive/paths';
+import { putDocumentContent } from '@/lib/storage/document';
 import type { LocalizedText } from '@/lib/i18n/locales';
 import type { Prisma } from '@prisma/client';
 
 type Status = 'MANQUANT' | 'DEPOSE' | 'EN_VALIDATION' | 'CONFORME' | 'NON_CONFORME';
 
 const msg = (s: string): LocalizedText => ({ fr: s, en: s, de: s });
+
+/** PDF minimal de démonstration (consultable depuis la file de validation). */
+function demoPdf(label: string): Buffer {
+  const content = `BT /F1 16 Tf 60 740 Td (${label.replace(/[()]/g, '')}) Tj ET`;
+  const objs = [
+    `<</Type/Catalog/Pages 2 0 R>>`,
+    `<</Type/Pages/Kids[3 0 R]/Count 1>>`,
+    `<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>`,
+    `<</Length ${content.length}>>\nstream\n${content}\nendstream`,
+    `<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>`,
+  ];
+  let pdf = `%PDF-1.4\n`;
+  objs.forEach((o, i) => (pdf += `${i + 1} 0 obj\n${o}\nendobj\n`));
+  pdf += `trailer<</Root 1 0 R/Size ${objs.length + 1}>>\n%%EOF`;
+  return Buffer.from(pdf, 'latin1');
+}
 
 interface ItemPlan {
   status: Status;
@@ -79,6 +96,8 @@ async function createItemArtifacts(
       uploadedAt: new Date(Date.now() - 3 * 86_400_000),
     },
   });
+  // Contenu de démonstration consultable (sauf pièces purgées après dépôt).
+  await putDocumentContent(doc.id, demoPdf(`${pieceCode} — ${ctx.clientName} (demonstration)`));
 
   await prisma.aiVerdict.create({
     data: {

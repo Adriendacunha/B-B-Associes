@@ -12,6 +12,7 @@ export default async function ValidationPage({ params }: { params: Promise<{ loc
   await requireStaff(locale); // file de validation — collaborateurs (§15.1)
   const loc = locale as AppLocale;
   const t = await getTranslations('validation');
+  const tUp = await getTranslations('upload');
 
   const docs = await prisma.document.findMany({
     where: { status: 'EN_VALIDATION' },
@@ -51,7 +52,14 @@ export default async function ValidationPage({ params }: { params: Promise<{ loc
                     {resolveLocalized(item.pieceDefinition.nom as unknown as LocalizedText, loc)}{' '}
                     <span className="font-mono text-[10px] text-slate-300">{item.pieceCode}</span>
                   </span>
-                  <span className="text-slate-400">{doc.originalFilename}</span>
+                  <a
+                    href={`/api/document/${doc.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-brand underline hover:text-brand-light"
+                  >
+                    📄 {tUp('view')} ({doc.originalFilename})
+                  </a>
                 </div>
 
                 <div className="mt-3 rounded bg-slate-50 p-3 text-sm">

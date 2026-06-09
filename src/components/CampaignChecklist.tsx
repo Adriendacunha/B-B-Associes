@@ -206,6 +206,17 @@ export async function CampaignChecklist({
                       </p>
                     )}
 
+                    {latest && item.status !== 'CONFORME' && (
+                      <a
+                        href={`/api/document/${latest.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-block text-xs text-brand underline hover:text-brand-light"
+                      >
+                        📄 {tUp('view')}
+                      </a>
+                    )}
+
                     {item.status === 'CONFORME' && latest?.finalFilename && (
                       <p className="mt-2 break-all text-xs text-green-700">
                         {tUp('depositedAs')} <span className="font-mono">{latest.finalFilename}</span>

@@ -82,7 +82,8 @@
     "aiProposes": "Proposed AI verdict",
     "conforme": "compliant",
     "nonConforme": "non-compliant",
-    "depositedAs": "Deposited to OneDrive:"
+    "depositedAs": "Deposited to OneDrive:",
+    "view": "View document"
   },
   "validation": {
     "title": "Validation queue",

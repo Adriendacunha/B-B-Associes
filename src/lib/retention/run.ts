@@ -5,7 +5,7 @@
 // Délai configurable via RETENTION_DAYS (défaut 180 j ~ 6 mois, à confirmer §14.3).
 
 import { prisma } from '@/lib/db';
-import { purgeTemp } from '@/lib/storage/temp';
+import { clearDocumentContent } from '@/lib/storage/document';
 
 export interface RetentionResult {
   scanned: number;
@@ -20,19 +20,20 @@ export function retentionDays(): number {
 export async function runRetention(now: Date = new Date()): Promise<RetentionResult> {
   const cutoff = new Date(now.getTime() - retentionDays() * 86_400_000);
 
+  // Pièces finalisées dont la copie temporaire (DocumentBlob) subsiste encore.
   const docs = await prisma.document.findMany({
     where: {
-      tempStorageKey: { not: null },
+      blob: { isNot: null },
       status: { in: ['DEPOSE_ONEDRIVE', 'REJETE'] },
       uploadedAt: { lt: cutoff },
     },
-    select: { id: true, tempStorageKey: true },
+    select: { id: true },
   });
 
   let purged = 0;
   for (const d of docs) {
-    if (d.tempStorageKey) await purgeTemp(d.tempStorageKey);
-    await prisma.document.update({ where: { id: d.id }, data: { tempStorageKey: null, purgedAt: now } });
+    await clearDocumentContent(d.id);
+    await prisma.document.update({ where: { id: d.id }, data: { purgedAt: now } });
     purged += 1;
   }
   return { scanned: docs.length, purged };
