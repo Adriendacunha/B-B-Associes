@@ -83,7 +83,9 @@
     "conforme": "compliant",
     "nonConforme": "non-compliant",
     "depositedAs": "Deposited to OneDrive:",
-    "view": "View document"
+    "view": "View document",
+    "rename": "Rename",
+    "renamePlaceholder": "New name"
   },
   "validation": {
     "title": "Validation queue",

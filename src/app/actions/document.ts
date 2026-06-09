@@ -239,3 +239,88 @@ export async function reviewDocument(formData: FormData): Promise<void> {
   revalidatePath(`/${locale}/campagne/${campaign.id}`);
   revalidatePath(`/${locale}/validation`);
 }
+
+/**
+ * Renommage MANUEL d'un document (§5.3). Réservé au cabinet et au client
+ * propriétaire. Si la pièce est encore en validation, relance l'analyse (le verdict
+ * de démonstration dépend du nom ; avec Claude, du contenu).
+ */
+export async function renameDocument(formData: FormData): Promise<void> {
+  const documentId = String(formData.get('documentId') ?? '');
+  const rawName = String(formData.get('newName') ?? '').trim();
+  const locale = String(formData.get('locale') ?? 'fr') as AppLocale;
+  if (!documentId || !rawName) return;
+
+  const principal = await getCurrentPrincipal();
+  if (!principal) redirect(`/${locale}/espace`);
+
+  const doc = await prisma.document.findUnique({
+    where: { id: documentId },
+    include: { checklistItem: { include: { campaign: { include: { client: true } }, pieceDefinition: true } } },
+  });
+  if (!doc) throw new Error('Document introuvable.');
+  if (principal.type === 'CLIENT' && doc.checklistItem.campaign.clientId !== principal.client.id) {
+    throw new Error('Accès refusé : ce document ne vous appartient pas.');
+  }
+
+  // Conserve l'extension d'origine si l'utilisateur ne la précise pas.
+  const origExt = extOf(doc.originalFilename);
+  const newName = origExt && !/\.[A-Za-z0-9]+$/.test(rawName) ? `${rawName}.${origExt}` : rawName;
+  await prisma.document.update({ where: { id: documentId }, data: { originalFilename: newName } });
+
+  await appendAuditLog(prisma, {
+    actorType: principal.type === 'CLIENT' ? 'CLIENT' : principal.user.role === 'ADMIN' ? 'ADMIN' : 'COLLABORATEUR',
+    actorId: principal.type === 'CLIENT' ? principal.client.id : principal.user.id,
+    action: 'DOCUMENT_RENAMED',
+    entityType: 'Document',
+    entityId: documentId,
+    metadata: { newName },
+    createdAt: new Date(),
+  });
+
+  // Ré-analyse si la pièce est encore en file de validation.
+  if (doc.status === 'EN_VALIDATION') {
+    const item = doc.checklistItem;
+    const content = await getDocumentContent(documentId);
+    const text = content ? (await extractText(content, doc.mimeType, newName)).text : '';
+    const result = await analyzeDocument({
+      pieceCode: item.pieceCode,
+      pieceNom: resolveLocalized(item.pieceDefinition.nom as unknown as LocalizedText, locale),
+      pieceDescription: resolveLocalized(item.pieceDefinition.description as unknown as LocalizedText, locale),
+      expectedFiscalYear: item.expectedFiscalYear,
+      clientDisplayName: item.campaign.client.displayName,
+      acceptedFormats: item.pieceDefinition.acceptedFormats,
+      clientLocale: item.campaign.client.locale.toLowerCase() as AppLocale,
+      filename: newName,
+      text,
+    });
+    await prisma.aiVerdict.upsert({
+      where: { documentId },
+      update: {
+        conforme: result.conforme,
+        typeDetecte: result.typeDetecte,
+        anneeDetectee: result.anneeDetectee,
+        scoreLisibilite: result.scoreLisibilite,
+        anomalies: result.anomalies as unknown as Prisma.InputJsonValue,
+        messageClient: result.messageClient as unknown as Prisma.InputJsonValue,
+        model: result.model,
+        rawResponse: result.raw as Prisma.InputJsonValue,
+      },
+      create: {
+        documentId,
+        conforme: result.conforme,
+        typeDetecte: result.typeDetecte,
+        anneeDetectee: result.anneeDetectee,
+        scoreLisibilite: result.scoreLisibilite,
+        anomalies: result.anomalies as unknown as Prisma.InputJsonValue,
+        messageClient: result.messageClient as unknown as Prisma.InputJsonValue,
+        model: result.model,
+        rawResponse: result.raw as Prisma.InputJsonValue,
+      },
+    });
+  }
+
+  revalidatePath(`/${locale}/espace`);
+  revalidatePath(`/${locale}/campagne/${doc.checklistItem.campaignId}`);
+  revalidatePath(`/${locale}/validation`);
+}
