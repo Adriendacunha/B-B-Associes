@@ -85,7 +85,9 @@
     "depositedAs": "In OneDrive abgelegt:",
     "view": "Dokument ansehen",
     "rename": "Umbenennen",
-    "renamePlaceholder": "Neuer Name"
+    "renamePlaceholder": "Neuer Name",
+    "rejectReason": "Ablehnungsgrund",
+    "help": "Hilfe zur Korrektur"
   },
   "validation": {
     "title": "Validierungswarteschlange",

@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { prisma } from '@/lib/db';
 import { reviewDocument, renameDocument } from '@/app/actions/document';
 import { requireStaff } from '@/lib/auth/session';
+import { formatAnomalies } from '@/lib/ai/anomalies';
 import { resolveLocalized, type AppLocale, type LocalizedText } from '@/lib/i18n/locales';
 
 export const dynamic = 'force-dynamic';
@@ -80,7 +81,7 @@ export default async function ValidationPage({ params }: { params: Promise<{ loc
                   </div>
                   {Array.isArray(v.anomalies) && (v.anomalies as string[]).length > 0 && (
                     <p className="mt-1 text-xs text-amber-700">
-                      {t('anomalies')} : {(v.anomalies as string[]).join(', ')}
+                      {t('anomalies')} : {formatAnomalies(v.anomalies as string[], loc)}
                     </p>
                   )}
                   <p className="mt-1 text-xs italic text-slate-500">
