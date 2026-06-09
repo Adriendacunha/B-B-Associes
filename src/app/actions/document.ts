@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { storeTemp, readTemp, purgeTemp } from '@/lib/storage/temp';
+import { putDocumentContent, getDocumentContent, clearDocumentContent } from '@/lib/storage/document';
 import { analyzeDocument } from '@/lib/ai/analyze';
 import { extractText } from '@/lib/ocr/extract';
 import { appendAuditLog } from '@/lib/audit/log';
@@ -51,8 +51,6 @@ export async function uploadDocument(formData: FormData): Promise<void> {
   const uploadedByClient = principal.type === 'CLIENT';
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const ext = extOf(file.name);
-  const tempStorageKey = await storeTemp(buffer, ext);
   const version = (await prisma.document.count({ where: { checklistItemId } })) + 1;
 
   const doc = await prisma.document.create({
@@ -60,13 +58,14 @@ export async function uploadDocument(formData: FormData): Promise<void> {
       checklistItemId,
       version,
       originalFilename: file.name,
-      tempStorageKey,
       mimeType: file.type || 'application/octet-stream',
       sizeBytes: buffer.length,
       uploadedByClient,
       status: 'RECU',
     },
   });
+  // Contenu persistant et chiffré (remplace /tmp éphémère, §9).
+  await putDocumentContent(doc.id, buffer);
 
   await appendAuditLog(prisma, {
     actorType: principal.type === 'CLIENT' ? 'CLIENT' : principal.user.role === 'ADMIN' ? 'ADMIN' : 'COLLABORATEUR',
@@ -162,7 +161,6 @@ export async function reviewDocument(formData: FormData): Promise<void> {
   let finalOnedrivePath: string | null = null;
   let finalFilename: string | null = null;
   let purgedAt: Date | null = null;
-  let keepTempKey: string | null = doc.tempStorageKey; // conservé en démo pour l'export (§10)
 
   if (decision === 'VALIDE') {
     const folderParams = {
@@ -187,22 +185,23 @@ export async function reviewDocument(formData: FormData): Promise<void> {
 
     // Dépôt réel sur OneDrive uniquement si Microsoft Graph est configuré (§5/§14.1).
     let depositedToGraph = false;
-    if (process.env.MS_GRAPH_CLIENT_ID && doc.tempStorageKey) {
+    if (process.env.MS_GRAPH_CLIENT_ID) {
       try {
-        const { uploadValidatedFile } = await import('@/lib/graph/client');
-        const content = await readTemp(doc.tempStorageKey);
-        await uploadValidatedFile(finalOnedrivePath, content, doc.mimeType);
-        depositedToGraph = true;
+        const content = await getDocumentContent(documentId);
+        if (content) {
+          const { uploadValidatedFile } = await import('@/lib/graph/client');
+          await uploadValidatedFile(finalOnedrivePath, content, doc.mimeType);
+          depositedToGraph = true;
+        }
       } catch (e) {
         console.warn('Dépôt OneDrive ignoré (Graph non configuré ou erreur):', (e as Error).message);
       }
     }
-    // On ne purge le fichier temporaire QUE s'il est bien déposé sur OneDrive (§9).
-    // En mode démo (sans Graph), on le conserve pour permettre l'export ZIP (§10).
-    if (depositedToGraph && doc.tempStorageKey) {
-      await purgeTemp(doc.tempStorageKey);
+    // On ne purge le contenu temporaire QUE s'il est bien déposé sur OneDrive (§9).
+    // En mode démo (sans Graph), on le conserve pour permettre la consultation/export (§10).
+    if (depositedToGraph) {
+      await clearDocumentContent(documentId);
       purgedAt = new Date();
-      keepTempKey = null;
     }
   }
 
@@ -212,7 +211,7 @@ export async function reviewDocument(formData: FormData): Promise<void> {
     });
     await tx.document.update({
       where: { id: documentId },
-      data: { status: outcome.documentStatus, finalOnedrivePath, finalFilename, purgedAt, tempStorageKey: keepTempKey },
+      data: { status: outcome.documentStatus, finalOnedrivePath, finalFilename, purgedAt },
     });
     await tx.checklistItem.update({ where: { id: item.id }, data: { status: outcome.itemStatus } });
 

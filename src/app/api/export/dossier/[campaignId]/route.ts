@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getCurrentPrincipal } from '@/lib/auth/session';
 import { appendAuditLog } from '@/lib/audit/log';
-import { readTemp } from '@/lib/storage/temp';
+import { getDocumentContent } from '@/lib/storage/document';
 import { resolveLocalized, type AppLocale, type LocalizedText } from '@/lib/i18n/locales';
 import {
   buildRecapCsv,
@@ -93,8 +93,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ campaign
       if (graphConfigured() && latest.finalOnedrivePath) {
         const { downloadValidatedFile } = await import('@/lib/graph/client');
         content = await downloadValidatedFile(latest.finalOnedrivePath);
-      } else if (latest.tempStorageKey) {
-        content = await readTemp(latest.tempStorageKey);
+      } else {
+        content = await getDocumentContent(latest.id);
       }
       if (content) files.push({ filename: latest.finalFilename, content });
     } catch {
