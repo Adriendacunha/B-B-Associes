@@ -104,7 +104,7 @@ export function ProfilageForm({ locale, clients, defaultFiscalYear }: Props) {
       {/* Colonne formulaire */}
       <div className="space-y-6">
         <header className="space-y-1">
-          <h1 className="text-2xl font-bold text-brand">{t('title')}</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t('title')}</h1>
           <p className="text-sm text-slate-600">{t('intro')}</p>
         </header>
 
@@ -164,8 +164,8 @@ export function ProfilageForm({ locale, clients, defaultFiscalYear }: Props) {
         </section>
 
         {(Object.keys(BOOLEAN_FIELDS) as (keyof typeof BOOLEAN_FIELDS)[]).map((group) => (
-          <fieldset key={group} className="rounded-lg border border-slate-200 bg-white p-4">
-            <legend className="px-1 text-xs font-semibold uppercase text-slate-500">{t(group)}</legend>
+          <fieldset key={group} className="card">
+            <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{t(group)}</legend>
             <div className="grid gap-2 sm:grid-cols-2">
               {BOOLEAN_FIELDS[group].map((field) => (
                 <label key={field} className="flex items-center gap-2 text-sm">
@@ -181,17 +181,17 @@ export function ProfilageForm({ locale, clients, defaultFiscalYear }: Props) {
           </fieldset>
         ))}
 
-        <button onClick={onSubmit} disabled={isPending || !clientCode} className="rounded bg-brand px-4 py-2 font-medium text-white hover:bg-brand-light disabled:opacity-50">
+        <button onClick={onSubmit} disabled={isPending || !clientCode} className="btn btn-primary">
           {isPending ? '…' : t('submit')}
         </button>
       </div>
 
       {/* Colonne aperçu live */}
-      <aside className="lg:sticky lg:top-6 lg:self-start">
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+      <aside className="lg:sticky lg:top-20 lg:self-start">
+        <div className="card">
           <div className="mb-3 flex items-baseline justify-between">
-            <h2 className="font-semibold text-slate-800">{t('preview')}</h2>
-            <span className="text-sm font-bold text-brand">
+            <h2 className="font-semibold text-slate-900">{t('preview')}</h2>
+            <span className="badge bg-brand/10 text-brand">
               {preview.length} {t('pieces')}
             </span>
           </div>

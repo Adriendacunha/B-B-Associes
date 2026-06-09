@@ -25,28 +25,33 @@ export default async function EspacePage({
   // Non connecté → formulaire de connexion client.
   if (!principal || principal.type !== 'CLIENT') {
     return (
-      <div className="mx-auto max-w-sm">
-        <h1 className="mb-4 text-2xl font-bold text-brand">{t('clientTitle')}</h1>
+      <div className="mx-auto max-w-sm py-6">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand text-lg font-bold text-white">
+            B
+          </span>
+          <h1 className="text-2xl font-bold text-slate-900">{t('clientTitle')}</h1>
+        </div>
         {error && (
-          <p className="mb-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p className="mb-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
             {error === 'locked' ? t('errorLocked') : error === 'token' ? t('errorToken') : t('errorInvalid')}
           </p>
         )}
-        <form action={clientLogin} className="space-y-3 rounded-lg border border-slate-200 bg-white p-5">
+        <form action={clientLogin} className="card space-y-4">
           <input type="hidden" name="locale" value={locale} />
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-500">{t('email')}</span>
-            <input type="email" name="email" required autoComplete="username" className="select" />
+            <span className="mb-1.5 block text-xs font-medium text-slate-600">{t('email')}</span>
+            <input type="email" name="email" required autoComplete="username" className="input" />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-medium text-slate-500">{t('password')}</span>
-            <input type="password" name="password" required autoComplete="current-password" className="select" />
+            <span className="mb-1.5 block text-xs font-medium text-slate-600">{t('password')}</span>
+            <input type="password" name="password" required autoComplete="current-password" className="input" />
           </label>
-          <button type="submit" className="w-full rounded bg-brand px-4 py-2 font-medium text-white hover:bg-brand-light">
+          <button type="submit" className="btn btn-primary w-full">
             {t('signIn')}
           </button>
         </form>
-        <p className="mt-3 text-xs text-slate-500">{t('firstConnection')}</p>
+        <p className="mt-3 text-center text-xs text-slate-500">{t('firstConnection')}</p>
       </div>
     );
   }
@@ -61,7 +66,7 @@ export default async function EspacePage({
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-2xl font-bold text-brand">{te('title')}</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{te('title')}</h1>
         <p className="text-sm text-slate-600">{te('intro')}</p>
       </header>
       {campaign ? (

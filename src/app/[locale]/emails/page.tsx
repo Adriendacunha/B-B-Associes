@@ -25,7 +25,7 @@ export default async function EmailsPage({ params }: { params: Promise<{ locale:
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold text-brand">{t('title')}</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{t('title')}</h1>
         <p className="text-sm text-slate-600">{t('subtitle')}</p>
       </header>
 
@@ -59,7 +59,7 @@ export default async function EmailsPage({ params }: { params: Promise<{ locale:
                   </td>
                   <td className="px-4 py-2 text-slate-700">{e.subject}</td>
                   <td className="px-4 py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[e.status]}`}>{e.status}</span>
+                    <span className={`badge ${STATUS_STYLE[e.status]}`}>{e.status}</span>
                   </td>
                   <td className="px-4 py-2 text-xs text-slate-400">{e.channel}</td>
                 </tr>

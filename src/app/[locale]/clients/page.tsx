@@ -32,19 +32,21 @@ export default async function ClientsPage({
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold text-brand">{t('title')}</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{t('title')}</h1>
         <p className="text-sm text-slate-600">{t('subtitle')}</p>
       </header>
 
       {error && (
-        <p className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error === 'existe' ? t('errExiste') : t('errChamps')}
         </p>
       )}
-      {created && <p className="rounded bg-green-50 px-3 py-2 text-sm text-green-700">{t('createdOk')}</p>}
+      {created && (
+        <p className="rounded-lg border border-green-100 bg-green-50 px-3 py-2 text-sm text-green-700">{t('createdOk')}</p>
+      )}
 
       {/* Formulaire de création */}
-      <form action={createClient} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-2">
+      <form action={createClient} className="card grid gap-3 sm:grid-cols-2">
         <input type="hidden" name="uiLocale" value={locale} />
         <h2 className="text-sm font-semibold text-slate-700 sm:col-span-2">{t('new')}</h2>
         <Field label={t('code')}><input name="clientCode" required className="select" placeholder="C0123" /></Field>
@@ -73,7 +75,7 @@ export default async function ClientsPage({
           </select>
         </Field>
         <div className="sm:col-span-2">
-          <button type="submit" className="rounded bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-light">
+          <button type="submit" className="btn btn-primary">
             {t('create')}
           </button>
         </div>
@@ -84,7 +86,7 @@ export default async function ClientsPage({
         {clients.map((c) => {
           const activated = Boolean(c.passwordHash);
           return (
-            <li key={c.id} className="rounded-lg border border-slate-200 bg-white p-4">
+            <li key={c.id} className="card">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="text-sm">
                   <span className="font-mono text-xs text-slate-400">{c.clientCode}</span>{' '}
@@ -93,9 +95,7 @@ export default async function ClientsPage({
                   <span className="text-xs text-slate-400">· {c.locale}</span>
                 </div>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                    activated ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-800'
-                  }`}
+                  className={`badge ${activated ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-800'}`}
                 >
                   {activated ? t('activated') : t('pending')}
                 </span>

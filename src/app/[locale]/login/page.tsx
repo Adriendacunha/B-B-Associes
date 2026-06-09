@@ -21,24 +21,29 @@ export default async function LoginPage({
   if (principal?.type === 'STAFF') redirect(`/${locale}/tableau-de-bord`);
 
   return (
-    <div className="mx-auto max-w-sm">
-      <h1 className="mb-4 text-2xl font-bold text-brand">{t('staffTitle')}</h1>
+    <div className="mx-auto max-w-sm py-6">
+      <div className="mb-6 flex flex-col items-center text-center">
+        <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand text-lg font-bold text-white">
+          B
+        </span>
+        <h1 className="text-2xl font-bold text-slate-900">{t('staffTitle')}</h1>
+      </div>
       {error && (
-        <p className="mb-3 rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p className="mb-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
           {error === 'locked' ? t('errorLocked') : t('errorInvalid')}
         </p>
       )}
-      <form action={staffLogin} className="space-y-3 rounded-lg border border-slate-200 bg-white p-5">
+      <form action={staffLogin} className="card space-y-4">
         <input type="hidden" name="locale" value={locale} />
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-slate-500">{t('email')}</span>
-          <input type="email" name="email" required autoComplete="username" className="select" />
+          <span className="mb-1.5 block text-xs font-medium text-slate-600">{t('email')}</span>
+          <input type="email" name="email" required autoComplete="username" className="input" />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-slate-500">{t('password')}</span>
-          <input type="password" name="password" required autoComplete="current-password" className="select" />
+          <span className="mb-1.5 block text-xs font-medium text-slate-600">{t('password')}</span>
+          <input type="password" name="password" required autoComplete="current-password" className="input" />
         </label>
-        <button type="submit" className="w-full rounded bg-brand px-4 py-2 font-medium text-white hover:bg-brand-light">
+        <button type="submit" className="btn btn-primary w-full">
           {t('signIn')}
         </button>
       </form>
