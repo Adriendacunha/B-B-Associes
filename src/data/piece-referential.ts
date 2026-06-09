@@ -44,7 +44,28 @@ function tx(fr: string, en: string, de: string): LocalizedText {
   return { fr, en, de };
 }
 
+// Pièce SYSTÈME « À trier » : reçoit les documents déposés en vrac que l'IA n'a
+// pas su classer. Le tag de profil ne correspond à aucun client → jamais ajoutée
+// automatiquement aux checklists ; créée à la demande par le dépôt groupé.
+export const A_TRIER_CODE = 'A-TRIER';
+
 export const PIECE_REFERENTIAL: PieceReferentialEntry[] = [
+  {
+    code: A_TRIER_CODE,
+    category: 'A_TRIER',
+    profils: ['__SYSTEME__'],
+    requiredByDefault: false,
+    modeValidation: 'HUMAIN_REQUIS',
+    acceptedFormats: PDF_IMG,
+    expectedYearOffset: 0,
+    nom: tx('À trier / Non classé', 'To sort / Unclassified', 'Zu sortieren / Nicht klassifiziert'),
+    description: tx(
+      'Document déposé en vrac, non classé automatiquement — à rattacher manuellement à une pièce.',
+      'Bulk-uploaded document not auto-sorted — to be attached manually to an item.',
+      'Massenhochgeladenes, nicht automatisch sortiertes Dokument — manuell zuzuordnen.',
+    ),
+    texteAide: tx('Le cabinet rattachera ce document à la bonne pièce.', 'The firm will attach this document to the right item.', 'Die Kanzlei ordnet dieses Dokument dem richtigen Posten zu.'),
+  },
   // ─────────── A. Particuliers — Identité & base ───────────
   {
     code: 'DECL-N1',

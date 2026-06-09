@@ -90,7 +90,10 @@
     "help": "Aide pour corriger",
     "replace": "Remplacer",
     "uploading": "Téléversement & analyse…",
-    "multiHint": "Plusieurs fichiers possibles (fusionnés en un seul PDF)."
+    "multiHint": "Plusieurs fichiers possibles (fusionnés en un seul PDF).",
+    "bulkTitle": "Dépôt groupé — tri automatique par l’IA",
+    "bulkHint": "Déposez tous vos documents d’un coup : l’IA identifie chacun et le range dans la bonne pièce. Ce qui n’est pas reconnu va dans « À trier ».",
+    "bulkSend": "Déposer et trier"
   },
   "validation": {
     "title": "File de validation",
@@ -103,7 +106,9 @@
     "readability": "Lisibilité",
     "model": "Modèle",
     "validate": "Valider",
-    "reject": "Rejeter"
+    "reject": "Rejeter",
+    "reassign": "Reclasser vers",
+    "reassignBtn": "Reclasser"
   },
   "espace": {
     "title": "Ma checklist documentaire",
