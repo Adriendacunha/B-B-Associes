@@ -263,9 +263,13 @@ Une fois l'app déployée (Vercel ou Docker/Suisse) :
   verrouillage après échecs, déconnexion, expiration glissante (inactivité), protection
   des routes cabinet, journalisation `LOGIN`/`LOGOUT`/`LOGIN_FAILED`. _Testé e2e._
 
-  Identifiants de démonstration (créés par le seed) :
+  Identifiants de démonstration (créés par le seed, **dev local uniquement**) :
   - Cabinet : `collab@bbassocies.ch` / `changeme-collab` · `admin@bbassocies.ch` / `changeme-admin`
   - Clients : `jean.dupont@example.ch` / `changeme-client` · `anna.muller@example.ch` / `changeme-client`
+
+  > **Production** : définissez `ADMIN_PASSWORD` et `COLLAB_PASSWORD` (variables
+  > d'environnement) — le dépôt étant public, les mots de passe par défaut sont
+  > connus. Le seed met à jour ces comptes à chaque (re)déploiement.
 - **Relances e-mail (§6)** : invitation + relances manuelles, et **moteur automatique**
   (`processDueReminders`) respectant la cadence configurable (arrêt si complet, suspension,
   ciblage des seules pièces en attente). Envoi via Microsoft Graph si configuré, sinon
