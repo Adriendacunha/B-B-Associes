@@ -78,7 +78,7 @@ export async function CampaignChecklist({
     <div className="space-y-6">
       {showMeta && (
         <header className="space-y-2">
-          <h1 className="text-2xl font-bold text-brand">{t('title')}</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t('title')}</h1>
           <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-slate-600">
             <span>
               <span className="text-slate-400">{t('client')} :</span>{' '}
@@ -99,20 +99,23 @@ export async function CampaignChecklist({
         </header>
       )}
 
-      <div className="rounded-lg border border-slate-200 bg-white p-4">
-        <div className="mb-1 flex items-center justify-between text-sm">
-          <span className="font-medium">{t('completude')}</span>
+      <div className="card">
+        <div className="mb-1.5 flex items-center justify-between text-sm">
+          <span className="font-medium text-slate-700">{t('completude')}</span>
           <span className="font-semibold text-brand">{comp.label}</span>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded bg-slate-100">
-          <div className="h-full rounded bg-brand" style={{ width: `${Math.round(comp.ratio * 100)}%` }} />
+        <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+          <div
+            className="h-full rounded-full bg-brand transition-all duration-500"
+            style={{ width: `${Math.round(comp.ratio * 100)}%` }}
+          />
         </div>
       </div>
 
       {/* Dépôt groupé : tous les documents d'un coup, triés automatiquement par l'IA (§7). */}
-      <div className="rounded-lg border border-dashed border-brand/40 bg-brand/5 p-4">
+      <div className="rounded-xl border border-dashed border-brand/40 bg-brand/5 p-5">
         <h2 className="text-sm font-semibold text-brand">{tUp('bulkTitle')}</h2>
-        <p className="mb-2 text-xs text-slate-600">{tUp('bulkHint')}</p>
+        <p className="mb-3 text-xs text-slate-600">{tUp('bulkHint')}</p>
         <form action={bulkUpload} className="flex flex-wrap items-center gap-2">
           <input type="hidden" name="campaignId" value={campaignId} />
           <input type="hidden" name="locale" value={locale} />
@@ -121,21 +124,17 @@ export async function CampaignChecklist({
             name="file"
             multiple
             required
-            className="text-xs file:mr-2 file:rounded file:border-0 file:bg-brand file:px-2 file:py-1 file:text-xs file:text-white"
+            className="text-xs file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white hover:file:bg-brand-light"
           />
-          <UploadButton
-            idle={tUp('bulkSend')}
-            pending={tUp('uploading')}
-            className="rounded bg-brand px-3 py-1 text-xs font-medium text-white hover:bg-brand-light"
-          />
+          <UploadButton idle={tUp('bulkSend')} pending={tUp('uploading')} className="btn btn-primary btn-sm" />
         </form>
       </div>
 
       {showMeta && (
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
+        <div className="card">
           <div className="mb-2 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-700">{tR('title')}</h2>
-            <Link href="/emails" className="text-xs text-brand hover:underline">
+            <h2 className="text-sm font-semibold text-slate-900">{tR('title')}</h2>
+            <Link href="/emails" className="text-xs font-medium text-brand hover:underline">
               {tR('outbox')} →
             </Link>
           </div>
@@ -149,18 +148,14 @@ export async function CampaignChecklist({
               <form action={sendInvitation}>
                 <input type="hidden" name="campaignId" value={campaignId} />
                 <input type="hidden" name="locale" value={locale} />
-                <button type="submit" className="rounded border border-brand px-3 py-1 text-xs font-medium text-brand hover:bg-brand hover:text-white">
+                <button type="submit" className="btn btn-secondary btn-sm">
                   {tR('sendInvitation')}
                 </button>
               </form>
               <form action={sendReminderNow}>
                 <input type="hidden" name="campaignId" value={campaignId} />
                 <input type="hidden" name="locale" value={locale} />
-                <button
-                  type="submit"
-                  disabled={pendingCount === 0}
-                  className="rounded bg-brand px-3 py-1 text-xs font-medium text-white hover:bg-brand-light disabled:opacity-40"
-                >
+                <button type="submit" disabled={pendingCount === 0} className="btn btn-primary btn-sm">
                   {tR('remindNow')}
                 </button>
               </form>
@@ -170,19 +165,13 @@ export async function CampaignChecklist({
       )}
 
       {showMeta && (
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="mb-2 text-sm font-semibold text-slate-700">{tX('title')}</h2>
+        <div className="card">
+          <h2 className="mb-2 text-sm font-semibold text-slate-900">{tX('title')}</h2>
           <div className="flex flex-wrap gap-2">
-            <a
-              href={`/api/export/dossier/${campaignId}?locale=${locale}`}
-              className="rounded border border-brand px-3 py-1 text-xs font-medium text-brand hover:bg-brand hover:text-white"
-            >
+            <a href={`/api/export/dossier/${campaignId}?locale=${locale}`} className="btn btn-secondary btn-sm">
               {tX('zip')}
             </a>
-            <a
-              href={`/api/export/dossier/${campaignId}?format=csv&locale=${locale}`}
-              className="rounded border border-slate-300 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
-            >
+            <a href={`/api/export/dossier/${campaignId}?format=csv&locale=${locale}`} className="btn btn-secondary btn-sm">
               {tX('csv')}
             </a>
           </div>
@@ -202,15 +191,15 @@ export async function CampaignChecklist({
                 const canUpload =
                   item.status === 'MANQUANT' || item.status === 'NON_CONFORME' || item.status === 'EN_VALIDATION';
                 return (
-                  <li key={item.id} className="rounded-lg border border-slate-200 bg-white p-3">
+                  <li key={item.id} className="rounded-xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 hover:shadow-sm">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-slate-800">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium text-slate-900">
                             {resolveLocalized(item.pieceDefinition.nom as unknown as LocalizedText, locale)}
                           </span>
                           <span className="font-mono text-[10px] text-slate-300">{item.pieceCode}</span>
-                          <span className="text-[10px] uppercase text-slate-400">
+                          <span className="text-[10px] uppercase tracking-wide text-slate-400">
                             {item.required ? tStatus('required') : tStatus('optional')}
                           </span>
                         </div>
@@ -218,7 +207,7 @@ export async function CampaignChecklist({
                           {resolveLocalized(item.pieceDefinition.description as unknown as LocalizedText, locale)}
                         </p>
                       </div>
-                      <span className={`shrink-0 rounded-full px-2 py-1 text-xs font-medium ${STATUS_STYLE[item.status]}`}>
+                      <span className={`badge shrink-0 ${STATUS_STYLE[item.status]}`}>
                         {tStatus(`status.${item.status}`)}
                       </span>
                     </div>
@@ -280,7 +269,7 @@ export async function CampaignChecklist({
                           placeholder={tUp('renamePlaceholder')}
                           className="select max-w-[14rem] text-xs"
                         />
-                        <button type="submit" className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50">
+                        <button type="submit" className="btn btn-secondary btn-sm">
                           {tUp('rename')}
                         </button>
                       </form>
@@ -295,13 +284,13 @@ export async function CampaignChecklist({
                           name="file"
                           required
                           multiple
-                          className="text-xs file:mr-2 file:rounded file:border-0 file:bg-slate-100 file:px-2 file:py-1 file:text-xs"
+                          className="text-xs file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-slate-700 hover:file:bg-slate-200"
                         />
                         <span className="w-full text-[10px] text-slate-400">{tUp('multiHint')}</span>
                         <UploadButton
                           idle={item.status === 'EN_VALIDATION' ? tUp('replace') : tUp('send')}
                           pending={tUp('uploading')}
-                          className="rounded bg-brand px-3 py-1 text-xs font-medium text-white hover:bg-brand-light"
+                          className="btn btn-primary btn-sm"
                         />
                       </form>
                     )}

@@ -9,7 +9,12 @@
     "subtitle": "Laden Sie Ihre Unterlagen sicher für die Vorbereitung Ihrer Steuererklärung hoch.",
     "clientSpace": "Mein Kundenbereich",
     "dashboard": "Kanzlei-Dashboard",
-    "validation": "Validierungswarteschlange"
+    "validation": "Validierungswarteschlange",
+    "clientsDesc": "Betatester-Kunden erstellen und verfolgen, Aktivierungslinks senden.",
+    "newCampaignDesc": "Einen Kunden profilieren und seine dynamische Checkliste erstellen.",
+    "clientSpaceDesc": "Kundenseitiger Upload-Bereich, durch die KI geprüft.",
+    "validationDesc": "KI-Urteile prüfen und Dokumente freigeben (Mensch in der Schleife).",
+    "dashboardDesc": "Dossierfortschritt, KI-Zuverlässigkeit und Erinnerungen verfolgen."
   },
   "clients": {
     "title": "Kunden / Betatester",

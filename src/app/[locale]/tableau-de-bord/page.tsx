@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { Gauge, ShieldCheck, Clock, FolderCheck, type LucideIcon } from 'lucide-react';
 import { getDashboardData } from '@/lib/dashboard/data';
 import { processDueReminders } from '@/app/actions/email';
 import { requireStaff } from '@/lib/auth/session';
@@ -6,11 +7,16 @@ import { Link } from '@/i18n/routing';
 
 export const dynamic = 'force-dynamic';
 
-function Metric({ label, value }: { label: string; value: string }) {
+function Metric({ label, value, Icon }: { label: string; value: string; Icon: LucideIcon }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <div className="text-2xl font-bold text-brand">{value}</div>
-      <div className="mt-1 text-xs text-slate-500">{label}</div>
+    <div className="card flex items-center gap-4">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
+        <Icon className="h-5 w-5" strokeWidth={1.75} />
+      </div>
+      <div className="min-w-0">
+        <div className="text-2xl font-bold text-slate-900">{value}</div>
+        <div className="mt-0.5 text-xs text-slate-500">{label}</div>
+      </div>
     </div>
   );
 }
@@ -27,14 +33,14 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold text-brand">{t('title')}</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{t('title')}</h1>
         <div className="flex items-center gap-3">
-          <Link href="/emails" className="text-xs text-brand hover:underline">
+          <Link href="/emails" className="text-xs font-medium text-brand hover:underline">
             {tR('outbox')} →
           </Link>
           <form action={processDueReminders}>
             <input type="hidden" name="locale" value={locale} />
-            <button type="submit" className="rounded bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-light">
+            <button type="submit" className="btn btn-primary btn-sm">
               {tR('processDue')}
             </button>
           </form>
@@ -42,10 +48,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric label={t('metrics.autonomy')} value={pct(d.autonomyRate)} />
-        <Metric label={t('metrics.reliability')} value={pct(d.overallReliability)} />
-        <Metric label={t('metrics.timeSaved')} value={`${Math.round(d.minutesSaved / 60)} h`} />
-        <Metric label={t('metrics.complete')} value={`${d.completeCount}/${d.totalCampaigns}`} />
+        <Metric label={t('metrics.autonomy')} value={pct(d.autonomyRate)} Icon={Gauge} />
+        <Metric label={t('metrics.reliability')} value={pct(d.overallReliability)} Icon={ShieldCheck} />
+        <Metric label={t('metrics.timeSaved')} value={`${Math.round(d.minutesSaved / 60)} h`} Icon={Clock} />
+        <Metric label={t('metrics.complete')} value={`${d.completeCount}/${d.totalCampaigns}`} Icon={FolderCheck} />
       </div>
 
       {/* Tableau (≥ sm) avec défilement horizontal si l'écran est étroit. */}

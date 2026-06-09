@@ -9,7 +9,12 @@
     "subtitle": "Securely upload your documents for the preparation of your tax return.",
     "clientSpace": "My client area",
     "dashboard": "Firm dashboard",
-    "validation": "Validation queue"
+    "validation": "Validation queue",
+    "clientsDesc": "Create and track your beta-tester clients, share activation links.",
+    "newCampaignDesc": "Profile a client and generate their dynamic document checklist.",
+    "clientSpaceDesc": "Client-side upload area for documents, checked by AI.",
+    "validationDesc": "Review AI verdicts and approve documents (human in the loop).",
+    "dashboardDesc": "Track file progress, AI reliability and reminders."
   },
   "clients": {
     "title": "Clients / beta testers",

@@ -33,7 +33,7 @@ export default async function ValidationPage({ params }: { params: Promise<{ loc
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <h1 className="text-2xl font-bold text-brand">{t('title')}</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{t('title')}</h1>
         <p className="text-sm text-slate-600">{t('subtitle')}</p>
       </header>
 
@@ -48,7 +48,7 @@ export default async function ValidationPage({ params }: { params: Promise<{ loc
             const client = item.campaign.client;
             const v = doc.aiVerdict!;
             return (
-              <li key={doc.id} className="rounded-lg border border-slate-200 bg-white p-4">
+              <li key={doc.id} className="card">
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
                   <span>
                     <span className="text-slate-400">{t('client')} :</span>{' '}
@@ -106,7 +106,7 @@ export default async function ValidationPage({ params }: { params: Promise<{ loc
                     placeholder={tUp('renamePlaceholder')}
                     className="select max-w-xs text-xs"
                   />
-                  <button type="submit" className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                  <button type="submit" className="btn btn-secondary btn-sm">
                     {tUp('rename')}
                   </button>
                 </form>
@@ -125,7 +125,7 @@ export default async function ValidationPage({ params }: { params: Promise<{ loc
                         </option>
                       ))}
                   </select>
-                  <button type="submit" className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                  <button type="submit" className="btn btn-secondary btn-sm">
                     {t('reassignBtn')}
                   </button>
                 </form>
@@ -138,7 +138,7 @@ export default async function ValidationPage({ params }: { params: Promise<{ loc
                     type="submit"
                     name="decision"
                     value="VALIDE"
-                    className="rounded bg-green-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-green-700"
+                    className="btn btn-sm bg-green-600 px-4 py-2 text-white shadow-sm hover:bg-green-700"
                   >
                     {t('validate')}
                   </button>
@@ -146,7 +146,7 @@ export default async function ValidationPage({ params }: { params: Promise<{ loc
                     type="submit"
                     name="decision"
                     value="REJETE"
-                    className="rounded bg-red-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+                    className="btn btn-sm bg-red-600 px-4 py-2 text-white shadow-sm hover:bg-red-700"
                   >
                     {t('reject')}
                   </button>
