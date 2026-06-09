@@ -33,33 +33,39 @@ export interface AnalysisResult {
 
 export async function analyzeDocument(args: AnalyzeArgs): Promise<AnalysisResult> {
   // Voie réelle : API Claude avec Zero Data Retention (§9). Le texte fourni est
-  // l'extraction OCR ; on retombe sur le stub si la clé n'est pas configurée.
+  // l'extraction OCR ; en cas d'échec (clé/modèle invalide, réseau…), on retombe
+  // proprement sur l'analyseur de démonstration plutôt que de planter le dépôt.
   if (process.env.ANTHROPIC_API_KEY) {
-    const { verdict, model, raw } = await verifyDocument(
-      {
-        code: args.pieceCode,
-        nom: args.pieceNom,
-        description: args.pieceDescription,
-        expectedFiscalYear: args.expectedFiscalYear,
-        clientDisplayName: args.clientDisplayName,
-        acceptedFormats: args.acceptedFormats,
-        signatureRequired: args.signatureRequired,
-      },
-      args.text || args.filename,
-      args.clientLocale,
-    );
-    // Le modèle renvoie un message dans la langue du client ; on le range sous sa locale.
-    const messageClient = { [args.clientLocale]: verdict.message_client } as LocalizedText;
-    return {
-      conforme: verdict.conforme,
-      typeDetecte: verdict.type_detecte,
-      anneeDetectee: verdict.annee_detectee,
-      scoreLisibilite: verdict.score_lisibilite,
-      anomalies: verdict.anomalies,
-      messageClient,
-      model,
-      raw,
-    };
+    try {
+      const { verdict, model, raw } = await verifyDocument(
+        {
+          code: args.pieceCode,
+          nom: args.pieceNom,
+          description: args.pieceDescription,
+          expectedFiscalYear: args.expectedFiscalYear,
+          clientDisplayName: args.clientDisplayName,
+          acceptedFormats: args.acceptedFormats,
+          signatureRequired: args.signatureRequired,
+        },
+        args.text || args.filename,
+        args.clientLocale,
+      );
+      // Le modèle renvoie un message dans la langue du client ; on le range sous sa locale.
+      const messageClient = { [args.clientLocale]: verdict.message_client } as LocalizedText;
+      return {
+        conforme: verdict.conforme,
+        typeDetecte: verdict.type_detecte,
+        anneeDetectee: verdict.annee_detectee,
+        scoreLisibilite: verdict.score_lisibilite,
+        anomalies: verdict.anomalies,
+        messageClient,
+        model,
+        raw,
+      };
+    } catch (e) {
+      console.error("Analyse Claude échouée, repli sur l'analyseur de démonstration:", (e as Error).message);
+      // on poursuit avec le stub ci-dessous
+    }
   }
 
   const v = stubVerdict({
