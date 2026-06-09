@@ -25,9 +25,19 @@ export async function GET(_req: Request, { params }: { params: Promise<{ documen
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
 
-  const content = await getDocumentContent(documentId);
+  let content = await getDocumentContent(documentId);
+  // Fallback production : si la copie locale a été purgée après dépôt, on récupère
+  // le fichier validé depuis OneDrive (§5/§10).
+  if (!content && doc.finalOnedrivePath && process.env.MS_GRAPH_CLIENT_ID) {
+    try {
+      const { downloadValidatedFile } = await import('@/lib/graph/client');
+      content = await downloadValidatedFile(doc.finalOnedrivePath);
+    } catch {
+      content = null;
+    }
+  }
   if (!content) {
-    return NextResponse.json({ error: 'contenu indisponible (purgé ou déposé sur OneDrive)' }, { status: 404 });
+    return NextResponse.json({ error: 'contenu indisponible' }, { status: 404 });
   }
 
   return new NextResponse(content as unknown as BodyInit, {

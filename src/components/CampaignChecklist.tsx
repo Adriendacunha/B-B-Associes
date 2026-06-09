@@ -206,7 +206,14 @@ export async function CampaignChecklist({
                       </p>
                     )}
 
-                    {latest && item.status !== 'CONFORME' && (
+                    {item.status === 'CONFORME' && latest?.finalFilename && (
+                      <p className="mt-2 break-all text-xs text-green-700">
+                        {tUp('depositedAs')} <span className="font-mono">{latest.finalFilename}</span>
+                      </p>
+                    )}
+
+                    {/* Consultation du document, quel que soit le statut (§15.1). */}
+                    {latest && (
                       <a
                         href={`/api/document/${latest.id}`}
                         target="_blank"
@@ -215,12 +222,6 @@ export async function CampaignChecklist({
                       >
                         📄 {tUp('view')}
                       </a>
-                    )}
-
-                    {item.status === 'CONFORME' && latest?.finalFilename && (
-                      <p className="mt-2 break-all text-xs text-green-700">
-                        {tUp('depositedAs')} <span className="font-mono">{latest.finalFilename}</span>
-                      </p>
                     )}
 
                     {canUpload && (
