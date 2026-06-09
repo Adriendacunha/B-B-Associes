@@ -87,7 +87,9 @@
     "rename": "Rename",
     "renamePlaceholder": "New name",
     "rejectReason": "Reason for refusal",
-    "help": "How to fix it"
+    "help": "How to fix it",
+    "replace": "Replace",
+    "uploading": "Uploading & analysing…"
   },
   "validation": {
     "title": "Validation queue",

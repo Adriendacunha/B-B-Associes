@@ -87,7 +87,9 @@
     "rename": "Renommer",
     "renamePlaceholder": "Nouveau nom",
     "rejectReason": "Motif du refus",
-    "help": "Aide pour corriger"
+    "help": "Aide pour corriger",
+    "replace": "Remplacer",
+    "uploading": "Téléversement & analyse…"
   },
   "validation": {
     "title": "File de validation",
