@@ -89,12 +89,13 @@ async function seedDemo() {
   const collabPass = await hashPassword(collabPlain);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@bbassocies.ch' },
-    update: { passwordHash: adminPass }, // met à jour au redéploiement si la variable change
+    // Réinitialise le mot de passe ET déverrouille à chaque (re)déploiement.
+    update: { passwordHash: adminPass, failedLoginCount: 0, lockedUntil: null },
     create: { email: 'admin@bbassocies.ch', name: 'Associé Admin', passwordHash: adminPass, role: 'ADMIN' },
   });
   const collab = await prisma.user.upsert({
     where: { email: 'collab@bbassocies.ch' },
-    update: { passwordHash: collabPass },
+    update: { passwordHash: collabPass, failedLoginCount: 0, lockedUntil: null },
     create: { email: 'collab@bbassocies.ch', name: 'Collaborateur Référent', passwordHash: collabPass, role: 'COLLABORATEUR' },
   });
 
