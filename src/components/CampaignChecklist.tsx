@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db';
 import { resolveLocalized, type AppLocale, type LocalizedText } from '@/lib/i18n/locales';
 import { completude } from '@/lib/metrics/mvp';
 import { CATEGORY_FOLDERS, ORDERED_CATEGORIES } from '@/lib/onedrive/paths';
-import { uploadDocument, renameDocument } from '@/app/actions/document';
+import { uploadDocument, renameDocument, bulkUpload } from '@/app/actions/document';
 import { formatAnomalies } from '@/lib/ai/anomalies';
 import { UploadButton } from '@/components/UploadButton';
 import { sendInvitation, sendReminderNow } from '@/app/actions/email';
@@ -107,6 +107,28 @@ export async function CampaignChecklist({
         <div className="h-2 w-full overflow-hidden rounded bg-slate-100">
           <div className="h-full rounded bg-brand" style={{ width: `${Math.round(comp.ratio * 100)}%` }} />
         </div>
+      </div>
+
+      {/* Dépôt groupé : tous les documents d'un coup, triés automatiquement par l'IA (§7). */}
+      <div className="rounded-lg border border-dashed border-brand/40 bg-brand/5 p-4">
+        <h2 className="text-sm font-semibold text-brand">{tUp('bulkTitle')}</h2>
+        <p className="mb-2 text-xs text-slate-600">{tUp('bulkHint')}</p>
+        <form action={bulkUpload} className="flex flex-wrap items-center gap-2">
+          <input type="hidden" name="campaignId" value={campaignId} />
+          <input type="hidden" name="locale" value={locale} />
+          <input
+            type="file"
+            name="file"
+            multiple
+            required
+            className="text-xs file:mr-2 file:rounded file:border-0 file:bg-brand file:px-2 file:py-1 file:text-xs file:text-white"
+          />
+          <UploadButton
+            idle={tUp('bulkSend')}
+            pending={tUp('uploading')}
+            className="rounded bg-brand px-3 py-1 text-xs font-medium text-white hover:bg-brand-light"
+          />
+        </form>
       </div>
 
       {showMeta && (

@@ -6,7 +6,9 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { putDocumentContent, getDocumentContent, clearDocumentContent } from '@/lib/storage/document';
 import { analyzeDocument } from '@/lib/ai/analyze';
+import { classifyDocument } from '@/lib/ai/classify';
 import { extractText } from '@/lib/ocr/extract';
+import { A_TRIER_CODE } from '@/data/piece-referential';
 import { appendAuditLog } from '@/lib/audit/log';
 import { humanAgreesWithAi, reviewOutcome, campaignStatusFrom, type ReviewDecision } from '@/lib/review/decision';
 import { buildFileName, buildFinalPath, type PieceCategory } from '@/lib/onedrive/paths';
@@ -344,4 +346,172 @@ export async function renameDocument(formData: FormData): Promise<void> {
   revalidatePath(`/${locale}/espace`);
   revalidatePath(`/${locale}/campagne/${doc.checklistItem.campaignId}`);
   revalidatePath(`/${locale}/validation`);
+}
+
+/** Crée (idempotent) la pièce système « À trier » d'une campagne et renvoie son id. */
+async function ensureATrierItem(campaignId: string, fiscalYear: number): Promise<string> {
+  const existing = await prisma.checklistItem.findFirst({ where: { campaignId, pieceCode: A_TRIER_CODE } });
+  if (existing) return existing.id;
+  const def = await prisma.pieceDefinition.findUnique({ where: { code: A_TRIER_CODE } });
+  if (!def) throw new Error('Pièce « À trier » absente (relancez le seed).');
+  const created = await prisma.checklistItem.create({
+    data: { campaignId, pieceDefinitionId: def.id, pieceCode: A_TRIER_CODE, category: 'A_TRIER', required: false, expectedFiscalYear: fiscalYear, status: 'EN_VALIDATION' },
+  });
+  return created.id;
+}
+
+const UNSORTED_MESSAGE = {
+  fr: 'Document non classé automatiquement — à rattacher manuellement à une pièce.',
+  en: 'Document not auto-sorted — to be attached manually to an item.',
+  de: 'Dokument nicht automatisch sortiert — manuell einem Posten zuzuordnen.',
+};
+
+/**
+ * Dépôt EN VRAC (§7) : le client dépose plusieurs documents d'un coup ; l'IA
+ * identifie chacun et le range dans la bonne pièce (avec verdict). Les documents
+ * non reconnus vont dans « À trier » pour classement manuel par le cabinet.
+ */
+export async function bulkUpload(formData: FormData): Promise<void> {
+  const campaignId = String(formData.get('campaignId') ?? '');
+  const locale = String(formData.get('locale') ?? 'fr') as AppLocale;
+  const files = formData.getAll('file').filter((f): f is File => f instanceof File && f.size > 0);
+  if (!campaignId || files.length === 0) throw new Error('Fichiers ou campagne manquants.');
+
+  const principal = await getCurrentPrincipal();
+  if (!principal) redirect(`/${locale}/espace`);
+
+  const campaign = await prisma.campaign.findUnique({
+    where: { id: campaignId },
+    include: { client: true, checklistItems: { include: { pieceDefinition: true } } },
+  });
+  if (!campaign) throw new Error('Campagne introuvable.');
+  if (principal.type === 'CLIENT' && campaign.clientId !== principal.client.id) {
+    throw new Error('Accès refusé : cette campagne ne vous appartient pas.');
+  }
+
+  const clientLocale = campaign.client.locale.toLowerCase() as AppLocale;
+  const candidates = campaign.checklistItems
+    .filter((i) => i.pieceCode !== A_TRIER_CODE)
+    .map((i) => ({
+      pieceCode: i.pieceCode,
+      nom: resolveLocalized(i.pieceDefinition.nom as unknown as LocalizedText, locale),
+      description: resolveLocalized(i.pieceDefinition.description as unknown as LocalizedText, locale),
+    }));
+  const itemByCode = new Map(campaign.checklistItems.map((i) => [i.pieceCode, i]));
+  const uploadedByClient = principal.type === 'CLIENT';
+  const actorType = principal.type === 'CLIENT' ? 'CLIENT' : principal.user.role === 'ADMIN' ? 'ADMIN' : 'COLLABORATEUR';
+  const actorId = principal.type === 'CLIENT' ? principal.client.id : principal.user.id;
+
+  for (const file of files) {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const extraction = await extractText(buffer, file.type, file.name);
+    const matchedCode = await classifyDocument({ filename: file.name, text: extraction.text, candidates });
+    const target = matchedCode ? itemByCode.get(matchedCode) : undefined;
+
+    if (target) {
+      await prisma.document.deleteMany({ where: { checklistItemId: target.id, status: { in: ['RECU', 'ANALYSE_IA', 'EN_VALIDATION'] } } });
+      const version = (await prisma.document.count({ where: { checklistItemId: target.id } })) + 1;
+      const doc = await prisma.document.create({
+        data: { checklistItemId: target.id, version, originalFilename: file.name, mimeType: file.type || 'application/octet-stream', sizeBytes: buffer.length, uploadedByClient, status: 'RECU' },
+      });
+      await putDocumentContent(doc.id, buffer);
+      const result = await analyzeDocument({
+        pieceCode: target.pieceCode,
+        pieceNom: resolveLocalized(target.pieceDefinition.nom as unknown as LocalizedText, clientLocale),
+        pieceDescription: resolveLocalized(target.pieceDefinition.description as unknown as LocalizedText, clientLocale),
+        expectedFiscalYear: target.expectedFiscalYear,
+        clientDisplayName: campaign.client.displayName,
+        acceptedFormats: target.pieceDefinition.acceptedFormats,
+        clientLocale,
+        filename: file.name,
+        text: extraction.text,
+      });
+      await prisma.aiVerdict.create({
+        data: {
+          documentId: doc.id,
+          conforme: result.conforme,
+          typeDetecte: result.typeDetecte,
+          anneeDetectee: result.anneeDetectee,
+          scoreLisibilite: result.scoreLisibilite,
+          anomalies: result.anomalies as unknown as Prisma.InputJsonValue,
+          messageClient: result.messageClient as unknown as Prisma.InputJsonValue,
+          model: result.model,
+          rawResponse: result.raw as Prisma.InputJsonValue,
+        },
+      });
+      await prisma.document.update({ where: { id: doc.id }, data: { status: 'EN_VALIDATION' } });
+      await prisma.checklistItem.update({ where: { id: target.id }, data: { status: 'EN_VALIDATION' } });
+      await appendAuditLog(prisma, { actorType, actorId, action: 'BULK_UPLOAD_CLASSIFIED', entityType: 'Document', entityId: doc.id, metadata: { pieceCode: target.pieceCode, filename: file.name }, createdAt: new Date() });
+    } else {
+      const atrierId = await ensureATrierItem(campaignId, campaign.fiscalYear);
+      const version = (await prisma.document.count({ where: { checklistItemId: atrierId } })) + 1;
+      const doc = await prisma.document.create({
+        data: { checklistItemId: atrierId, version, originalFilename: file.name, mimeType: file.type || 'application/octet-stream', sizeBytes: buffer.length, uploadedByClient, status: 'EN_VALIDATION' },
+      });
+      await putDocumentContent(doc.id, buffer);
+      await prisma.aiVerdict.create({
+        data: { documentId: doc.id, conforme: false, anomalies: [] as unknown as Prisma.InputJsonValue, messageClient: UNSORTED_MESSAGE as unknown as Prisma.InputJsonValue, model: 'classification', rawResponse: {} as Prisma.InputJsonValue },
+      });
+      await prisma.checklistItem.update({ where: { id: atrierId }, data: { status: 'EN_VALIDATION' } });
+      await appendAuditLog(prisma, { actorType, actorId, action: 'BULK_UPLOAD_UNSORTED', entityType: 'Document', entityId: doc.id, metadata: { filename: file.name }, createdAt: new Date() });
+    }
+  }
+
+  revalidatePath(`/${locale}/espace`);
+  revalidatePath(`/${locale}/campagne/${campaignId}`);
+  revalidatePath(`/${locale}/validation`);
+}
+
+/** Reclasse manuellement un document vers une autre pièce de la campagne (§7.3). */
+export async function reassignDocument(formData: FormData): Promise<void> {
+  const documentId = String(formData.get('documentId') ?? '');
+  const newItemId = String(formData.get('newChecklistItemId') ?? '');
+  const locale = String(formData.get('locale') ?? 'fr') as AppLocale;
+  if (!documentId || !newItemId) return;
+  const reviewer = await requireStaff(locale);
+
+  const doc = await prisma.document.findUnique({ where: { id: documentId }, include: { checklistItem: true } });
+  const newItem = await prisma.checklistItem.findUnique({
+    where: { id: newItemId },
+    include: { pieceDefinition: true, campaign: { include: { client: true } } },
+  });
+  if (!doc || !newItem) throw new Error('Document ou pièce cible introuvable.');
+  if (doc.checklistItem.campaignId !== newItem.campaignId) throw new Error('Pièce cible hors campagne.');
+
+  const oldItemId = doc.checklistItemId;
+  await prisma.document.deleteMany({ where: { checklistItemId: newItemId, status: { in: ['RECU', 'ANALYSE_IA', 'EN_VALIDATION'] }, id: { not: documentId } } });
+  await prisma.document.update({ where: { id: documentId }, data: { checklistItemId: newItemId, status: 'EN_VALIDATION' } });
+
+  const content = await getDocumentContent(documentId);
+  const text = content ? (await extractText(content, doc.mimeType, doc.originalFilename)).text : '';
+  const clientLocale = newItem.campaign.client.locale.toLowerCase() as AppLocale;
+  const result = await analyzeDocument({
+    pieceCode: newItem.pieceCode,
+    pieceNom: resolveLocalized(newItem.pieceDefinition.nom as unknown as LocalizedText, clientLocale),
+    pieceDescription: resolveLocalized(newItem.pieceDefinition.description as unknown as LocalizedText, clientLocale),
+    expectedFiscalYear: newItem.expectedFiscalYear,
+    clientDisplayName: newItem.campaign.client.displayName,
+    acceptedFormats: newItem.pieceDefinition.acceptedFormats,
+    clientLocale,
+    filename: doc.originalFilename,
+    text,
+  });
+  await prisma.aiVerdict.upsert({
+    where: { documentId },
+    update: { conforme: result.conforme, typeDetecte: result.typeDetecte, anneeDetectee: result.anneeDetectee, scoreLisibilite: result.scoreLisibilite, anomalies: result.anomalies as unknown as Prisma.InputJsonValue, messageClient: result.messageClient as unknown as Prisma.InputJsonValue, model: result.model, rawResponse: result.raw as Prisma.InputJsonValue },
+    create: { documentId, conforme: result.conforme, typeDetecte: result.typeDetecte, anneeDetectee: result.anneeDetectee, scoreLisibilite: result.scoreLisibilite, anomalies: result.anomalies as unknown as Prisma.InputJsonValue, messageClient: result.messageClient as unknown as Prisma.InputJsonValue, model: result.model, rawResponse: result.raw as Prisma.InputJsonValue },
+  });
+
+  await prisma.checklistItem.update({ where: { id: newItemId }, data: { status: 'EN_VALIDATION' } });
+  const oldPending = await prisma.document.count({ where: { checklistItemId: oldItemId, status: { in: ['RECU', 'ANALYSE_IA', 'EN_VALIDATION'] } } });
+  const oldItem = await prisma.checklistItem.findUnique({ where: { id: oldItemId } });
+  if (oldItem && oldItem.status !== 'CONFORME' && oldPending === 0) {
+    await prisma.checklistItem.update({ where: { id: oldItemId }, data: { status: 'MANQUANT' } });
+  }
+
+  await appendAuditLog(prisma, { actorType: reviewer.role === 'ADMIN' ? 'ADMIN' : 'COLLABORATEUR', actorId: reviewer.id, action: 'DOCUMENT_REASSIGNED', entityType: 'Document', entityId: documentId, metadata: { from: doc.checklistItem.pieceCode, to: newItem.pieceCode }, createdAt: new Date() });
+
+  revalidatePath(`/${locale}/validation`);
+  revalidatePath(`/${locale}/campagne/${newItem.campaignId}`);
+  revalidatePath(`/${locale}/espace`);
 }

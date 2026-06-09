@@ -1,8 +1,9 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { reviewDocument, renameDocument } from '@/app/actions/document';
+import { reviewDocument, renameDocument, reassignDocument } from '@/app/actions/document';
 import { requireStaff } from '@/lib/auth/session';
 import { formatAnomalies } from '@/lib/ai/anomalies';
+import { A_TRIER_CODE } from '@/data/piece-referential';
 import { resolveLocalized, type AppLocale, type LocalizedText } from '@/lib/i18n/locales';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +21,12 @@ export default async function ValidationPage({ params }: { params: Promise<{ loc
     orderBy: { uploadedAt: 'asc' },
     include: {
       aiVerdict: true,
-      checklistItem: { include: { pieceDefinition: true, campaign: { include: { client: true } } } },
+      checklistItem: {
+        include: {
+          pieceDefinition: true,
+          campaign: { include: { client: true, checklistItems: { include: { pieceDefinition: true } } } },
+        },
+      },
     },
   });
 
@@ -102,6 +108,25 @@ export default async function ValidationPage({ params }: { params: Promise<{ loc
                   />
                   <button type="submit" className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
                     {tUp('rename')}
+                  </button>
+                </form>
+
+                {/* Reclasser le document vers une autre pièce (tri manuel, §7.3) */}
+                <form action={reassignDocument} className="mt-2 flex flex-wrap items-center gap-2">
+                  <input type="hidden" name="documentId" value={doc.id} />
+                  <input type="hidden" name="locale" value={locale} />
+                  <span className="text-xs text-slate-500">{t('reassign')} :</span>
+                  <select name="newChecklistItemId" defaultValue={doc.checklistItemId} className="select max-w-xs text-xs">
+                    {item.campaign.checklistItems
+                      .filter((ci) => ci.pieceCode !== A_TRIER_CODE)
+                      .map((ci) => (
+                        <option key={ci.id} value={ci.id}>
+                          {resolveLocalized(ci.pieceDefinition.nom as unknown as LocalizedText, loc)}
+                        </option>
+                      ))}
+                  </select>
+                  <button type="submit" className="rounded border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50">
+                    {t('reassignBtn')}
                   </button>
                 </form>
 
