@@ -81,16 +81,21 @@ async function seedSettings() {
 }
 
 async function seedDemo() {
-  const adminPass = await hashPassword('changeme-admin');
+  // Mots de passe du cabinet : configurables par variables d'environnement
+  // (à définir en production — le dépôt est public). Défauts pour le dev local.
+  const adminPlain = process.env.ADMIN_PASSWORD ?? 'changeme-admin';
+  const collabPlain = process.env.COLLAB_PASSWORD ?? 'changeme-collab';
+  const adminPass = await hashPassword(adminPlain);
+  const collabPass = await hashPassword(collabPlain);
   const admin = await prisma.user.upsert({
     where: { email: 'admin@bbassocies.ch' },
-    update: {},
+    update: { passwordHash: adminPass }, // met à jour au redéploiement si la variable change
     create: { email: 'admin@bbassocies.ch', name: 'Associé Admin', passwordHash: adminPass, role: 'ADMIN' },
   });
   const collab = await prisma.user.upsert({
     where: { email: 'collab@bbassocies.ch' },
-    update: {},
-    create: { email: 'collab@bbassocies.ch', name: 'Collaborateur Référent', passwordHash: await hashPassword('changeme-collab'), role: 'COLLABORATEUR' },
+    update: { passwordHash: collabPass },
+    create: { email: 'collab@bbassocies.ch', name: 'Collaborateur Référent', passwordHash: collabPass, role: 'COLLABORATEUR' },
   });
 
   // Bêta-testeurs (§15.2) : particuliers salariés résidents suisses, profils simples.
@@ -121,8 +126,10 @@ async function seedDemo() {
     console.log(`  • client bêta ${client.clientCode} - ${client.displayName} (gestionnaire: ${collab.name})`);
   }
 
+  const pwNote = (envVar: string, def: string) =>
+    process.env[envVar] ? '(défini par variable d’environnement)' : def;
   console.log('✓ démo — identifiants de connexion :');
-  console.log('   cabinet  : admin@bbassocies.ch / changeme-admin   ·   collab@bbassocies.ch / changeme-collab');
+  console.log(`   cabinet  : admin@bbassocies.ch / ${pwNote('ADMIN_PASSWORD', 'changeme-admin')}   ·   collab@bbassocies.ch / ${pwNote('COLLAB_PASSWORD', 'changeme-collab')}`);
   console.log('   clients  : jean.dupont@example.ch / changeme-client   ·   anna.muller@example.ch / changeme-client');
 }
 
