@@ -79,7 +79,13 @@
     "status": "Status",
     "date": "Datum",
     "channel": "Kanal",
-    "empty": "Noch keine E-Mail gesendet."
+    "empty": "Noch keine E-Mail gesendet.",
+    "channelLive": "Echtversand aktiv (Microsoft Graph) — E-Mails werden an die Empfänger zugestellt.",
+    "channelDemo": "Demomodus — E-Mails werden nur hier protokolliert, sie werden nicht zugestellt. Konfigurieren Sie Microsoft Graph für den Echtversand.",
+    "testTitle": "Versandkanal testen",
+    "testHint": "Senden Sie sich eine Test-E-Mail, um die Zustellbarkeit zu prüfen, bevor Sie einen Betatester einladen.",
+    "testPlaceholder": "adresse@beispiel.ch",
+    "testSend": "Test senden"
   },
   "upload": {
     "deposit": "Datei hochladen",
