@@ -10,7 +10,7 @@ const nextConfig = {
   output: process.env.VERCEL ? undefined : 'standalone',
   // pdf-parse (pdfjs) et tesseract.js utilisent des workers : ne pas les bundler
   // par webpack (sinon chemins de worker introuvables côté serveur).
-  serverExternalPackages: ['pdf-parse', 'tesseract.js'],
+  serverExternalPackages: ['pdf-parse', 'tesseract.js', 'nodemailer'],
   experimental: {
     // Les server actions limitent le corps à 1 Mo par défaut : on relève à 16 Mo
     // pour les dépôts de pièces (cohérent avec MAX_BYTES = 15 Mo). Sinon l'upload

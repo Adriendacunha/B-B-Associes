@@ -81,6 +81,7 @@
     "channel": "Canal",
     "empty": "Aucun e-mail envoyé pour le moment.",
     "channelLive": "Envoi réel actif (Microsoft Graph) — les e-mails partent vers les destinataires.",
+    "channelLiveSmtp": "Envoi réel actif (SMTP) — les e-mails partent vers les destinataires.",
     "channelDemo": "Mode démo — les e-mails sont seulement journalisés ici, ils ne partent pas. Configurez Microsoft Graph pour l'envoi réel.",
     "testTitle": "Tester le canal d'envoi",
     "testHint": "Envoyez-vous un e-mail de test pour vérifier la délivrabilité avant d'inviter un bêta-testeur.",

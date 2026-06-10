@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { prisma } from '@/lib/db';
 import { requireStaff } from '@/lib/auth/session';
-import { isRealEmailChannel } from '@/lib/email/mailer';
+import { emailChannel } from '@/lib/email/mailer';
 import { sendTestEmail } from '@/app/actions/email';
 
 export const dynamic = 'force-dynamic';
@@ -24,7 +24,8 @@ export default async function EmailsPage({ params }: { params: Promise<{ locale:
     include: { campaign: { include: { client: true } } },
   });
 
-  const live = isRealEmailChannel();
+  const channel = emailChannel();
+  const live = channel !== 'demo';
 
   return (
     <div className="space-y-6">
@@ -40,7 +41,7 @@ export default async function EmailsPage({ params }: { params: Promise<{ locale:
         }`}
       >
         <span aria-hidden>{live ? '✓' : '⚠'}</span>
-        <span>{live ? t('channelLive') : t('channelDemo')}</span>
+        <span>{channel === 'graph' ? t('channelLive') : channel === 'smtp' ? t('channelLiveSmtp') : t('channelDemo')}</span>
       </div>
 
       {/* Test de délivrabilité avant d'inviter un vrai bêta-testeur. */}
