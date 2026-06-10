@@ -16,8 +16,27 @@ export interface SendEmailInput {
   actorId?: string | null;
 }
 
+/**
+ * L'envoi e-mail réel (Microsoft Graph) requiert l'authentification applicative
+ * (tenant/client/secret) ET l'adresse expéditrice. Sans l'un de ces éléments, on
+ * reste en mode démo (journalisation) — on évite ainsi les échecs silencieux.
+ * Le drive OneDrive n'est PAS requis pour envoyer un e-mail.
+ */
 function graphConfigured(): boolean {
-  return Boolean(process.env.MS_GRAPH_CLIENT_ID && process.env.MS_GRAPH_TENANT_ID && process.env.MS_GRAPH_CLIENT_SECRET);
+  return Boolean(
+    process.env.MS_GRAPH_CLIENT_ID &&
+      process.env.MS_GRAPH_TENANT_ID &&
+      process.env.MS_GRAPH_CLIENT_SECRET &&
+      process.env.MS_GRAPH_SENDER_ADDRESS,
+  );
+}
+
+/**
+ * Indique si un canal d'envoi réel est actif (vs mode démo). Utilisé par l'UI
+ * pour signaler au cabinet si les e-mails partent réellement.
+ */
+export function isRealEmailChannel(): boolean {
+  return graphConfigured();
 }
 
 export async function sendEmail(input: SendEmailInput) {

@@ -86,3 +86,32 @@ export async function processDueReminders(formData: FormData): Promise<void> {
   revalidatePath(`/${uiLocale}/tableau-de-bord`);
   revalidatePath(`/${uiLocale}/emails`);
 }
+
+/**
+ * Envoie un e-mail de test à une adresse donnée, pour que le cabinet vérifie la
+ * délivrabilité du canal (Graph) avant d'inviter un vrai bêta-testeur. En mode
+ * démo, l'e-mail est seulement consigné dans la boîte d'envoi interne.
+ */
+export async function sendTestEmail(formData: FormData): Promise<void> {
+  const uiLocale = String(formData.get('locale') ?? 'fr');
+  const staff = await requireStaff(uiLocale);
+  const to = String(formData.get('to') ?? '').trim();
+  if (!to) return;
+
+  const locale = (uiLocale.toUpperCase() as 'FR' | 'EN' | 'DE') ?? 'FR';
+  const subject = 'B&B Associés — e-mail de test';
+  const body =
+    `Ceci est un e-mail de test envoyé depuis l'espace de collecte B&B Associés.\n\n` +
+    `Si vous le recevez, le canal d'envoi est correctement configuré.\n\n` +
+    `— Espace de collecte documentaire`;
+  await sendEmail({
+    to,
+    locale,
+    subject,
+    body,
+    templateKey: null,
+    actorId: staff.id,
+  });
+
+  revalidatePath(`/${uiLocale}/emails`);
+}

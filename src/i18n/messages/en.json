@@ -79,7 +79,13 @@
     "status": "Status",
     "date": "Date",
     "channel": "Channel",
-    "empty": "No email sent yet."
+    "empty": "No email sent yet.",
+    "channelLive": "Live sending active (Microsoft Graph) — emails are delivered to recipients.",
+    "channelDemo": "Demo mode — emails are only logged here, they are not delivered. Configure Microsoft Graph for live sending.",
+    "testTitle": "Test the sending channel",
+    "testHint": "Send yourself a test email to check deliverability before inviting a beta tester.",
+    "testPlaceholder": "address@example.ch",
+    "testSend": "Send a test"
   },
   "upload": {
     "deposit": "Upload a file",
