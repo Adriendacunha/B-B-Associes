@@ -32,11 +32,27 @@ function graphConfigured(): boolean {
 }
 
 /**
- * Indique si un canal d'envoi réel est actif (vs mode démo). Utilisé par l'UI
- * pour signaler au cabinet si les e-mails partent réellement.
+ * Canal SMTP (Gmail / Google Workspace ou tout serveur SMTP) — voie simple pour
+ * tester les relances sans l'app registration Azure (§6.2).
  */
+function smtpConfigured(): boolean {
+  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD);
+}
+
+/**
+ * Canal d'envoi réel actif (sinon mode démo). Graph est prioritaire (production
+ * cabinet), SMTP en repli (bêta / Google Workspace). Utilisé par l'UI pour
+ * signaler si les e-mails partent réellement, et lequel.
+ */
+export function emailChannel(): 'graph' | 'smtp' | 'demo' {
+  if (graphConfigured()) return 'graph';
+  if (smtpConfigured()) return 'smtp';
+  return 'demo';
+}
+
+/** Indique si un canal d'envoi réel est actif (vs mode démo). */
 export function isRealEmailChannel(): boolean {
-  return graphConfigured();
+  return emailChannel() !== 'demo';
 }
 
 export async function sendEmail(input: SendEmailInput) {
@@ -44,11 +60,22 @@ export async function sendEmail(input: SendEmailInput) {
   let channel = 'demo-outbox';
   let error: string | null = null;
 
-  if (graphConfigured()) {
+  const active = emailChannel();
+  if (active === 'graph') {
     channel = 'graph';
     try {
       const { sendMail } = await import('@/lib/graph/client');
       await sendMail({ to: input.to, subject: input.subject, body: input.body });
+      status = 'SENT';
+    } catch (e) {
+      status = 'FAILED';
+      error = (e as Error).message;
+    }
+  } else if (active === 'smtp') {
+    channel = 'smtp';
+    try {
+      const { sendMailSmtp } = await import('@/lib/email/smtp');
+      await sendMailSmtp({ to: input.to, subject: input.subject, body: input.body });
       status = 'SENT';
     } catch (e) {
       status = 'FAILED';
