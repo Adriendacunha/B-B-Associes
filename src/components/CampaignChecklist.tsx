@@ -8,6 +8,7 @@ import { uploadDocument, renameDocument, bulkUpload } from '@/app/actions/docume
 import { setClientDeclaration } from '@/app/actions/campaign';
 import { formatAnomalies } from '@/lib/ai/anomalies';
 import { UploadButton } from '@/components/UploadButton';
+import { Dropzone } from '@/components/Dropzone';
 import { sendInvitation, sendReminderNow } from '@/app/actions/email';
 import { Link } from '@/i18n/routing';
 
@@ -300,23 +301,14 @@ export async function CampaignChecklist({
                     )}
 
                     {canUpload && (
-                      <form action={uploadDocument} className="mt-2 flex flex-wrap items-center gap-2">
-                        <input type="hidden" name="checklistItemId" value={item.id} />
-                        <input type="hidden" name="locale" value={locale} />
-                        <input
-                          type="file"
-                          name="file"
-                          required
-                          multiple
-                          className="text-xs file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-slate-700 hover:file:bg-slate-200"
-                        />
-                        <span className="w-full text-[10px] text-slate-400">{tUp('multiHint')}</span>
-                        <UploadButton
-                          idle={item.status === 'EN_VALIDATION' ? tUp('replace') : tUp('send')}
-                          pending={tUp('uploading')}
-                          className="btn btn-primary btn-sm"
-                        />
-                      </form>
+                      <Dropzone
+                        action={uploadDocument}
+                        fields={{ checklistItemId: item.id, locale }}
+                        prompt={tUp('dropzone')}
+                        multiHint={tUp('multiHint')}
+                        idle={item.status === 'EN_VALIDATION' ? tUp('replace') : tUp('send')}
+                        pending={tUp('uploading')}
+                      />
                     )}
                   </li>
                 );

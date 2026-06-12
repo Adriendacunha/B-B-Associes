@@ -103,6 +103,7 @@
     "replace": "Ersetzen",
     "uploading": "Hochladen & Analyse…",
     "multiHint": "Mehrere Dateien möglich (zu einem PDF zusammengefügt).",
+    "dropzone": "Ziehen Sie eine neue Datei hierher oder klicken Sie auf den Pfeil, um eine Datei zu importieren",
     "bulkTitle": "Massen-Upload — automatische KI-Sortierung",
     "bulkHint": "Laden Sie alle Dokumente auf einmal hoch: Die KI erkennt jedes und ordnet es dem richtigen Posten zu. Nicht erkannte landen unter „Zu sortieren\".",
     "bulkSend": "Hochladen & sortieren"

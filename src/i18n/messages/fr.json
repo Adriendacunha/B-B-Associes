@@ -103,6 +103,7 @@
     "replace": "Remplacer",
     "uploading": "Téléversement & analyse…",
     "multiHint": "Plusieurs fichiers possibles (fusionnés en un seul PDF).",
+    "dropzone": "Glissez-déposez un nouveau fichier ici ou cliquez sur la flèche pour importer un fichier",
     "bulkTitle": "Dépôt groupé — tri automatique par l’IA",
     "bulkHint": "Déposez tous vos documents d’un coup : l’IA identifie chacun et le range dans la bonne pièce. Ce qui n’est pas reconnu va dans « À trier ».",
     "bulkSend": "Déposer et trier"
