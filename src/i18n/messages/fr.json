@@ -172,6 +172,12 @@
     "clients": "Clients",
     "completude": "Complétude",
     "nextReminder": "Prochaine relance",
-    "manager": "Gestionnaire"
+    "manager": "Gestionnaire",
+    "declaration": "Déclaration client",
+    "declReadyCount": "{count} dossier(s) déclaré(s) terminé(s) par le client — à traiter",
+    "declOui": "Terminé",
+    "declNon": "En cours",
+    "declNonConcerne": "Non concerné",
+    "declNone": "—"
   }
 }

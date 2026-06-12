@@ -172,6 +172,12 @@
     "clients": "Clients",
     "completude": "Completeness",
     "nextReminder": "Next reminder",
-    "manager": "Manager"
+    "manager": "Manager",
+    "declaration": "Client declaration",
+    "declReadyCount": "{count} file(s) declared complete by the client — to process",
+    "declOui": "Done",
+    "declNon": "In progress",
+    "declNonConcerne": "Not applicable",
+    "declNone": "—"
   }
 }

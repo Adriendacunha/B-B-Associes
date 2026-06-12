@@ -172,6 +172,12 @@
     "clients": "Kunden",
     "completude": "Vollständigkeit",
     "nextReminder": "Nächste Erinnerung",
-    "manager": "Sachbearbeiter"
+    "manager": "Sachbearbeiter",
+    "declaration": "Kundenerklärung",
+    "declReadyCount": "{count} Dossier(s) vom Kunden als abgeschlossen erklärt — zu bearbeiten",
+    "declOui": "Abgeschlossen",
+    "declNon": "In Bearbeitung",
+    "declNonConcerne": "Nicht betroffen",
+    "declNone": "—"
   }
 }

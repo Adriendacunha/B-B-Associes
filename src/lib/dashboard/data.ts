@@ -14,6 +14,7 @@ export interface DashboardClientRow {
   completude: { ratio: number; label: string };
   status: string;
   nextReminderDays: number | null;
+  clientDeclaration: 'NON' | 'OUI' | 'NON_CONCERNE' | null;
 }
 
 export async function getDashboardData() {
@@ -72,6 +73,7 @@ export async function getDashboardData() {
       completude: comp,
       status: c.status,
       nextReminderDays,
+      clientDeclaration: c.clientDeclaration,
     });
 
     autonomyInput.push({
