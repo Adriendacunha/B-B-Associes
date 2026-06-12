@@ -136,7 +136,15 @@
     "required": "Required",
     "optional": "Optional",
     "upload": "Upload",
-    "completude": "File completeness"
+    "completude": "File completeness",
+    "declQuestion": "Have you finished uploading the requested documents?",
+    "declHint": "This tells the firm whether your file can be processed; automatic reminders stop if you answer “Yes” or “Not applicable”.",
+    "declNon": "No",
+    "declOui": "Yes",
+    "declNonConcerne": "Not applicable for this exercise",
+    "declDoneOui": "Thank you, the firm has been notified that your upload is complete. You can still add a document if needed.",
+    "declDoneNonConcerne": "Noted: this exercise does not apply to you. You can change this choice at any time.",
+    "declModify": "Change my answer"
   },
   "campagne": {
     "title": "Collection campaign",
@@ -145,7 +153,12 @@
     "client": "Client",
     "manager": "Manager",
     "completude": "Completeness",
-    "newCampaign": "Open a campaign"
+    "newCampaign": "Open a campaign",
+    "declarationLabel": "Client declaration",
+    "declNone": "No answer",
+    "declNon": "In progress (not finished)",
+    "declOui": "Declared complete by client",
+    "declNonConcerne": "Client not concerned this exercise"
   },
   "dashboard": {
     "title": "Dashboard — file tracking",

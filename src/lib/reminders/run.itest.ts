@@ -7,7 +7,12 @@ import { runDueReminders } from './run';
 
 const createdClientIds: string[] = [];
 
-async function makeCampaign(opts: { daysAgo: number; paused?: boolean; complete?: boolean }) {
+async function makeCampaign(opts: {
+  daysAgo: number;
+  paused?: boolean;
+  complete?: boolean;
+  declaration?: 'NON' | 'OUI' | 'NON_CONCERNE';
+}) {
   const code = 'ITEST-' + Math.random().toString(36).slice(2, 9).toUpperCase();
   const client = await prisma.client.create({
     data: { clientCode: code, displayName: 'ITest Client', type: 'PARTICULIER', email: `${code.toLowerCase()}@test.ch`, locale: 'FR' },
@@ -21,6 +26,7 @@ async function makeCampaign(opts: { daysAgo: number; paused?: boolean; complete?
       profile: {},
       status: 'EN_ATTENTE_CLIENT',
       remindersPaused: Boolean(opts.paused),
+      clientDeclaration: opts.declaration ?? null,
       openedAt: new Date(Date.now() - opts.daysAgo * 86_400_000),
     },
   });
@@ -72,6 +78,18 @@ describe('runDueReminders (intégration §6.1)', () => {
 
   it('n’envoie pas encore avant le premier palier (J+3)', async () => {
     const id = await makeCampaign({ daysAgo: 3 });
+    await runDueReminders();
+    expect(await reminderCount(id)).toBe(0);
+  });
+
+  it('n’envoie rien si le client a déclaré avoir terminé (UX §7)', async () => {
+    const id = await makeCampaign({ daysAgo: 25, declaration: 'OUI' });
+    await runDueReminders();
+    expect(await reminderCount(id)).toBe(0);
+  });
+
+  it('n’envoie rien si le client n’est pas concerné (UX §7)', async () => {
+    const id = await makeCampaign({ daysAgo: 25, declaration: 'NON_CONCERNE' });
     await runDueReminders();
     expect(await reminderCount(id)).toBe(0);
   });

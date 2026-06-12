@@ -5,6 +5,7 @@ import { resolveLocalized, type AppLocale, type LocalizedText } from '@/lib/i18n
 import { completude } from '@/lib/metrics/mvp';
 import { CATEGORY_FOLDERS, ORDERED_CATEGORIES } from '@/lib/onedrive/paths';
 import { uploadDocument, renameDocument, bulkUpload } from '@/app/actions/document';
+import { setClientDeclaration } from '@/app/actions/campaign';
 import { formatAnomalies } from '@/lib/ai/anomalies';
 import { UploadButton } from '@/components/UploadButton';
 import { sendInvitation, sendReminderNow } from '@/app/actions/email';
@@ -95,6 +96,29 @@ export async function CampaignChecklist({
                 <span className="text-slate-400">{t('manager')} :</span> {campaign.client.gestionnaire.name}
               </span>
             )}
+          </div>
+          {/* Déclaration de complétude du client (UX §7) */}
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-slate-400">{t('declarationLabel')} :</span>
+            <span
+              className={`badge ${
+                campaign.clientDeclaration === 'OUI'
+                  ? 'bg-green-100 text-green-700'
+                  : campaign.clientDeclaration === 'NON_CONCERNE'
+                    ? 'bg-slate-200 text-slate-700'
+                    : campaign.clientDeclaration === 'NON'
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-slate-100 text-slate-500'
+              }`}
+            >
+              {campaign.clientDeclaration === 'OUI'
+                ? t('declOui')
+                : campaign.clientDeclaration === 'NON_CONCERNE'
+                  ? t('declNonConcerne')
+                  : campaign.clientDeclaration === 'NON'
+                    ? t('declNon')
+                    : t('declNone')}
+            </span>
           </div>
         </header>
       )}
@@ -301,6 +325,41 @@ export async function CampaignChecklist({
           </section>
         ))}
       </div>
+
+      {/* Déclaration de complétude — vue client (UX §7). */}
+      {!showMeta && (
+        <div className="card">
+          <h2 className="text-sm font-semibold text-slate-900">{tStatus('declQuestion')}</h2>
+          <p className="mt-1 text-xs text-slate-500">{tStatus('declHint')}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {(['NON', 'OUI', 'NON_CONCERNE'] as const).map((value) => {
+              const selected = campaign.clientDeclaration === value;
+              const label =
+                value === 'NON' ? tStatus('declNon') : value === 'OUI' ? tStatus('declOui') : tStatus('declNonConcerne');
+              return (
+                <form action={setClientDeclaration} key={value}>
+                  <input type="hidden" name="campaignId" value={campaignId} />
+                  <input type="hidden" name="locale" value={locale} />
+                  <input type="hidden" name="declaration" value={value} />
+                  <button type="submit" className={`btn btn-sm ${selected ? 'btn-primary' : 'btn-secondary'}`}>
+                    {label}
+                  </button>
+                </form>
+              );
+            })}
+          </div>
+          {campaign.clientDeclaration === 'OUI' && (
+            <p className="mt-3 rounded-lg border border-green-100 bg-green-50 px-3 py-2 text-xs text-green-700">
+              {tStatus('declDoneOui')}
+            </p>
+          )}
+          {campaign.clientDeclaration === 'NON_CONCERNE' && (
+            <p className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+              {tStatus('declDoneNonConcerne')}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

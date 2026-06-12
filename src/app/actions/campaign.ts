@@ -1,11 +1,12 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import type { Prisma } from '@prisma/client';
+import { revalidatePath } from 'next/cache';
+import type { Prisma, ClientDeclaration } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { buildChecklistItems, type BuildablePiece } from '@/lib/checklist/build';
 import { appendAuditLog } from '@/lib/audit/log';
-import { requireStaff } from '@/lib/auth/session';
+import { requireStaff, requireClient } from '@/lib/auth/session';
 import type { ClientProfile } from '@/lib/checklist/profiling';
 
 export interface CreateCampaignInput {
@@ -77,4 +78,41 @@ export async function createCampaign(input: CreateCampaignInput): Promise<void> 
   });
 
   redirect(`/${input.locale}/campagne/${campaign.id}`);
+}
+
+const DECLARATIONS: ClientDeclaration[] = ['NON', 'OUI', 'NON_CONCERNE'];
+
+/**
+ * Déclaration de complétude par le client sur sa checklist (UX §7) : « Avez-vous
+ * terminé de déposer les documents demandés ? » Non / Oui / Je ne suis pas
+ * concerné. « OUI » et « NON_CONCERNE » suspendent les relances automatiques.
+ */
+export async function setClientDeclaration(formData: FormData): Promise<void> {
+  const uiLocale = String(formData.get('locale') ?? 'fr');
+  const campaignId = String(formData.get('campaignId') ?? '');
+  const value = String(formData.get('declaration') ?? '');
+  const client = await requireClient(uiLocale);
+  if (!DECLARATIONS.includes(value as ClientDeclaration)) return;
+
+  // Le client ne peut déclarer que sur SA propre campagne (§9).
+  const campaign = await prisma.campaign.findUnique({ where: { id: campaignId }, select: { id: true, clientId: true } });
+  if (!campaign || campaign.clientId !== client.id) return;
+
+  await prisma.campaign.update({
+    where: { id: campaignId },
+    data: { clientDeclaration: value as ClientDeclaration, clientDeclarationAt: new Date() },
+  });
+
+  await appendAuditLog(prisma, {
+    actorType: 'CLIENT',
+    actorId: client.id,
+    action: 'CLIENT_DECLARATION',
+    entityType: 'Campaign',
+    entityId: campaignId,
+    metadata: { declaration: value },
+    createdAt: new Date(),
+  });
+
+  revalidatePath(`/${uiLocale}/espace`);
+  revalidatePath(`/${uiLocale}/campagne/${campaignId}`);
 }
