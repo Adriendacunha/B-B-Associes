@@ -28,6 +28,23 @@ describe('deriveProfileTags (§4.1)', () => {
   it('n’ajoute pas ENFANTS si 0 enfant', () => {
     expect(deriveProfileTags({ ...baseParticulier, nbEnfants: 0 }).has('ENFANTS')).toBe(false);
   });
+
+  it('Niveau 1 — émet le tag de situation de famille', () => {
+    expect(deriveProfileTags({ ...baseParticulier, situationFamille: 'MARIE_PACS' }).has('MARIE_PACS')).toBe(true);
+    expect(deriveProfileTags({ ...baseParticulier, situationFamille: 'SEPARE_DIVORCE' }).has('SEPARE_DIVORCE')).toBe(true);
+  });
+
+  it('Niveau 1 — un retraité dérive RETRAITE et RENTES', () => {
+    const tags = deriveProfileTags({ ...baseParticulier, retraite: true });
+    expect(tags.has('RETRAITE')).toBe(true);
+    expect(tags.has('RENTES')).toBe(true);
+  });
+
+  it('Niveau 2 — activité accessoire et frais médicaux émettent leurs tags', () => {
+    const tags = deriveProfileTags({ ...baseParticulier, activiteAccessoire: true, fraisMedicaux: true });
+    expect(tags.has('ACTIVITE_ACCESSOIRE')).toBe(true);
+    expect(tags.has('FRAIS_MEDICAUX')).toBe(true);
+  });
 });
 
 describe('pieceApplies (sémantique ET)', () => {
@@ -66,6 +83,28 @@ describe('selectRequiredPieces', () => {
       logement: 'PROPRIETAIRE',
     }).map((p) => p.code);
     expect(codes).toEqual(['CERT-SALAIRE', 'ATTEST-SOURCE', 'IMMO-HYPO']);
+  });
+
+  it('Niveau 1+2 — sélectionne les pièces des nouvelles situations', () => {
+    const withNew: SelectablePiece[] = [
+      ...defs,
+      { code: 'REVENU-ACCESSOIRE', profils: ['ACTIVITE_ACCESSOIRE'] },
+      { code: 'FRAIS-MEDICAUX', profils: ['FRAIS_MEDICAUX'] },
+      { code: 'DIVORCE-JUGEMENT', profils: ['SEPARE_DIVORCE'] },
+      { code: 'ATTEST-RENTES', profils: ['RENTES'] },
+    ];
+    const codes = selectRequiredPieces(withNew, {
+      type: 'PARTICULIER',
+      residence: 'RESIDENT_CH',
+      situationFamille: 'SEPARE_DIVORCE',
+      retraite: true,
+      activiteAccessoire: true,
+      fraisMedicaux: true,
+    }).map((p) => p.code);
+    expect(codes).toContain('REVENU-ACCESSOIRE');
+    expect(codes).toContain('FRAIS-MEDICAUX');
+    expect(codes).toContain('DIVORCE-JUGEMENT');
+    expect(codes).toContain('ATTEST-RENTES'); // dérivé de retraite
   });
 });
 

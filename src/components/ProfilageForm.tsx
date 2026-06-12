@@ -20,6 +20,11 @@ const L: Record<string, Dict> = {
   fiscalYear: { fr: 'Année fiscale', en: 'Tax year', de: 'Steuerjahr' },
   type: { fr: 'Type de contribuable', en: 'Taxpayer type', de: 'Steuerpflichtiger Typ' },
   residence: { fr: 'Statut de résidence', en: 'Residence status', de: 'Wohnsitzstatus' },
+  situationFamille: { fr: 'Situation de famille', en: 'Family situation', de: 'Familiensituation' },
+  famCelibataire: { fr: 'Célibataire', en: 'Single', de: 'Ledig' },
+  famMariePacs: { fr: 'Marié·e / partenariat', en: 'Married / partnership', de: 'Verheiratet / Partnerschaft' },
+  famSepareDivorce: { fr: 'Séparé·e / divorcé·e', en: 'Separated / divorced', de: 'Getrennt / geschieden' },
+  famVeuf: { fr: 'Veuf·ve', en: 'Widowed', de: 'Verwitwet' },
   logement: { fr: 'Logement', en: 'Housing', de: 'Wohnsituation' },
   none: { fr: '—', en: '—', de: '—' },
   nbEnfants: { fr: "Nombre d'enfants à charge", en: 'Dependent children', de: 'Unterhaltsberechtigte Kinder' },
@@ -34,9 +39,11 @@ const L: Record<string, Dict> = {
   submit: { fr: 'Créer la campagne', en: 'Create campaign', de: 'Kampagne erstellen' },
   // champs booléens
   nouveauClient: { fr: 'Nouveau client', en: 'New client', de: 'Neukunde' },
+  retraite: { fr: 'Retraité·e', en: 'Retired', de: 'Pensioniert' },
   enfantsMajeursACharge: { fr: 'Enfants majeurs à charge', en: 'Dependent adult children', de: 'Volljährige unterhaltsber. Kinder' },
   revenuSalarie: { fr: 'Revenu salarié', en: 'Salaried income', de: 'Lohneinkommen' },
   revenuIndependant: { fr: 'Revenu indépendant', en: 'Self-employed income', de: 'Selbständiges Einkommen' },
+  activiteAccessoire: { fr: 'Activité accessoire', en: 'Secondary activity', de: 'Nebenerwerb' },
   rentes: { fr: 'Rentes (AVS/LPP)', en: 'Pensions (AVS/LPP)', de: 'Renten (AHV/BVG)' },
   immoLocatif: { fr: 'Revenus locatifs', en: 'Rental income', de: 'Mieteinnahmen' },
   titres: { fr: 'Titres / comptes bancaires', en: 'Securities / bank accounts', de: 'Wertschriften / Bankkonten' },
@@ -46,6 +53,7 @@ const L: Record<string, Dict> = {
   pilier3b: { fr: '3e pilier B (3b)', en: '3rd pillar B (3b)', de: 'Säule 3b' },
   rachatLpp: { fr: 'Rachat 2e pilier (LPP)', en: '2nd pillar buy-in', de: 'Einkauf 2. Säule' },
   fraisGarde: { fr: 'Frais de garde', en: 'Childcare costs', de: 'Betreuungskosten' },
+  fraisMedicaux: { fr: 'Frais médicaux', en: 'Medical costs', de: 'Krankheitskosten' },
   formation: { fr: 'Frais de formation', en: 'Training costs', de: 'Ausbildungskosten' },
   fraisProEffectifs: { fr: 'Frais professionnels effectifs', en: 'Actual professional expenses', de: 'Effektive Berufskosten' },
   dons: { fr: 'Dons', en: 'Donations', de: 'Spenden' },
@@ -65,10 +73,10 @@ const CATEGORY_LABEL: Record<string, Dict> = {
 };
 
 const BOOLEAN_FIELDS = {
-  situation: ['nouveauClient', 'enfantsMajeursACharge'],
-  revenus: ['revenuSalarie', 'revenuIndependant', 'rentes', 'immoLocatif'],
+  situation: ['nouveauClient', 'retraite', 'enfantsMajeursACharge'],
+  revenus: ['revenuSalarie', 'revenuIndependant', 'activiteAccessoire', 'rentes', 'immoLocatif'],
   fortune: ['titres', 'compteEtranger', 'crypto'],
-  deductions: ['pilier3a', 'pilier3b', 'rachatLpp', 'fraisGarde', 'formation', 'fraisProEffectifs', 'dons', 'pensions', 'dettes', 'assujettiTva'],
+  deductions: ['pilier3a', 'pilier3b', 'rachatLpp', 'fraisGarde', 'fraisMedicaux', 'formation', 'fraisProEffectifs', 'dons', 'pensions', 'dettes', 'assujettiTva'],
 } as const;
 
 interface Props {
@@ -86,6 +94,7 @@ export function ProfilageForm({ locale, clients, defaultFiscalYear }: Props) {
   const [profile, setProfile] = useState<ClientProfile>({
     type: 'PARTICULIER',
     residence: 'RESIDENT_CH',
+    situationFamille: 'CELIBATAIRE',
     revenuSalarie: true,
     logement: 'LOCATAIRE',
   });
@@ -139,6 +148,18 @@ export function ProfilageForm({ locale, clients, defaultFiscalYear }: Props) {
               <option value="RESIDENT_CH">Résident CH</option>
               <option value="FRONTALIER">Frontalier</option>
               <option value="QUASI_RESIDENT">Quasi-résident</option>
+            </select>
+          </Field>
+          <Field label={t('situationFamille')}>
+            <select
+              className="select"
+              value={profile.situationFamille ?? 'CELIBATAIRE'}
+              onChange={(e) => set({ situationFamille: e.target.value as ClientProfile['situationFamille'] })}
+            >
+              <option value="CELIBATAIRE">{t('famCelibataire')}</option>
+              <option value="MARIE_PACS">{t('famMariePacs')}</option>
+              <option value="SEPARE_DIVORCE">{t('famSepareDivorce')}</option>
+              <option value="VEUF">{t('famVeuf')}</option>
             </select>
           </Field>
           <Field label={t('logement')}>

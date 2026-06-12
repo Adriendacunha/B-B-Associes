@@ -190,6 +190,26 @@ export const PIECE_REFERENTIAL: PieceReferentialEntry[] = [
     texteAide: tx('Remis par la caisse de chômage ou la caisse de compensation.', 'Issued by the unemployment or compensation fund.', 'Von der Arbeitslosen- oder Ausgleichskasse ausgestellt.'),
   },
   {
+    code: 'REVENU-ACCESSOIRE',
+    category: 'REVENUS',
+    profils: [T.ACTIVITE_ACCESSOIRE],
+    requiredByDefault: true,
+    modeValidation: 'HUMAIN_REQUIS',
+    acceptedFormats: PDF_IMG,
+    expectedYearOffset: 0,
+    nom: tx('Justificatifs de revenu accessoire', 'Secondary income supporting documents', 'Belege für Nebenerwerb'),
+    description: tx(
+      'Justificatifs des revenus d’une activité accessoire (honoraires, certificat de salaire secondaire, décomptes).',
+      'Supporting documents for secondary activity income (fees, secondary salary certificate, statements).',
+      'Belege für Einkünfte aus einer Nebenerwerbstätigkeit (Honorare, zweiter Lohnausweis, Abrechnungen).',
+    ),
+    texteAide: tx(
+      'Tout justificatif du revenu accessoire perçu dans l’année (certificat de salaire secondaire, factures émises).',
+      'Any proof of secondary income earned during the year (secondary salary certificate, issued invoices).',
+      'Jeder Nachweis des im Jahr erzielten Nebenerwerbs (zweiter Lohnausweis, ausgestellte Rechnungen).',
+    ),
+  },
+  {
     code: 'ATTEST-RENTES',
     category: 'REVENUS',
     profils: [T.RENTES],
@@ -362,8 +382,8 @@ export const PIECE_REFERENTIAL: PieceReferentialEntry[] = [
   {
     code: 'FRAIS-MEDICAUX',
     category: 'DEDUCTIONS',
-    profils: [T.PARTICULIER],
-    requiredByDefault: false,
+    profils: [T.FRAIS_MEDICAUX],
+    requiredByDefault: true,
     modeValidation: 'HUMAIN_REQUIS',
     acceptedFormats: PDF_IMG,
     expectedYearOffset: 0,
@@ -457,6 +477,30 @@ export const PIECE_REFERENTIAL: PieceReferentialEntry[] = [
   },
 
   // ─────────── A. Famille ───────────
+  {
+    code: 'DIVORCE-JUGEMENT',
+    category: 'FAMILLE',
+    profils: [T.SEPARE_DIVORCE],
+    requiredByDefault: true,
+    modeValidation: 'HUMAIN_REQUIS',
+    acceptedFormats: PDF,
+    expectedYearOffset: 0,
+    nom: tx(
+      'Jugement / convention de divorce ou séparation',
+      'Divorce or separation judgment / agreement',
+      'Scheidungs- / Trennungsurteil oder -vereinbarung',
+    ),
+    description: tx(
+      'Jugement ou convention de divorce / séparation (garde des enfants, pensions alimentaires).',
+      'Divorce / separation judgment or agreement (child custody, alimony).',
+      'Scheidungs- / Trennungsurteil oder -vereinbarung (Sorgerecht, Unterhaltsbeiträge).',
+    ),
+    texteAide: tx(
+      'Document officiel fixant la garde et les pensions ; utile pour les déductions correspondantes.',
+      'Official document setting custody and alimony; needed for the related deductions.',
+      'Offizielles Dokument zu Sorgerecht und Unterhalt; für die entsprechenden Abzüge nötig.',
+    ),
+  },
   {
     code: 'SCOLARITE-MAJEURS',
     category: 'FAMILLE',
