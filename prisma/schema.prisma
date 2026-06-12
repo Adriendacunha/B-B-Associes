@@ -84,6 +84,15 @@ enum CampaignStatus {
   SUSPENDU
 }
 
+// Déclaration de complétude par le client sur sa checklist (UX §7) : il indique
+// s'il a fini de déposer, sinon le cabinet le relance. « NON_CONCERNE » = rien à
+// déposer pour cet exercice.
+enum ClientDeclaration {
+  NON
+  OUI
+  NON_CONCERNE
+}
+
 enum ChecklistItemStatus {
   MANQUANT
   DEPOSE // fichier reçu, en attente d'analyse IA
@@ -245,6 +254,9 @@ model Campaign {
   onedriveFolder   String? // chemin racine créé sur OneDrive (§5.1)
   openedAt         DateTime?
   completedAt      DateTime?
+  // Déclaration de complétude par le client (UX §7) : suspend les relances auto.
+  clientDeclaration   ClientDeclaration?
+  clientDeclarationAt DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 

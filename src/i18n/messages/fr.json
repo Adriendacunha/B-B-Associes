@@ -136,7 +136,15 @@
     "required": "Obligatoire",
     "optional": "Facultatif",
     "upload": "Déposer",
-    "completude": "Complétude du dossier"
+    "completude": "Complétude du dossier",
+    "declQuestion": "Avez-vous terminé de déposer les documents demandés ?",
+    "declHint": "Cela aide le cabinet à savoir s’il peut traiter votre dossier ; les rappels automatiques s’arrêtent si vous répondez « Oui » ou « Je ne suis pas concerné ».",
+    "declNon": "Non",
+    "declOui": "Oui",
+    "declNonConcerne": "Je ne suis pas concerné pour cet exercice",
+    "declDoneOui": "Merci, le cabinet a été informé que votre dépôt est terminé. Vous pouvez encore ajouter une pièce si nécessaire.",
+    "declDoneNonConcerne": "Noté : vous n’êtes pas concerné pour cet exercice. Vous pouvez revenir sur ce choix à tout moment.",
+    "declModify": "Modifier ma réponse"
   },
   "campagne": {
     "title": "Campagne de collecte",
@@ -145,7 +153,12 @@
     "client": "Client",
     "manager": "Gestionnaire",
     "completude": "Complétude",
-    "newCampaign": "Ouvrir une campagne"
+    "newCampaign": "Ouvrir une campagne",
+    "declarationLabel": "Déclaration du client",
+    "declNone": "Aucune réponse",
+    "declNon": "En cours (non terminé)",
+    "declOui": "Déclaré terminé par le client",
+    "declNonConcerne": "Client non concerné cet exercice"
   },
   "dashboard": {
     "title": "Tableau de bord — suivi des dossiers",

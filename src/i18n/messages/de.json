@@ -136,7 +136,15 @@
     "required": "Erforderlich",
     "optional": "Optional",
     "upload": "Hochladen",
-    "completude": "Vollständigkeit des Dossiers"
+    "completude": "Vollständigkeit des Dossiers",
+    "declQuestion": "Haben Sie alle angeforderten Dokumente hochgeladen?",
+    "declHint": "So weiss die Kanzlei, ob Ihr Dossier bearbeitet werden kann; automatische Erinnerungen stoppen bei „Ja“ oder „Nicht betroffen“.",
+    "declNon": "Nein",
+    "declOui": "Ja",
+    "declNonConcerne": "Für diese Übung nicht betroffen",
+    "declDoneOui": "Danke, die Kanzlei wurde informiert, dass Ihr Upload abgeschlossen ist. Sie können bei Bedarf noch ein Dokument hinzufügen.",
+    "declDoneNonConcerne": "Notiert: Diese Übung betrifft Sie nicht. Sie können diese Wahl jederzeit ändern.",
+    "declModify": "Antwort ändern"
   },
   "campagne": {
     "title": "Sammelkampagne",
@@ -145,7 +153,12 @@
     "client": "Kunde",
     "manager": "Sachbearbeiter",
     "completude": "Vollständigkeit",
-    "newCampaign": "Kampagne eröffnen"
+    "newCampaign": "Kampagne eröffnen",
+    "declarationLabel": "Kundenerklärung",
+    "declNone": "Keine Antwort",
+    "declNon": "In Bearbeitung (nicht abgeschlossen)",
+    "declOui": "Vom Kunden als abgeschlossen erklärt",
+    "declNonConcerne": "Kunde diese Übung nicht betroffen"
   },
   "dashboard": {
     "title": "Dashboard — Dossierverfolgung",

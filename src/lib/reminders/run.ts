@@ -31,6 +31,9 @@ export async function runDueReminders(now: Date = new Date()): Promise<RunResult
   let remindersSent = 0;
 
   for (const c of campaigns) {
+    // Le client a déclaré avoir terminé (ou ne pas être concerné) : on cesse de
+    // le relancer automatiquement (UX §7). La relance manuelle reste possible.
+    if (c.clientDeclaration === 'OUI' || c.clientDeclaration === 'NON_CONCERNE') continue;
     const required = c.checklistItems.filter((i) => i.required);
     const isComplete = required.length > 0 && required.every((i) => i.status === 'CONFORME');
     const planned = planCadence(c.openedAt!, cadence);
