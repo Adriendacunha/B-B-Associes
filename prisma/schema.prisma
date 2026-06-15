@@ -99,6 +99,7 @@ enum ChecklistItemStatus {
   EN_VALIDATION // verdict IA rendu, en attente de décision humaine (MVP)
   CONFORME // validé (auto ou humain) + déposé sur OneDrive
   NON_CONFORME // rejeté, à refournir
+  NON_CONCERNE // le client déclare ne pas être concerné par cette pièce
 }
 
 enum DocumentStatus {

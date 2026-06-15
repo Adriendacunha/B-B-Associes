@@ -35,7 +35,8 @@ export async function runDueReminders(now: Date = new Date()): Promise<RunResult
     // le relancer automatiquement (UX §7). La relance manuelle reste possible.
     if (c.clientDeclaration === 'OUI' || c.clientDeclaration === 'NON_CONCERNE') continue;
     const required = c.checklistItems.filter((i) => i.required);
-    const isComplete = required.length > 0 && required.every((i) => i.status === 'CONFORME');
+    const isComplete =
+      required.length > 0 && required.every((i) => i.status === 'CONFORME' || i.status === 'NON_CONCERNE');
     const planned = planCadence(c.openedAt!, cadence);
     const sentSteps = c.reminders
       .filter((r) => r.sentAt)

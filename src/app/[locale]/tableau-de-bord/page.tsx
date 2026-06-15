@@ -69,6 +69,34 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
         <Metric label={t('metrics.complete')} value={`${d.completeCount}/${d.totalCampaigns}`} Icon={FolderCheck} />
       </div>
 
+      {/* Triage en 4 buckets (écran 6). */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          { title: 'Dossiers bloqués', rows: d.buckets.bloque, cls: 'border-red-200', dot: 'bg-red-500' },
+          { title: 'À relancer', rows: d.buckets.aRelancer, cls: 'border-amber-200', dot: 'bg-amber-500' },
+          { title: 'À contrôler', rows: d.buckets.aControler, cls: 'border-blue-200', dot: 'bg-blue-500' },
+          { title: 'Prêts à traiter', rows: d.buckets.pret, cls: 'border-green-200', dot: 'bg-green-500' },
+        ].map((b) => (
+          <div key={b.title} className={`card ${b.cls}`}>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                <span className={`h-2 w-2 rounded-full ${b.dot}`} /> {b.title}
+              </span>
+              <span className="text-lg font-bold text-slate-900">{b.rows.length}</span>
+            </div>
+            <ul className="space-y-1">
+              {b.rows.slice(0, 6).map((r) => (
+                <li key={r.clientCode} className="truncate text-xs text-slate-600">
+                  <span className="font-mono text-[10px] text-slate-400">{r.clientCode}</span> {r.displayName}
+                  <span className="text-slate-400"> · {r.completude.label}</span>
+                </li>
+              ))}
+              {b.rows.length === 0 && <li className="text-xs text-slate-400">—</li>}
+            </ul>
+          </div>
+        ))}
+      </div>
+
       {/* Dossiers déclarés terminés par le client → à traiter (UX §7). */}
       {readyCount > 0 && (
         <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">

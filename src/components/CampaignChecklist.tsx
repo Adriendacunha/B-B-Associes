@@ -5,12 +5,21 @@ import { resolveLocalized, type AppLocale, type LocalizedText } from '@/lib/i18n
 import { completude } from '@/lib/metrics/mvp';
 import { CATEGORY_FOLDERS, ORDERED_CATEGORIES } from '@/lib/onedrive/paths';
 import { uploadDocument, renameDocument, bulkUpload } from '@/app/actions/document';
-import { setClientDeclaration } from '@/app/actions/campaign';
+import { setClientDeclaration, setItemConcern } from '@/app/actions/campaign';
 import { setItemRequired, deleteItem, updateItemDetails, addItemFromCatalogue } from '@/app/actions/checklist';
 import { formatAnomalies } from '@/lib/ai/anomalies';
 import { Dropzone } from '@/components/Dropzone';
 import { sendInvitation, sendReminderNow } from '@/app/actions/email';
 import { Link } from '@/i18n/routing';
+
+const CAMPAIGN_STATUS_LABEL: Record<string, string> = {
+  NON_COMMENCE: 'Brouillon',
+  EN_COURS: 'En préparation',
+  EN_ATTENTE_CLIENT: 'Envoyée — en attente du client',
+  A_VALIDER: 'À contrôler',
+  COMPLET: 'Prête à traiter',
+  SUSPENDU: 'Suspendue',
+};
 
 const STATUS_STYLE: Record<string, string> = {
   MANQUANT: 'bg-slate-100 text-slate-600',
@@ -18,6 +27,7 @@ const STATUS_STYLE: Record<string, string> = {
   EN_VALIDATION: 'bg-amber-100 text-amber-800',
   CONFORME: 'bg-green-100 text-green-700',
   NON_CONFORME: 'bg-red-100 text-red-700',
+  NON_CONCERNE: 'bg-slate-200 text-slate-500',
 };
 
 /**
@@ -58,9 +68,11 @@ export async function CampaignChecklist({
 
   const items = campaign.checklistItems;
   const requiredItems = items.filter((i) => i.required);
+  // Une pièce « non concernée » est résolue (au même titre que validée).
+  const isResolved = (s: string) => s === 'CONFORME' || s === 'NON_CONCERNE';
   const comp = completude({
     requiredTotal: requiredItems.length,
-    conformes: requiredItems.filter((i) => i.status === 'CONFORME').length,
+    conformes: requiredItems.filter((i) => isResolved(i.status)).length,
   });
 
   // Synthèse du dossier (vue cabinet) — statuts réels des documents (§ rectificative).
@@ -69,12 +81,13 @@ export async function CampaignChecklist({
     manquants: items.filter((i) => i.status === 'MANQUANT').length,
     aCorriger: items.filter((i) => i.status === 'NON_CONFORME').length,
     valides: items.filter((i) => i.status === 'CONFORME').length,
+    nonConcerne: items.filter((i) => i.status === 'NON_CONCERNE').length,
   };
   const isRectificative = campaign.templateId !== null;
 
   // Compteurs relances (vue cabinet uniquement).
   const pendingCount = items.filter((i) => i.status === 'MANQUANT' || i.status === 'NON_CONFORME').length;
-  const isComplete = requiredItems.length > 0 && requiredItems.every((i) => i.status === 'CONFORME');
+  const isComplete = requiredItems.length > 0 && requiredItems.every((i) => isResolved(i.status));
   const [invitationCount, reminderCount] = showMeta
     ? await Promise.all([
         prisma.emailMessage.count({ where: { campaignId, templateKey: 'INVITATION' } }),
@@ -115,7 +128,10 @@ export async function CampaignChecklist({
               <span className="text-slate-400">{t('fiscalYear')} :</span> {campaign.fiscalYear}
             </span>
             <span>
-              <span className="text-slate-400">{t('statusLabel')} :</span> {campaign.status}
+              <span className="text-slate-400">{t('statusLabel')} :</span>{' '}
+              <span className="font-medium text-slate-700">
+                {isComplete ? 'Prête à traiter' : (CAMPAIGN_STATUS_LABEL[campaign.status] ?? campaign.status)}
+              </span>
             </span>
             {campaign.client.gestionnaire && (
               <span>
@@ -187,12 +203,13 @@ export async function CampaignChecklist({
       {showMeta && (
         <div className="card space-y-3">
           <h2 className="text-sm font-semibold text-slate-900">Synthèse du dossier</h2>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
             {[
               { k: 'Reçus', v: synthese.recus, cls: 'text-blue-700' },
               { k: 'Manquants', v: synthese.manquants, cls: 'text-slate-700' },
               { k: 'À corriger', v: synthese.aCorriger, cls: 'text-red-700' },
               { k: 'Validés', v: synthese.valides, cls: 'text-green-700' },
+              { k: 'Non concerné', v: synthese.nonConcerne, cls: 'text-slate-400' },
             ].map((s) => (
               <div key={s.k} className="rounded-lg border border-slate-200 p-3 text-center">
                 <div className={`text-2xl font-bold ${s.cls}`}>{s.v}</div>
@@ -429,6 +446,28 @@ export async function CampaignChecklist({
                         idle={item.status === 'EN_VALIDATION' ? tUp('replace') : tUp('send')}
                         pending={tUp('uploading')}
                       />
+                    )}
+
+                    {/* « Je ne suis pas concerné » par cette pièce (côté client). */}
+                    {!showMeta && item.status === 'MANQUANT' && (
+                      <form action={setItemConcern} className="mt-1">
+                        <input type="hidden" name="itemId" value={item.id} />
+                        <input type="hidden" name="locale" value={locale} />
+                        <input type="hidden" name="concerned" value="false" />
+                        <button type="submit" className="text-xs text-slate-500 underline hover:text-slate-700">
+                          {tStatus('notConcerned')}
+                        </button>
+                      </form>
+                    )}
+                    {!showMeta && item.status === 'NON_CONCERNE' && (
+                      <form action={setItemConcern} className="mt-1">
+                        <input type="hidden" name="itemId" value={item.id} />
+                        <input type="hidden" name="locale" value={locale} />
+                        <input type="hidden" name="concerned" value="true" />
+                        <button type="submit" className="text-xs text-brand underline hover:text-brand-light">
+                          {tStatus('concernedAfterAll')}
+                        </button>
+                      </form>
                     )}
                   </li>
                 );

@@ -201,3 +201,29 @@ export async function setClientDeclaration(formData: FormData): Promise<void> {
   revalidatePath(`/${uiLocale}/espace`);
   revalidatePath(`/${uiLocale}/campagne/${campaignId}`);
 }
+
+/**
+ * Le client déclare (ou annule) « Je ne suis pas concerné » pour une pièce
+ * précise (UX écran 4/6). Bascule le statut entre NON_CONCERNE et MANQUANT.
+ */
+export async function setItemConcern(formData: FormData): Promise<void> {
+  const uiLocale = String(formData.get('locale') ?? 'fr');
+  const client = await requireClient(uiLocale);
+  const itemId = String(formData.get('itemId') ?? '');
+  const concerned = String(formData.get('concerned') ?? '') === 'true';
+
+  const item = await prisma.checklistItem.findUnique({
+    where: { id: itemId },
+    select: { id: true, status: true, campaign: { select: { id: true, clientId: true } } },
+  });
+  if (!item || item.campaign.clientId !== client.id) return;
+  // On ne touche pas à une pièce déjà déposée/validée (seulement MANQUANT ↔ NON_CONCERNE).
+  if (concerned) {
+    if (item.status === 'NON_CONCERNE') await prisma.checklistItem.update({ where: { id: itemId }, data: { status: 'MANQUANT' } });
+  } else {
+    if (item.status === 'MANQUANT') await prisma.checklistItem.update({ where: { id: itemId }, data: { status: 'NON_CONCERNE' } });
+  }
+
+  revalidatePath(`/${uiLocale}/espace`);
+  revalidatePath(`/${uiLocale}/campagne/${item.campaign.id}`);
+}

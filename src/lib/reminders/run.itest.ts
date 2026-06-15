@@ -11,6 +11,7 @@ async function makeCampaign(opts: {
   daysAgo: number;
   paused?: boolean;
   complete?: boolean;
+  itemStatus?: 'MANQUANT' | 'CONFORME' | 'NON_CONCERNE';
   declaration?: 'NON' | 'OUI' | 'NON_CONCERNE';
 }) {
   const code = 'ITEST-' + Math.random().toString(36).slice(2, 9).toUpperCase();
@@ -38,7 +39,7 @@ async function makeCampaign(opts: {
       category: piece.category,
       required: true,
       expectedFiscalYear: 2025,
-      status: opts.complete ? 'CONFORME' : 'MANQUANT',
+      status: opts.itemStatus ?? (opts.complete ? 'CONFORME' : 'MANQUANT'),
     },
   });
   return campaign.id;
@@ -90,6 +91,12 @@ describe('runDueReminders (intégration §6.1)', () => {
 
   it('n’envoie rien si le client n’est pas concerné (UX §7)', async () => {
     const id = await makeCampaign({ daysAgo: 25, declaration: 'NON_CONCERNE' });
+    await runDueReminders();
+    expect(await reminderCount(id)).toBe(0);
+  });
+
+  it('une pièce obligatoire « Non concerné » rend le dossier complet (pas de relance)', async () => {
+    const id = await makeCampaign({ daysAgo: 25, itemStatus: 'NON_CONCERNE' });
     await runDueReminders();
     expect(await reminderCount(id)).toBe(0);
   });
