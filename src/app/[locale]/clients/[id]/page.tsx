@@ -3,12 +3,11 @@ import { notFound } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { prisma } from '@/lib/db';
 import { requireStaff } from '@/lib/auth/session';
+import { baseUrl } from '@/lib/url';
 import { CopyLink } from '@/components/CopyLink';
 import { Link } from '@/i18n/routing';
 
 export const dynamic = 'force-dynamic';
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
 const STATUS_LABEL: Record<string, string> = {
   NON_COMMENCE: 'Non commencée',
@@ -40,6 +39,7 @@ export default async function ClientFichePage({
   const templates = await prisma.campaignTemplate.findMany({ select: { key: true, name: true } });
   const templateName = new Map(templates.map((t) => [t.key, t.name]));
 
+  const APP_URL = await baseUrl();
   const activated = Boolean(client.passwordHash);
   const clientLink = activated
     ? `${APP_URL}/${client.locale.toLowerCase()}/espace`

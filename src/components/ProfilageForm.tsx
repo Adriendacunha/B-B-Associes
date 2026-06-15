@@ -130,6 +130,8 @@ export function ProfilageForm({ locale, clients, defaultFiscalYear }: Props) {
           <Field label={t('fiscalYear')}>
             <input
               type="number"
+              min={2015}
+              max={new Date().getFullYear() + 1}
               className="select"
               value={fiscalYear}
               onChange={(e) => setFiscalYear(Number(e.target.value))}

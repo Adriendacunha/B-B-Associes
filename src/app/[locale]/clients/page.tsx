@@ -2,11 +2,10 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { prisma } from '@/lib/db';
 import { requireStaff } from '@/lib/auth/session';
 import { createClient } from '@/app/actions/client';
+import { baseUrl } from '@/lib/url';
 import { Link } from '@/i18n/routing';
 
 export const dynamic = 'force-dynamic';
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
 export default async function ClientsPage({
   params,
@@ -29,6 +28,7 @@ export default async function ClientsPage({
     prisma.user.findMany({ where: { active: true }, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
   ]);
 
+  const APP_URL = await baseUrl();
   const activationUrl = (loc: string, token: string) =>
     `${APP_URL}/${loc.toLowerCase()}/activation?token=${token}`;
   const activeCount = (cs: { status: string }[]) => cs.filter((c) => c.status !== 'COMPLET' && c.status !== 'NON_COMMENCE').length;

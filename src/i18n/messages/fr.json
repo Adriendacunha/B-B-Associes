@@ -183,6 +183,20 @@
     "declOui": "Terminé",
     "declNon": "En cours",
     "declNonConcerne": "Non concerné",
-    "declNone": "—"
+    "declNone": "—",
+    "buckets": {
+      "bloque": "Dossiers bloqués",
+      "aRelancer": "À relancer",
+      "aControler": "À contrôler",
+      "pret": "Prêts à traiter"
+    },
+    "campaignStatus": {
+      "NON_COMMENCE": "Brouillon",
+      "EN_COURS": "En préparation",
+      "EN_ATTENTE_CLIENT": "Envoyée",
+      "A_VALIDER": "À contrôler",
+      "COMPLET": "Prête à traiter",
+      "SUSPENDU": "Suspendue"
+    }
   }
 }

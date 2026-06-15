@@ -9,6 +9,7 @@ import { setClientDeclaration, setItemConcern } from '@/app/actions/campaign';
 import { setItemRequired, deleteItem, updateItemDetails, addItemFromCatalogue } from '@/app/actions/checklist';
 import { formatAnomalies } from '@/lib/ai/anomalies';
 import { intakeSummary } from '@/lib/questionnaire/intake';
+import { baseUrl } from '@/lib/url';
 import { RECTIFICATIVE_TEMPLATE } from '@/data/templates/declaration-rectificative';
 import { Dropzone } from '@/components/Dropzone';
 import { CopyLink } from '@/components/CopyLink';
@@ -89,7 +90,7 @@ export async function CampaignChecklist({
   const isRectificative = campaign.templateId !== null;
 
   // Lien à transmettre au client pour qu'il complète sa campagne.
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const APP_URL = showMeta ? await baseUrl() : process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
   const clientLocale = campaign.client.locale.toLowerCase();
   const clientActivated = Boolean(campaign.client.passwordHash);
   const clientLink = clientActivated
@@ -202,6 +203,11 @@ export async function CampaignChecklist({
               Prévisualiser (côté client)
             </Link>
           </div>
+          <p className="text-xs text-slate-400">
+            {advanced
+              ? 'Mode avancé : ajoutez/retirez des pièces, basculez obligatoire/optionnel, ajoutez notes et dates limites.'
+              : 'Mode simple : consultez le dossier. Passez en mode avancé pour personnaliser la checklist.'}
+          </p>
         </header>
       )}
 

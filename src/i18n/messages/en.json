@@ -183,6 +183,20 @@
     "declOui": "Done",
     "declNon": "In progress",
     "declNonConcerne": "Not applicable",
-    "declNone": "—"
+    "declNone": "—",
+    "buckets": {
+      "bloque": "Blocked files",
+      "aRelancer": "To remind",
+      "aControler": "To review",
+      "pret": "Ready to process"
+    },
+    "campaignStatus": {
+      "NON_COMMENCE": "Draft",
+      "EN_COURS": "In preparation",
+      "EN_ATTENTE_CLIENT": "Sent",
+      "A_VALIDER": "To review",
+      "COMPLET": "Ready to process",
+      "SUSPENDU": "Suspended"
+    }
   }
 }

@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from 'react';
 import { AlertTriangle, Info, FileText } from 'lucide-react';
 import type { Answers, DocObligation, Section } from '@/lib/questionnaire/types';
-import { groupByCategory, qualificationComplete, requestedDocuments, visibleSections } from '@/lib/questionnaire/engine';
+import { groupByCategory, isAnswered, qualificationComplete, requestedDocuments, visibleSections } from '@/lib/questionnaire/engine';
 import {
   RECTIFICATIVE_TEMPLATE as T,
   QUALIFYING_IDS,
@@ -58,6 +58,11 @@ export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear 
   const orientation = sections.find((s) => s.id === 'orientation');
   const otherSections = sections.filter((s) => s.id !== 'orientation');
 
+  // Questions de qualification visibles encore sans réponse (pour guider le cabinet).
+  const missingQualif = sections
+    .flatMap((s) => s.questions)
+    .filter((q) => QUALIFYING_IDS.includes(q.id) && !isAnswered(answers[q.id]));
+
   const counts = {
     obligatoire: docs.filter((d) => d.obligation === 'obligatoire').length,
     conditionnel: docs.filter((d) => d.obligation === 'conditionnel').length,
@@ -89,7 +94,14 @@ export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear 
         </label>
         <label className="block">
           <span className="mb-1.5 block text-xs font-medium text-slate-600">Année fiscale</span>
-          <input type="number" className="input" value={fiscalYear} onChange={(e) => setFiscalYear(Number(e.target.value))} />
+          <input
+            type="number"
+            min={2015}
+            max={new Date().getFullYear() + 1}
+            className="input"
+            value={fiscalYear}
+            onChange={(e) => setFiscalYear(Number(e.target.value))}
+          />
         </label>
       </section>
 
@@ -192,11 +204,22 @@ export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear 
         </div>
       )}
 
-      {/* Invitation à finir la qualification */}
+      {/* Invitation à finir la qualification : on indique ce qui reste à répondre. */}
       {!notRectificative && !qualified && (
-        <p className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-center text-sm text-slate-500">
-          Répondez aux questions ci-dessus : votre liste de documents personnalisée s’affichera ensuite.
-        </p>
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-600">
+          {missingQualif.length > 0 ? (
+            <>
+              <p className="mb-1 font-medium">Pour générer la liste de documents, répondez encore à :</p>
+              <ul className="list-disc pl-5 text-slate-500">
+                {missingQualif.map((q) => (
+                  <li key={q.id}>{q.clientLabel}</li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p className="text-center text-slate-500">Continuez à répondre : la liste de documents s’affichera ensuite.</p>
+          )}
+        </div>
       )}
 
       {/* Création de la campagne (persistance) */}

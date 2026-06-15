@@ -183,6 +183,20 @@
     "declOui": "Abgeschlossen",
     "declNon": "In Bearbeitung",
     "declNonConcerne": "Nicht betroffen",
-    "declNone": "—"
+    "declNone": "—",
+    "buckets": {
+      "bloque": "Blockierte Dossiers",
+      "aRelancer": "Zu erinnern",
+      "aControler": "Zu prüfen",
+      "pret": "Bereit zur Bearbeitung"
+    },
+    "campaignStatus": {
+      "NON_COMMENCE": "Entwurf",
+      "EN_COURS": "In Vorbereitung",
+      "EN_ATTENTE_CLIENT": "Gesendet",
+      "A_VALIDER": "Zu prüfen",
+      "COMPLET": "Bereit zur Bearbeitung",
+      "SUSPENDU": "Ausgesetzt"
+    }
   }
 }

@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import type { EmailTemplateKey } from '@prisma/client';
 import { prisma } from '@/lib/db';
 import { sendEmail, loadTemplate } from '@/lib/email/mailer';
@@ -57,6 +58,18 @@ export async function sendReminderNow(formData: FormData): Promise<void> {
     return;
   }
 
+  // Garde-fou : pas de relance dans les 24 h suivant le dernier e-mail (invitation
+  // ou relance) — évite de relancer le client juste après l'invitation.
+  const lastEmail = await prisma.emailMessage.findFirst({
+    where: { campaignId, templateKey: { in: ['INVITATION', ...RELANCE_SEQUENCE] } },
+    orderBy: { createdAt: 'desc' },
+    select: { createdAt: true },
+  });
+  if (lastEmail && Date.now() - lastEmail.createdAt.getTime() < 24 * 3600 * 1000) {
+    revalidatePath(`/${uiLocale}/campagne/${campaignId}`);
+    return;
+  }
+
   const priorReminders = await prisma.emailMessage.count({ where: { campaignId, templateKey: { in: RELANCE_SEQUENCE } } });
   const key = RELANCE_SEQUENCE[Math.min(priorReminders, RELANCE_SEQUENCE.length - 1)];
 
@@ -82,9 +95,9 @@ export async function sendReminderNow(formData: FormData): Promise<void> {
 export async function processDueReminders(formData: FormData): Promise<void> {
   const uiLocale = String(formData.get('locale') ?? 'fr');
   await requireStaff(uiLocale);
-  await runDueReminders();
-  revalidatePath(`/${uiLocale}/tableau-de-bord`);
+  const result = await runDueReminders();
   revalidatePath(`/${uiLocale}/emails`);
+  redirect(`/${uiLocale}/tableau-de-bord?relancesSent=${result.remindersSent}`);
 }
 
 /**

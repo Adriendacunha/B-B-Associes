@@ -13,6 +13,15 @@ import { requestedDocuments } from '@/lib/questionnaire/engine';
 import { RECTIFICATIVE_TEMPLATE } from '@/data/templates/declaration-rectificative';
 import { rectPieceCode } from '@/data/templates/rectificative-pieces';
 
+/** Borne l'année fiscale (2015 ≤ année ≤ année courante + 1). */
+function assertFiscalYear(y: number): void {
+  const min = 2015;
+  const max = new Date().getUTCFullYear() + 1;
+  if (!Number.isInteger(y) || y < min || y > max) {
+    throw new Error(`Année fiscale invalide : attendu entre ${min} et ${max}.`);
+  }
+}
+
 export interface CreateCampaignInput {
   locale: string;
   clientCode: string;
@@ -27,6 +36,7 @@ export interface CreateCampaignInput {
  */
 export async function createCampaign(input: CreateCampaignInput): Promise<void> {
   await requireStaff(input.locale); // réservé au cabinet (§2/§8)
+  assertFiscalYear(input.fiscalYear);
 
   const client = await prisma.client.findUnique({ where: { clientCode: input.clientCode } });
   if (!client) throw new Error(`Client introuvable: ${input.clientCode}`);
@@ -99,6 +109,7 @@ export interface CreateRectificativeInput {
  */
 export async function createRectificativeCampaign(input: CreateRectificativeInput): Promise<void> {
   await requireStaff(input.locale);
+  assertFiscalYear(input.fiscalYear);
 
   const client = await prisma.client.findUnique({ where: { clientCode: input.clientCode } });
   if (!client) throw new Error(`Client introuvable: ${input.clientCode}`);
