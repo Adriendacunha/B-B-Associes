@@ -11,6 +11,7 @@ import { formatAnomalies } from '@/lib/ai/anomalies';
 import { intakeSummary } from '@/lib/questionnaire/intake';
 import { RECTIFICATIVE_TEMPLATE } from '@/data/templates/declaration-rectificative';
 import { Dropzone } from '@/components/Dropzone';
+import { CopyLink } from '@/components/CopyLink';
 import { sendInvitation, sendReminderNow } from '@/app/actions/email';
 import { Link } from '@/i18n/routing';
 
@@ -86,6 +87,16 @@ export async function CampaignChecklist({
     nonConcerne: items.filter((i) => i.status === 'NON_CONCERNE').length,
   };
   const isRectificative = campaign.templateId !== null;
+
+  // Lien à transmettre au client pour qu'il complète sa campagne.
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const clientLocale = campaign.client.locale.toLowerCase();
+  const clientActivated = Boolean(campaign.client.passwordHash);
+  const clientLink = clientActivated
+    ? `${APP_URL}/${clientLocale}/espace`
+    : campaign.client.activationToken
+      ? `${APP_URL}/${clientLocale}/activation?token=${campaign.client.activationToken}`
+      : null;
 
   // Informations fournies par le client (intake) — vue cabinet, lecture seule.
   const intakeRows =
@@ -192,6 +203,19 @@ export async function CampaignChecklist({
             </Link>
           </div>
         </header>
+      )}
+
+      {/* Lien à transmettre au client pour compléter sa campagne. */}
+      {showMeta && clientLink && (
+        <div className="card border-brand/30 bg-brand/5">
+          <h2 className="text-sm font-semibold text-slate-900">Lien pour le client</h2>
+          <p className="mb-2 text-xs text-slate-500">
+            {clientActivated
+              ? 'Transmettez ce lien au client pour qu’il accède à son espace et dépose ses pièces.'
+              : 'Première connexion : ce lien permet au client d’activer son compte, puis de compléter sa campagne.'}
+          </p>
+          <CopyLink url={clientLink} />
+        </div>
       )}
 
       <div className="card">

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { prisma } from '@/lib/db';
 import { requireStaff } from '@/lib/auth/session';
+import { CopyLink } from '@/components/CopyLink';
 import { Link } from '@/i18n/routing';
 
 export const dynamic = 'force-dynamic';
@@ -40,8 +41,9 @@ export default async function ClientFichePage({
   const templateName = new Map(templates.map((t) => [t.key, t.name]));
 
   const activated = Boolean(client.passwordHash);
-  const activationUrl =
-    !activated && client.activationToken
+  const clientLink = activated
+    ? `${APP_URL}/${client.locale.toLowerCase()}/espace`
+    : client.activationToken
       ? `${APP_URL}/${client.locale.toLowerCase()}/activation?token=${client.activationToken}`
       : null;
 
@@ -86,10 +88,12 @@ export default async function ClientFichePage({
             </div>
           ))}
         </dl>
-        {activationUrl && (
+        {clientLink && (
           <div className="mt-4">
-            <label className="mb-1 block text-xs font-medium text-slate-500">Lien d’activation (à transmettre au client)</label>
-            <input readOnly value={activationUrl} className="input w-full font-mono text-xs" />
+            <label className="mb-1 block text-xs font-medium text-slate-500">
+              {activated ? 'Lien de l’espace client (à transmettre)' : 'Lien d’activation (à transmettre au client)'}
+            </label>
+            <CopyLink url={clientLink} />
           </div>
         )}
       </section>
