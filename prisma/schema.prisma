@@ -309,6 +309,11 @@ model ChecklistItem {
   modeValidation     ModeValidation      @default(HUMAIN_REQUIS)
   status             ChecklistItemStatus @default(MANQUANT)
 
+  // Personnalisation par le cabinet (écran 3) :
+  internalNote String? // note interne (non visible client)
+  clientNote   String? // explication affichée au client (« Pourquoi / comment »)
+  dueDate      DateTime? // date limite spécifique à cette pièce
+
   documents Document[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
