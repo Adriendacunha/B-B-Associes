@@ -8,8 +8,17 @@ import { requireStaff } from '@/lib/auth/session';
 import { appendAuditLog } from '@/lib/audit/log';
 
 const LOCALES = new Set(['FR', 'EN', 'DE']);
-const TYPES = new Set(['PARTICULIER', 'INDEPENDANT', 'SOCIETE', 'HOIRIE']);
-const RESIDENCES = new Set(['RESIDENT_CH', 'FRONTALIER', 'QUASI_RESIDENT']);
+
+/** Génère un code client court et unique à partir du nom (ex. BORG4821). */
+async function generateClientCode(lastName: string): Promise<string> {
+  const base = (lastName.replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 4) || 'CLT').padEnd(4, 'X');
+  for (let i = 0; i < 8; i++) {
+    const code = `${base}${Math.floor(1000 + Math.random() * 9000)}`;
+    const exists = await prisma.client.findUnique({ where: { clientCode: code }, select: { id: true } });
+    if (!exists) return code;
+  }
+  return `C${Date.now().toString(36).toUpperCase().slice(-6)}`;
+}
 
 /**
  * Création d'un client (bêta-testeur, §15.2) par le cabinet. Génère un jeton
@@ -19,21 +28,21 @@ export async function createClient(formData: FormData): Promise<void> {
   const uiLocale = String(formData.get('uiLocale') ?? 'fr');
   const staff = await requireStaff(uiLocale);
 
-  const clientCode = String(formData.get('clientCode') ?? '').trim();
-  const displayName = String(formData.get('displayName') ?? '').trim();
+  const lastName = String(formData.get('lastName') ?? '').trim();
+  const firstName = String(formData.get('firstName') ?? '').trim();
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
   const locale = String(formData.get('locale') ?? 'FR').toUpperCase();
-  const type = String(formData.get('type') ?? 'PARTICULIER');
-  const residence = String(formData.get('residence') ?? 'RESIDENT_CH');
-  const canton = String(formData.get('canton') ?? '').trim() || null;
-  const phone = String(formData.get('phone') ?? '').trim() || null;
   const gestionnaireId = String(formData.get('gestionnaireId') ?? '').trim() || staff.id;
+  const civilStatus = String(formData.get('civilStatus') ?? '').trim() || null;
+  const birthRaw = String(formData.get('birthDate') ?? '').trim();
+  const birthDate = birthRaw ? new Date(birthRaw) : null;
+  const str = (k: string) => String(formData.get(k) ?? '').trim() || null;
 
-  if (!clientCode || !displayName || !email) redirect(`/${uiLocale}/clients?error=champs`);
-  if (!LOCALES.has(locale) || !TYPES.has(type) || !RESIDENCES.has(residence)) {
-    redirect(`/${uiLocale}/clients?error=valeurs`);
-  }
+  if (!lastName || !firstName || !email) redirect(`/${uiLocale}/clients?error=champs`);
+  if (!LOCALES.has(locale)) redirect(`/${uiLocale}/clients?error=valeurs`);
 
+  const displayName = `${lastName} ${firstName}`.trim();
+  const clientCode = await generateClientCode(lastName);
   const activationToken = randomBytes(24).toString('base64url');
 
   try {
@@ -41,12 +50,21 @@ export async function createClient(formData: FormData): Promise<void> {
       data: {
         clientCode,
         displayName,
+        firstName,
+        lastName,
         email,
         locale: locale as Prisma.ClientCreateInput['locale'],
-        type: type as Prisma.ClientCreateInput['type'],
-        residence: residence as Prisma.ClientCreateInput['residence'],
-        canton,
-        phone,
+        type: 'PARTICULIER',
+        birthDate,
+        civilStatus,
+        street: str('street'),
+        postalCode: str('postalCode'),
+        city: str('city'),
+        nationality: str('nationality'),
+        permitType: str('permitType'),
+        avsNumber: str('avsNumber'),
+        religion: str('religion'),
+        phone: str('phone'),
         niveauDeService: 'EXPERT', // MVP : tous en expert (§2/§15)
         gestionnaireId,
         activationToken,

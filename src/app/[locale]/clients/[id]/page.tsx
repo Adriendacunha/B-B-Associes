@@ -47,11 +47,29 @@ export default async function ClientFichePage({
       ? `${APP_URL}/${client.locale.toLowerCase()}/activation?token=${client.activationToken}`
       : null;
 
+  const CIVIL_LABEL: Record<string, string> = {
+    celibataire: 'Célibataire',
+    marie: 'Marié·e',
+    partenariat: 'Partenariat enregistré',
+    separe: 'Séparé·e',
+    divorce: 'Divorcé·e',
+    veuf: 'Veuf·ve',
+  };
+  const fmtDate = (d: Date | null) =>
+    d ? `${String(d.getUTCDate()).padStart(2, '0')}.${String(d.getUTCMonth() + 1).padStart(2, '0')}.${d.getUTCFullYear()}` : '—';
+  const address = [client.street, [client.postalCode, client.city].filter(Boolean).join(' ')].filter(Boolean).join(', ') || '—';
+
   const info: [string, string][] = [
     ['Code', client.clientCode],
     ['E-mail', client.email],
     ['Téléphone', client.phone ?? '—'],
-    ['Canton', client.canton ?? '—'],
+    ['Date de naissance', fmtDate(client.birthDate)],
+    ['État civil', client.civilStatus ? (CIVIL_LABEL[client.civilStatus] ?? client.civilStatus) : '—'],
+    ['Adresse', address],
+    ['Nationalité', client.nationality ?? '—'],
+    ['Type de permis', client.permitType ?? '—'],
+    ['Numéro AVS', client.avsNumber ?? '—'],
+    ['Religion', client.religion ?? '—'],
     ['Langue', client.locale],
     ['Collaborateur', client.gestionnaire?.name ?? '—'],
   ];
