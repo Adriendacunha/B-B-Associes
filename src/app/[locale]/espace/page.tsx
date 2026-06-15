@@ -3,6 +3,9 @@ import { prisma } from '@/lib/db';
 import { clientLogin } from '@/app/actions/auth';
 import { getCurrentPrincipal } from '@/lib/auth/session';
 import { CampaignChecklist } from '@/components/CampaignChecklist';
+import { IntakeForm } from '@/components/questionnaire/IntakeForm';
+import { intakeQuestions } from '@/lib/questionnaire/intake';
+import { RECTIFICATIVE_TEMPLATE } from '@/data/templates/declaration-rectificative';
 import type { AppLocale } from '@/lib/i18n/locales';
 
 export const dynamic = 'force-dynamic';
@@ -60,8 +63,16 @@ export default async function EspacePage({
   const campaign = await prisma.campaign.findFirst({
     where: { clientId: principal.client.id },
     orderBy: { fiscalYear: 'desc' },
-    select: { id: true },
+    select: { id: true, profile: true, templateId: true },
   });
+
+  // Intake : questions « données du dossier » à remplir par le client (rectificative).
+  let intake: { questions: import('@/lib/questionnaire/types').Question[]; initial: Record<string, unknown> } | null = null;
+  if (campaign?.templateId === RECTIFICATIVE_TEMPLATE.id) {
+    const answers = ((campaign.profile as { answers?: Record<string, unknown> } | null)?.answers ?? {}) as never;
+    const questions = intakeQuestions(RECTIFICATIVE_TEMPLATE, answers);
+    if (questions.length > 0) intake = { questions, initial: answers };
+  }
 
   return (
     <div className="space-y-4">
@@ -70,7 +81,17 @@ export default async function EspacePage({
         <p className="text-sm text-slate-600">{te('intro')}</p>
       </header>
       {campaign ? (
-        <CampaignChecklist campaignId={campaign.id} locale={locale as AppLocale} showMeta={false} />
+        <>
+          {intake && (
+            <IntakeForm
+              locale={locale as AppLocale}
+              campaignId={campaign.id}
+              questions={intake.questions}
+              initial={intake.initial as never}
+            />
+          )}
+          <CampaignChecklist campaignId={campaign.id} locale={locale as AppLocale} showMeta={false} />
+        </>
       ) : (
         <p className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
           {t('noCampaign')}

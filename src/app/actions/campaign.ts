@@ -203,6 +203,31 @@ export async function setClientDeclaration(formData: FormData): Promise<void> {
 }
 
 /**
+ * Le client renseigne son formulaire d'intake (données du dossier) dans son
+ * espace. Les réponses sont fusionnées dans le blob `answers` de la campagne,
+ * sans écraser les réponses de qualification du cabinet.
+ */
+export async function saveIntakeAnswers(input: { locale: string; campaignId: string; answers: Answers }): Promise<void> {
+  const client = await requireClient(input.locale);
+  const campaign = await prisma.campaign.findUnique({
+    where: { id: input.campaignId },
+    select: { id: true, clientId: true, profile: true, templateId: true },
+  });
+  if (!campaign || campaign.clientId !== client.id) return;
+
+  const profile = (campaign.profile ?? {}) as { templateId?: string; answers?: Answers };
+  const merged = { ...(profile.answers ?? {}), ...input.answers };
+  await prisma.campaign.update({
+    where: { id: campaign.id },
+    data: {
+      profile: { templateId: profile.templateId ?? campaign.templateId, answers: merged } as unknown as Prisma.InputJsonValue,
+    },
+  });
+  revalidatePath(`/${input.locale}/espace`);
+  revalidatePath(`/${input.locale}/campagne/${campaign.id}`);
+}
+
+/**
  * Le client déclare (ou annule) « Je ne suis pas concerné » pour une pièce
  * précise (UX écran 4/6). Bascule le statut entre NON_CONCERNE et MANQUANT.
  */
