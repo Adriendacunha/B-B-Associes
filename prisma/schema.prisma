@@ -201,9 +201,33 @@ model Client {
   gestionnaireId String?
   gestionnaire   User?   @relation("GestionnaireReferent", fields: [gestionnaireId], references: [id])
 
+  // Fiche client (écran 1) : canton principal, téléphone (optionnels au MVP).
+  canton String?
+  phone  String?
+
   campaigns Campaign[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+}
+
+// Modèle réutilisable de campagne (objet métier), éditable par le cabinet.
+// Ex. « Déclaration d'impôt PP », « Déclaration rectificative », « Bouclement ».
+enum CampaignEngine {
+  PROFILAGE_TAGS // déclaration ordinaire — profilage par situations (tags)
+  QUESTIONNAIRE // assistant à arbre de décision (rectificative)
+  CUSTOM // checklist manuelle (à venir)
+}
+
+model CampaignTemplate {
+  id          String         @id @default(cuid())
+  key         String         @unique
+  name        String
+  description String
+  engine      CampaignEngine @default(CUSTOM)
+  active      Boolean        @default(true)
+  sortOrder   Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }
 
 // ─────────────────────────── Référentiel de pièces ──────────────────────────

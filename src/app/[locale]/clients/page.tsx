@@ -21,13 +21,17 @@ export default async function ClientsPage({
   await requireStaff(locale);
   const t = await getTranslations('clients');
 
-  const clients = await prisma.client.findMany({
-    orderBy: { clientCode: 'asc' },
-    include: { gestionnaire: true },
-  });
+  const [clients, staff] = await Promise.all([
+    prisma.client.findMany({
+      orderBy: { clientCode: 'asc' },
+      include: { gestionnaire: true, campaigns: { select: { id: true, status: true } } },
+    }),
+    prisma.user.findMany({ where: { active: true }, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+  ]);
 
   const activationUrl = (loc: string, token: string) =>
     `${APP_URL}/${loc.toLowerCase()}/activation?token=${token}`;
+  const activeCount = (cs: { status: string }[]) => cs.filter((c) => c.status !== 'COMPLET' && c.status !== 'NON_COMMENCE').length;
 
   return (
     <div className="space-y-6">
@@ -49,9 +53,28 @@ export default async function ClientsPage({
       <form action={createClient} className="card grid gap-3 sm:grid-cols-2">
         <input type="hidden" name="uiLocale" value={locale} />
         <h2 className="text-sm font-semibold text-slate-700 sm:col-span-2">{t('new')}</h2>
-        <Field label={t('code')}><input name="clientCode" required className="select" placeholder="C0123" /></Field>
-        <Field label={t('name')}><input name="displayName" required className="select" placeholder="Dupont Jean" /></Field>
-        <Field label={t('email')}><input type="email" name="email" required className="select" /></Field>
+        <Field label={t('code')}><input name="clientCode" required className="input" placeholder="C0123" /></Field>
+        <Field label="Nom du dossier"><input name="displayName" required className="input" placeholder="Borgniet Yves" /></Field>
+        <Field label={t('email')}><input type="email" name="email" required className="input" /></Field>
+        <Field label="Téléphone (optionnel)"><input name="phone" className="input" placeholder="+41 …" /></Field>
+        <Field label={t('type')}>
+          <select name="type" className="select" defaultValue="PARTICULIER">
+            <option value="PARTICULIER">Personne / couple / famille</option>
+            <option value="INDEPENDANT">Indépendant</option>
+            <option value="SOCIETE">Société</option>
+            <option value="HOIRIE">Hoirie</option>
+          </select>
+        </Field>
+        <Field label="Canton principal">
+          <select name="canton" className="select" defaultValue="GE">
+            <option value="GE">Genève</option>
+            <option value="VD">Vaud</option>
+            <option value="VS">Valais</option>
+            <option value="FR">Fribourg</option>
+            <option value="NE">Neuchâtel</option>
+            <option value="">Autre</option>
+          </select>
+        </Field>
         <Field label={t('language')}>
           <select name="locale" className="select" defaultValue="FR">
             <option value="FR">Français</option>
@@ -59,21 +82,16 @@ export default async function ClientsPage({
             <option value="DE">Deutsch</option>
           </select>
         </Field>
-        <Field label={t('type')}>
-          <select name="type" className="select" defaultValue="PARTICULIER">
-            <option value="PARTICULIER">Particulier</option>
-            <option value="INDEPENDANT">Indépendant</option>
-            <option value="SOCIETE">Société</option>
-            <option value="HOIRIE">Hoirie</option>
+        <Field label="Collaborateur responsable">
+          <select name="gestionnaireId" className="select" defaultValue={staff[0]?.id ?? ''}>
+            {staff.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name}
+              </option>
+            ))}
           </select>
         </Field>
-        <Field label={t('residence')}>
-          <select name="residence" className="select" defaultValue="RESIDENT_CH">
-            <option value="RESIDENT_CH">Résident CH</option>
-            <option value="FRONTALIER">Frontalier</option>
-            <option value="QUASI_RESIDENT">Quasi-résident</option>
-          </select>
-        </Field>
+        <input type="hidden" name="residence" value="RESIDENT_CH" />
         <div className="sm:col-span-2">
           <button type="submit" className="btn btn-primary">
             {t('create')}
@@ -102,6 +120,13 @@ export default async function ClientsPage({
               </div>
               <div className="mt-1 text-xs text-slate-500">
                 {t('manager')} : {c.gestionnaire?.name ?? '—'}
+                {c.canton ? ` · ${c.canton}` : ''}
+                {' · '}
+                {activeCount(c.campaigns) === 0 ? (
+                  <span className="text-slate-400">Aucune campagne active</span>
+                ) : (
+                  <span className="font-medium text-slate-600">{activeCount(c.campaigns)} campagne(s) active(s)</span>
+                )}
               </div>
 
               {!activated && c.activationToken && (
@@ -110,14 +135,14 @@ export default async function ClientsPage({
                   <input
                     readOnly
                     value={activationUrl(c.locale, c.activationToken)}
-                    className="select w-full font-mono text-xs"
+                    className="input w-full font-mono text-xs"
                   />
                 </div>
               )}
 
               <div className="mt-2">
-                <Link href="/profilage" className="text-xs text-brand hover:underline">
-                  {t('openCampaign')} →
+                <Link href={`/clients/${c.id}`} className="text-xs font-medium text-brand hover:underline">
+                  Ouvrir la fiche →
                 </Link>
               </div>
             </li>

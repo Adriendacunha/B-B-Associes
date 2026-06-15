@@ -25,6 +25,9 @@ export async function createClient(formData: FormData): Promise<void> {
   const locale = String(formData.get('locale') ?? 'FR').toUpperCase();
   const type = String(formData.get('type') ?? 'PARTICULIER');
   const residence = String(formData.get('residence') ?? 'RESIDENT_CH');
+  const canton = String(formData.get('canton') ?? '').trim() || null;
+  const phone = String(formData.get('phone') ?? '').trim() || null;
+  const gestionnaireId = String(formData.get('gestionnaireId') ?? '').trim() || staff.id;
 
   if (!clientCode || !displayName || !email) redirect(`/${uiLocale}/clients?error=champs`);
   if (!LOCALES.has(locale) || !TYPES.has(type) || !RESIDENCES.has(residence)) {
@@ -42,8 +45,10 @@ export async function createClient(formData: FormData): Promise<void> {
         locale: locale as Prisma.ClientCreateInput['locale'],
         type: type as Prisma.ClientCreateInput['type'],
         residence: residence as Prisma.ClientCreateInput['residence'],
+        canton,
+        phone,
         niveauDeService: 'EXPERT', // MVP : tous en expert (§2/§15)
-        gestionnaireId: staff.id,
+        gestionnaireId,
         activationToken,
       },
     });
