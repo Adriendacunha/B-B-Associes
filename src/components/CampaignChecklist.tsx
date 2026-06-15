@@ -59,6 +59,15 @@ export async function CampaignChecklist({
     conformes: requiredItems.filter((i) => i.status === 'CONFORME').length,
   });
 
+  // Synthèse du dossier (vue cabinet) — statuts réels des documents (§ rectificative).
+  const synthese = {
+    recus: items.filter((i) => i.status === 'DEPOSE' || i.status === 'EN_VALIDATION').length,
+    manquants: items.filter((i) => i.status === 'MANQUANT').length,
+    aCorriger: items.filter((i) => i.status === 'NON_CONFORME').length,
+    valides: items.filter((i) => i.status === 'CONFORME').length,
+  };
+  const isRectificative = campaign.templateId !== null;
+
   // Compteurs relances (vue cabinet uniquement).
   const pendingCount = items.filter((i) => i.status === 'MANQUANT' || i.status === 'NON_CONFORME').length;
   const isComplete = requiredItems.length > 0 && requiredItems.every((i) => i.status === 'CONFORME');
@@ -135,6 +144,33 @@ export async function CampaignChecklist({
           />
         </div>
       </div>
+
+      {/* Synthèse du dossier (cabinet) : statuts réels des documents. */}
+      {showMeta && (
+        <div className="card space-y-3">
+          <h2 className="text-sm font-semibold text-slate-900">Synthèse du dossier</h2>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              { k: 'Reçus', v: synthese.recus, cls: 'text-blue-700' },
+              { k: 'Manquants', v: synthese.manquants, cls: 'text-slate-700' },
+              { k: 'À corriger', v: synthese.aCorriger, cls: 'text-red-700' },
+              { k: 'Validés', v: synthese.valides, cls: 'text-green-700' },
+            ].map((s) => (
+              <div key={s.k} className="rounded-lg border border-slate-200 p-3 text-center">
+                <div className={`text-2xl font-bold ${s.cls}`}>{s.v}</div>
+                <div className="text-[11px] text-slate-500">{s.k}</div>
+              </div>
+            ))}
+          </div>
+          {isRectificative && (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              <span className="font-semibold">Risque de délai :</span> à Genève, le dépôt DRIS/TOU doit intervenir au plus
+              tard le <strong>31 mars</strong> de l’année suivant l’imposition, même si tous les justificatifs ne sont pas
+              encore disponibles.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Dépôt groupé : tous les documents d'un coup, triés automatiquement par l'IA (§7). */}
       <div className="rounded-xl border border-brand/30 bg-brand/5 p-5">
