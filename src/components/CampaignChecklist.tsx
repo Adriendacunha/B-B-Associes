@@ -8,6 +8,8 @@ import { uploadDocument, renameDocument, bulkUpload } from '@/app/actions/docume
 import { setClientDeclaration, setItemConcern } from '@/app/actions/campaign';
 import { setItemRequired, deleteItem, updateItemDetails, addItemFromCatalogue } from '@/app/actions/checklist';
 import { formatAnomalies } from '@/lib/ai/anomalies';
+import { intakeSummary } from '@/lib/questionnaire/intake';
+import { RECTIFICATIVE_TEMPLATE } from '@/data/templates/declaration-rectificative';
 import { Dropzone } from '@/components/Dropzone';
 import { sendInvitation, sendReminderNow } from '@/app/actions/email';
 import { Link } from '@/i18n/routing';
@@ -84,6 +86,12 @@ export async function CampaignChecklist({
     nonConcerne: items.filter((i) => i.status === 'NON_CONCERNE').length,
   };
   const isRectificative = campaign.templateId !== null;
+
+  // Informations fournies par le client (intake) — vue cabinet, lecture seule.
+  const intakeRows =
+    showMeta && campaign.templateId === RECTIFICATIVE_TEMPLATE.id
+      ? intakeSummary(RECTIFICATIVE_TEMPLATE, ((campaign.profile as { answers?: Record<string, unknown> } | null)?.answers ?? {}) as never)
+      : [];
 
   // Compteurs relances (vue cabinet uniquement).
   const pendingCount = items.filter((i) => i.status === 'MANQUANT' || i.status === 'NON_CONFORME').length;
@@ -224,6 +232,21 @@ export async function CampaignChecklist({
               encore disponibles.
             </p>
           )}
+        </div>
+      )}
+
+      {/* Informations fournies par le client (intake), lecture seule — cabinet. */}
+      {showMeta && intakeRows.length > 0 && (
+        <div className="card">
+          <h2 className="mb-3 text-sm font-semibold text-slate-900">Informations fournies par le client</h2>
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+            {intakeRows.map((r) => (
+              <div key={r.label}>
+                <dt className="text-xs text-slate-400">{r.label}</dt>
+                <dd className="text-sm text-slate-800">{r.value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       )}
 

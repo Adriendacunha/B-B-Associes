@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import { AlertTriangle, Info, FileText } from 'lucide-react';
-import type { Answers, DocObligation, Question, Section } from '@/lib/questionnaire/types';
+import type { Answers, DocObligation, Section } from '@/lib/questionnaire/types';
 import { groupByCategory, qualificationComplete, requestedDocuments, visibleSections } from '@/lib/questionnaire/engine';
 import {
   RECTIFICATIVE_TEMPLATE as T,
@@ -11,6 +11,7 @@ import {
   notRectificativeAlert,
 } from '@/data/templates/declaration-rectificative';
 import { createRectificativeCampaign } from '@/app/actions/campaign';
+import { QuestionField } from '@/components/questionnaire/QuestionField';
 import type { AppLocale } from '@/lib/i18n/locales';
 
 interface Props {
@@ -24,72 +25,6 @@ const OBLIGATION_BADGE: Record<DocObligation, { cls: string; label: string }> = 
   conditionnel: { cls: 'bg-amber-100 text-amber-800', label: 'Conditionnel' },
   recommande: { cls: 'bg-slate-200 text-slate-600', label: 'Recommandé' },
 };
-
-function QuestionField({
-  q,
-  value,
-  onChange,
-}: {
-  q: Question;
-  value: Answers[string];
-  onChange: (v: Answers[string]) => void;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label className="block text-sm font-medium text-slate-800">{q.clientLabel}</label>
-      {q.helpText && <p className="text-xs text-slate-500">{q.helpText}</p>}
-
-      {q.answerType === 'single' && q.choices && (
-        <div className="flex flex-wrap gap-2">
-          {q.choices.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              onClick={() => onChange(c.value)}
-              className={`btn btn-sm ${value === c.value ? 'btn-primary' : 'btn-secondary'}`}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {q.answerType === 'multi' && q.choices && (
-        <div className="flex flex-wrap gap-2">
-          {q.choices.map((c) => {
-            const arr = Array.isArray(value) ? value : [];
-            const on = arr.includes(c.value);
-            return (
-              <button
-                key={c.value}
-                type="button"
-                onClick={() => onChange(on ? arr.filter((v) => v !== c.value) : [...arr, c.value])}
-                className={`btn btn-sm ${on ? 'btn-primary' : 'btn-secondary'}`}
-              >
-                {c.label}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
-      {q.answerType === 'text' && (
-        <input type="text" className="input max-w-md" value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} />
-      )}
-      {q.answerType === 'number' && (
-        <input
-          type="number"
-          className="input max-w-[12rem]"
-          value={(value as number) ?? ''}
-          onChange={(e) => onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-        />
-      )}
-      {q.answerType === 'date' && (
-        <input type="date" className="input max-w-[14rem]" value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} />
-      )}
-    </div>
-  );
-}
 
 export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear }: Props) {
   const [answers, setAnswers] = useState<Answers>({});
