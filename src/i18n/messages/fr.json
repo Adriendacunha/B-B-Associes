@@ -106,6 +106,7 @@
     "dropzone": "Glissez-déposez un nouveau fichier ici ou cliquez sur la flèche pour importer un fichier",
     "bulkTitle": "Dépôt groupé — tri automatique par l’IA",
     "bulkHint": "Déposez tous vos documents d’un coup : l’IA identifie chacun et le range dans la bonne pièce. Ce qui n’est pas reconnu va dans « À trier ».",
+    "bulkDropzone": "Glissez-déposez tous vos documents ici ou cliquez sur la flèche pour les importer",
     "bulkSend": "Déposer et trier"
   },
   "validation": {
