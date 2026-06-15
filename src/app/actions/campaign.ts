@@ -8,6 +8,10 @@ import { buildChecklistItems, type BuildablePiece } from '@/lib/checklist/build'
 import { appendAuditLog } from '@/lib/audit/log';
 import { requireStaff, requireClient } from '@/lib/auth/session';
 import type { ClientProfile } from '@/lib/checklist/profiling';
+import type { Answers } from '@/lib/questionnaire/types';
+import { requestedDocuments } from '@/lib/questionnaire/engine';
+import { RECTIFICATIVE_TEMPLATE } from '@/data/templates/declaration-rectificative';
+import { rectPieceCode } from '@/data/templates/rectificative-pieces';
 
 export interface CreateCampaignInput {
   locale: string;
@@ -74,6 +78,87 @@ export async function createCampaign(input: CreateCampaignInput): Promise<void> 
     entityType: 'Campaign',
     entityId: campaign.id,
     metadata: { clientCode: input.clientCode, fiscalYear: input.fiscalYear, items: drafts.length },
+    createdAt: new Date(),
+  });
+
+  redirect(`/${input.locale}/campagne/${campaign.id}`);
+}
+
+export interface CreateRectificativeInput {
+  locale: string;
+  clientCode: string;
+  fiscalYear: number;
+  answers: Answers;
+}
+
+/**
+ * Crée (ou régénère) une campagne « Déclaration rectificative » à partir des
+ * réponses du questionnaire conditionnel. Les documents générés deviennent des
+ * ChecklistItem normaux (pièces RECT- seedées) → tout le pipeline de dépôt,
+ * d'analyse IA et de validation est réutilisé tel quel.
+ */
+export async function createRectificativeCampaign(input: CreateRectificativeInput): Promise<void> {
+  await requireStaff(input.locale);
+
+  const client = await prisma.client.findUnique({ where: { clientCode: input.clientCode } });
+  if (!client) throw new Error(`Client introuvable: ${input.clientCode}`);
+
+  const docs = requestedDocuments(RECTIFICATIVE_TEMPLATE, input.answers);
+  const codes = docs.map((d) => rectPieceCode(d.id));
+  const defs = await prisma.pieceDefinition.findMany({ where: { code: { in: codes } } });
+  const defByCode = new Map(defs.map((d) => [d.code, d]));
+
+  const profileBlob = { templateId: RECTIFICATIVE_TEMPLATE.id, answers: input.answers } as unknown as Prisma.InputJsonValue;
+
+  const campaign = await prisma.$transaction(async (tx) => {
+    const existing = await tx.campaign.findUnique({
+      where: { clientId_fiscalYear: { clientId: client.id, fiscalYear: input.fiscalYear } },
+    });
+    const camp = existing
+      ? await tx.campaign.update({
+          where: { id: existing.id },
+          data: { profile: profileBlob, templateId: RECTIFICATIVE_TEMPLATE.id, status: 'EN_COURS', openedAt: new Date() },
+        })
+      : await tx.campaign.create({
+          data: {
+            clientId: client.id,
+            fiscalYear: input.fiscalYear,
+            profile: profileBlob,
+            templateId: RECTIFICATIVE_TEMPLATE.id,
+            status: 'EN_COURS',
+            openedAt: new Date(),
+          },
+        });
+
+    if (existing) await tx.checklistItem.deleteMany({ where: { campaignId: camp.id } });
+
+    const items = docs.flatMap((d) => {
+      const def = defByCode.get(rectPieceCode(d.id));
+      if (!def) return [];
+      return [
+        {
+          campaignId: camp.id,
+          pieceDefinitionId: def.id,
+          pieceCode: def.code,
+          category: def.category as Prisma.ChecklistItemCreateManyInput['category'],
+          required: d.obligation === 'obligatoire',
+          expectedFiscalYear: input.fiscalYear,
+          modeValidation: 'HUMAIN_REQUIS' as Prisma.ChecklistItemCreateManyInput['modeValidation'],
+        },
+      ];
+    });
+    await tx.checklistItem.createMany({ data: items });
+
+    return camp;
+  });
+
+  await appendAuditLog(prisma, {
+    actorType: 'COLLABORATEUR',
+    actorId: client.gestionnaireId,
+    action: 'CAMPAIGN_CREATED',
+    entityType: 'Campaign',
+    entityId: campaign.id,
+    metadata: { clientCode: input.clientCode, fiscalYear: input.fiscalYear, template: RECTIFICATIVE_TEMPLATE.id, items: docs.length },
     createdAt: new Date(),
   });
 

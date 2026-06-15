@@ -89,7 +89,11 @@ export function CampaignCreator({ locale, clients, defaultFiscalYear }: Props) {
               Aperçu client
             </button>
           </div>
-          {rectView === 'bb' ? <RectificativeCreatorView /> : <RectificativeQuestionnaire />}
+          {rectView === 'bb' ? (
+            <RectificativeCreatorView />
+          ) : (
+            <RectificativeQuestionnaire locale={locale} clients={clients} defaultFiscalYear={defaultFiscalYear} />
+          )}
         </>
       )}
     </div>

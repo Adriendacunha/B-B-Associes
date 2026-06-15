@@ -6,6 +6,7 @@
 
 import { PrismaClient, Prisma } from '@prisma/client';
 import { PIECE_REFERENTIAL } from '../src/data/piece-referential';
+import { rectificativePieceEntries } from '../src/data/templates/rectificative-pieces';
 import { DEFAULT_EMAIL_TEMPLATES } from '../src/data/email-templates';
 import { DEFAULT_CADENCE } from '../src/lib/reminders/cadence';
 import { hashPassword } from '../src/lib/auth/password';
@@ -13,7 +14,8 @@ import { hashPassword } from '../src/lib/auth/password';
 const prisma = new PrismaClient();
 
 async function seedPieces() {
-  for (const p of PIECE_REFERENTIAL) {
+  const allPieces = [...PIECE_REFERENTIAL, ...rectificativePieceEntries()];
+  for (const p of allPieces) {
     await prisma.pieceDefinition.upsert({
       where: { code: p.code },
       update: {
@@ -41,7 +43,7 @@ async function seedPieces() {
       },
     });
   }
-  console.log(`✓ ${PIECE_REFERENTIAL.length} pièces du référentiel`);
+  console.log(`✓ ${allPieces.length} pièces (référentiel + template rectificative)`);
 }
 
 async function seedCadence() {

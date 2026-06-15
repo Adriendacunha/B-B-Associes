@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { AlertTriangle, Info, FileText } from 'lucide-react';
 import type { Answers, DocObligation, Question, Section } from '@/lib/questionnaire/types';
 import { groupByCategory, qualificationComplete, requestedDocuments, visibleSections } from '@/lib/questionnaire/engine';
@@ -10,6 +10,14 @@ import {
   drisToTouAlert,
   notRectificativeAlert,
 } from '@/data/templates/declaration-rectificative';
+import { createRectificativeCampaign } from '@/app/actions/campaign';
+import type { AppLocale } from '@/lib/i18n/locales';
+
+interface Props {
+  locale: AppLocale;
+  clients: { clientCode: string; displayName: string }[];
+  defaultFiscalYear: number;
+}
 
 const OBLIGATION_BADGE: Record<DocObligation, { cls: string; label: string }> = {
   obligatoire: { cls: 'bg-red-100 text-red-700', label: 'Obligatoire' },
@@ -83,9 +91,17 @@ function QuestionField({
   );
 }
 
-export function RectificativeQuestionnaire() {
+export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear }: Props) {
   const [answers, setAnswers] = useState<Answers>({});
   const set = (id: string, v: Answers[string]) => setAnswers((a) => ({ ...a, [id]: v }));
+  const [clientCode, setClientCode] = useState(clients[0]?.clientCode ?? '');
+  const [fiscalYear, setFiscalYear] = useState(defaultFiscalYear);
+  const [isPending, startTransition] = useTransition();
+
+  const createCampaign = () =>
+    startTransition(async () => {
+      await createRectificativeCampaign({ locale, clientCode, fiscalYear, answers });
+    });
 
   const sections = useMemo(() => visibleSections(T, answers), [answers]);
   const qualified = useMemo(() => qualificationComplete(T, answers, QUALIFYING_IDS), [answers]);
@@ -111,6 +127,24 @@ export function RectificativeQuestionnaire() {
         <h1 className="text-2xl font-bold text-slate-900">{T.title}</h1>
         <p className="max-w-2xl text-sm text-slate-600">{T.description}</p>
       </header>
+
+      {/* Client + année (création de la campagne) */}
+      <section className="card grid gap-4 sm:grid-cols-2">
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-medium text-slate-600">Client</span>
+          <select className="select" value={clientCode} onChange={(e) => setClientCode(e.target.value)}>
+            {clients.map((c) => (
+              <option key={c.clientCode} value={c.clientCode}>
+                {c.clientCode} — {c.displayName}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className="mb-1.5 block text-xs font-medium text-slate-600">Année fiscale</span>
+          <input type="number" className="input" value={fiscalYear} onChange={(e) => setFiscalYear(Number(e.target.value))} />
+        </label>
+      </section>
 
       {/* Étape 1 — qualification (orientation) */}
       {orientation && (
@@ -216,6 +250,18 @@ export function RectificativeQuestionnaire() {
         <p className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-center text-sm text-slate-500">
           Répondez aux questions ci-dessus : votre liste de documents personnalisée s’affichera ensuite.
         </p>
+      )}
+
+      {/* Création de la campagne (persistance) */}
+      {!notRectificative && qualified && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4">
+          <p className="text-sm text-slate-600">
+            {docs.length} document(s) seront demandés à <span className="font-medium text-slate-800">{clientCode}</span> pour {fiscalYear}.
+          </p>
+          <button type="button" onClick={createCampaign} disabled={isPending || !clientCode} className="btn btn-primary">
+            {isPending ? 'Création…' : 'Créer la campagne'}
+          </button>
+        </div>
       )}
     </div>
   );

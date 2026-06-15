@@ -247,7 +247,10 @@ model Campaign {
   status     CampaignStatus @default(NON_COMMENCE)
 
   // Réponses de profilage (§4.1) — snapshot par campagne, sert au report N+1 (§4.3).
+  // Pour une campagne issue d'un template (rectificative), contient { templateId, answers }.
   profile Json
+  // Identifiant du template d'assistant utilisé (null = profilage ordinaire à tags).
+  templateId String?
 
   dueDate          DateTime? // date d'échéance (§6.1) — calendrier fiscal GE (§14.7)
   remindersPaused  Boolean   @default(false)
