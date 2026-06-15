@@ -53,7 +53,9 @@
     "newPassword": "Passwort wählen",
     "activate": "Aktivieren",
     "firstConnection": "Erstanmeldung? Aktivieren Sie Ihr Konto über den per E-Mail erhaltenen Link.",
-    "noCampaign": "Derzeit keine Sammelkampagne geöffnet."
+    "noCampaign": "Derzeit keine Sammelkampagne geöffnet.",
+    "fieldRequired": "Bitte füllen Sie dieses Feld aus.",
+    "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein."
   },
   "export": {
     "title": "Buchhaltungsexport",

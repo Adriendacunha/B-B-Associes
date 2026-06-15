@@ -53,7 +53,9 @@
     "newPassword": "Choose a password",
     "activate": "Activate",
     "firstConnection": "First time? Activate your account using the link sent by email.",
-    "noCampaign": "No collection campaign open at the moment."
+    "noCampaign": "No collection campaign open at the moment.",
+    "fieldRequired": "Please fill out this field.",
+    "emailInvalid": "Please enter a valid email address."
   },
   "export": {
     "title": "Accounting export",

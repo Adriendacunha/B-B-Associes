@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { clientLogin } from '@/app/actions/auth';
 import { getCurrentPrincipal } from '@/lib/auth/session';
 import { CampaignChecklist } from '@/components/CampaignChecklist';
+import { ValidatedInput } from '@/components/ValidatedInput';
 import { IntakeForm } from '@/components/questionnaire/IntakeForm';
 import { intakeQuestions } from '@/lib/questionnaire/intake';
 import { RECTIFICATIVE_TEMPLATE } from '@/data/templates/declaration-rectificative';
@@ -44,11 +45,11 @@ export default async function EspacePage({
           <input type="hidden" name="locale" value={locale} />
           <label className="block">
             <span className="mb-1.5 block text-xs font-medium text-slate-600">{t('email')}</span>
-            <input type="email" name="email" required autoComplete="username" className="input" />
+            <ValidatedInput type="email" name="email" required autoComplete="username" className="input" requiredMessage={t('fieldRequired')} typeMismatchMessage={t('emailInvalid')} />
           </label>
           <label className="block">
             <span className="mb-1.5 block text-xs font-medium text-slate-600">{t('password')}</span>
-            <input type="password" name="password" required autoComplete="current-password" className="input" />
+            <ValidatedInput type="password" name="password" required autoComplete="current-password" className="input" requiredMessage={t('fieldRequired')} />
           </label>
           <button type="submit" className="btn btn-primary w-full">
             {t('signIn')}

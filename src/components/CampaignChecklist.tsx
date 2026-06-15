@@ -226,7 +226,10 @@ export async function CampaignChecklist({
 
       <div className="card">
         <div className="mb-1.5 flex items-center justify-between text-sm">
-          <span className="font-medium text-slate-700">{t('completude')}</span>
+          <span className="font-medium text-slate-700">
+            {t('completude')}
+            {showMeta && <span className="ml-1 text-xs font-normal text-slate-400">(pièces obligatoires)</span>}
+          </span>
           <span className="font-semibold text-brand">{comp.label}</span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
