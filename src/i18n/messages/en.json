@@ -106,6 +106,7 @@
     "dropzone": "Drag and drop a new file here, or click the arrow to import a file",
     "bulkTitle": "Bulk upload — automatic AI sorting",
     "bulkHint": "Upload all your documents at once: the AI identifies each one and files it under the right item. Unrecognised ones go to “To sort”.",
+    "bulkDropzone": "Drag and drop all your documents here, or click the arrow to import them",
     "bulkSend": "Upload & sort"
   },
   "validation": {

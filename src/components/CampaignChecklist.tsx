@@ -7,7 +7,6 @@ import { CATEGORY_FOLDERS, ORDERED_CATEGORIES } from '@/lib/onedrive/paths';
 import { uploadDocument, renameDocument, bulkUpload } from '@/app/actions/document';
 import { setClientDeclaration } from '@/app/actions/campaign';
 import { formatAnomalies } from '@/lib/ai/anomalies';
-import { UploadButton } from '@/components/UploadButton';
 import { Dropzone } from '@/components/Dropzone';
 import { sendInvitation, sendReminderNow } from '@/app/actions/email';
 import { Link } from '@/i18n/routing';
@@ -138,21 +137,16 @@ export async function CampaignChecklist({
       </div>
 
       {/* Dépôt groupé : tous les documents d'un coup, triés automatiquement par l'IA (§7). */}
-      <div className="rounded-xl border border-dashed border-brand/40 bg-brand/5 p-5">
+      <div className="rounded-xl border border-brand/30 bg-brand/5 p-5">
         <h2 className="text-sm font-semibold text-brand">{tUp('bulkTitle')}</h2>
-        <p className="mb-3 text-xs text-slate-600">{tUp('bulkHint')}</p>
-        <form action={bulkUpload} className="flex flex-wrap items-center gap-2">
-          <input type="hidden" name="campaignId" value={campaignId} />
-          <input type="hidden" name="locale" value={locale} />
-          <input
-            type="file"
-            name="file"
-            multiple
-            required
-            className="text-xs file:mr-2 file:cursor-pointer file:rounded-md file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white hover:file:bg-brand-light"
-          />
-          <UploadButton idle={tUp('bulkSend')} pending={tUp('uploading')} className="btn btn-primary btn-sm" />
-        </form>
+        <p className="text-xs text-slate-600">{tUp('bulkHint')}</p>
+        <Dropzone
+          action={bulkUpload}
+          fields={{ campaignId, locale }}
+          prompt={tUp('bulkDropzone')}
+          idle={tUp('bulkSend')}
+          pending={tUp('uploading')}
+        />
       </div>
 
       {showMeta && (

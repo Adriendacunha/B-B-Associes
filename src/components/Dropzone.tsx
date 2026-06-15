@@ -37,7 +37,7 @@ export function Dropzone({
   action: (formData: FormData) => void | Promise<void>;
   fields: Record<string, string>;
   prompt: string;
-  multiHint: string;
+  multiHint?: string;
   idle: string;
   pending: string;
 }) {
@@ -90,7 +90,7 @@ export function Dropzone({
           <Submit idle={idle} pending={pending} />
         </div>
       )}
-      <p className="mt-1 text-[10px] text-slate-400">{multiHint}</p>
+      {multiHint && <p className="mt-1 text-[10px] text-slate-400">{multiHint}</p>}
     </form>
   );
 }
