@@ -6,6 +6,7 @@ import { completude } from '@/lib/metrics/mvp';
 import { CATEGORY_FOLDERS, ORDERED_CATEGORIES } from '@/lib/onedrive/paths';
 import { uploadDocument, renameDocument, bulkUpload } from '@/app/actions/document';
 import { setClientDeclaration } from '@/app/actions/campaign';
+import { setItemRequired, deleteItem, updateItemDetails, addItemFromCatalogue } from '@/app/actions/checklist';
 import { formatAnomalies } from '@/lib/ai/anomalies';
 import { Dropzone } from '@/components/Dropzone';
 import { sendInvitation, sendReminderNow } from '@/app/actions/email';
@@ -27,10 +28,13 @@ export async function CampaignChecklist({
   campaignId,
   locale,
   showMeta,
+  advanced = false,
 }: {
   campaignId: string;
   locale: AppLocale;
   showMeta: boolean;
+  /** Mode avancé (cabinet) : active l'édition de la checklist (écran 3). */
+  advanced?: boolean;
 }) {
   const t = await getTranslations('campagne');
   const tStatus = await getTranslations('espace');
@@ -84,6 +88,19 @@ export async function CampaignChecklist({
     items: items.filter((i) => i.category === cat),
   })).filter((g) => g.items.length > 0);
 
+  // Catalogue disponible pour « ajouter une pièce » (mode avancé cabinet).
+  const presentDefIds = new Set(items.map((i) => i.pieceDefinitionId));
+  const availablePieces =
+    showMeta && advanced
+      ? (await prisma.pieceDefinition.findMany({ where: { active: true }, orderBy: { code: 'asc' } }))
+          .filter((d) => !presentDefIds.has(d.id))
+          .map((d) => ({ id: d.id, code: d.code, nom: resolveLocalized(d.nom as unknown as LocalizedText, locale) }))
+      : [];
+
+  const fmtDate = (d: Date | null) =>
+    d ? `${String(d.getUTCDate()).padStart(2, '0')}.${String(d.getUTCMonth() + 1).padStart(2, '0')}.${d.getUTCFullYear()}` : '';
+  const dateInput = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : '');
+
   return (
     <div className="space-y-6">
       {showMeta && (
@@ -128,6 +145,27 @@ export async function CampaignChecklist({
                     ? t('declNon')
                     : t('declNone')}
             </span>
+          </div>
+
+          {/* Barre d'outils : personnalisation (écran 3) + prévisualisation (écran 4) */}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5 text-xs">
+              <Link
+                href={`/campagne/${campaignId}`}
+                className={`rounded-md px-2.5 py-1 font-medium ${!advanced ? 'bg-brand text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+              >
+                Mode simple
+              </Link>
+              <Link
+                href={`/campagne/${campaignId}?mode=avance`}
+                className={`rounded-md px-2.5 py-1 font-medium ${advanced ? 'bg-brand text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+              >
+                Mode avancé
+              </Link>
+            </div>
+            <Link href={`/campagne/${campaignId}/apercu`} className="btn btn-secondary btn-sm">
+              Prévisualiser (côté client)
+            </Link>
           </div>
         </header>
       )}
@@ -267,6 +305,58 @@ export async function CampaignChecklist({
                       </span>
                     </div>
 
+                    {/* Explication client + échéance (visibles côté client et cabinet) */}
+                    {item.clientNote && (
+                      <p className="mt-2 rounded-md border border-blue-100 bg-blue-50 px-2 py-1.5 text-xs text-blue-800">
+                        {item.clientNote}
+                      </p>
+                    )}
+                    {item.dueDate && (
+                      <p className="mt-1 text-[11px] font-medium text-slate-500">Échéance : {fmtDate(item.dueDate)}</p>
+                    )}
+
+                    {/* Éditeur cabinet (écran 3 — personnalisation), mode avancé. */}
+                    {showMeta && advanced && (
+                      <div className="mt-3 space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <form action={setItemRequired}>
+                            <input type="hidden" name="itemId" value={item.id} />
+                            <input type="hidden" name="locale" value={locale} />
+                            <input type="hidden" name="required" value={(!item.required).toString()} />
+                            <button type="submit" className="btn btn-secondary btn-sm">
+                              {item.required ? 'Rendre optionnel' : 'Rendre obligatoire'}
+                            </button>
+                          </form>
+                          <form action={deleteItem}>
+                            <input type="hidden" name="itemId" value={item.id} />
+                            <input type="hidden" name="locale" value={locale} />
+                            <button type="submit" className="btn btn-sm bg-red-600 px-3 py-1.5 text-white hover:bg-red-700">
+                              Supprimer
+                            </button>
+                          </form>
+                        </div>
+                        <form action={updateItemDetails} className="grid gap-2 sm:grid-cols-2">
+                          <input type="hidden" name="itemId" value={item.id} />
+                          <input type="hidden" name="locale" value={locale} />
+                          <label className="block sm:col-span-2">
+                            <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-slate-400">Explication client</span>
+                            <input name="clientNote" defaultValue={item.clientNote ?? ''} className="input text-xs" placeholder="Pourquoi / comment fournir cette pièce" />
+                          </label>
+                          <label className="block sm:col-span-2">
+                            <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-slate-400">Note interne (cabinet)</span>
+                            <input name="internalNote" defaultValue={item.internalNote ?? ''} className="input text-xs" placeholder="Non visible par le client" />
+                          </label>
+                          <label className="block">
+                            <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-slate-400">Date limite</span>
+                            <input type="date" name="dueDate" defaultValue={dateInput(item.dueDate)} className="input text-xs" />
+                          </label>
+                          <div className="flex items-end">
+                            <button type="submit" className="btn btn-primary btn-sm">Enregistrer</button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+
                     {item.status === 'EN_VALIDATION' && verdict && (
                       <p className="mt-2 text-xs text-amber-700">
                         {tUp('aiProposes')} :{' '}
@@ -347,6 +437,30 @@ export async function CampaignChecklist({
           </section>
         ))}
       </div>
+
+      {/* Ajouter une pièce du référentiel (écran 3 — mode avancé). */}
+      {showMeta && advanced && availablePieces.length > 0 && (
+        <form action={addItemFromCatalogue} className="card flex flex-wrap items-end gap-2">
+          <input type="hidden" name="campaignId" value={campaignId} />
+          <input type="hidden" name="locale" value={locale} />
+          <label className="block flex-1">
+            <span className="mb-1 block text-xs font-medium text-slate-600">Ajouter une pièce</span>
+            <select name="pieceDefinitionId" className="select" defaultValue="">
+              <option value="" disabled>
+                Choisir une pièce du référentiel…
+              </option>
+              {availablePieces.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nom} ({p.code})
+                </option>
+              ))}
+            </select>
+          </label>
+          <button type="submit" className="btn btn-primary btn-sm">
+            Ajouter
+          </button>
+        </form>
+      )}
 
       {/* Déclaration de complétude — vue client (UX §7). */}
       {!showMeta && (
