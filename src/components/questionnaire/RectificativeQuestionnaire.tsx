@@ -1,0 +1,222 @@
+'use client';
+
+import { useMemo, useState } from 'react';
+import { AlertTriangle, Info, FileText } from 'lucide-react';
+import type { Answers, DocObligation, Question, Section } from '@/lib/questionnaire/types';
+import { groupByCategory, qualificationComplete, requestedDocuments, visibleSections } from '@/lib/questionnaire/engine';
+import {
+  RECTIFICATIVE_TEMPLATE as T,
+  QUALIFYING_IDS,
+  drisToTouAlert,
+  notRectificativeAlert,
+} from '@/data/templates/declaration-rectificative';
+
+const OBLIGATION_BADGE: Record<DocObligation, { cls: string; label: string }> = {
+  obligatoire: { cls: 'bg-red-100 text-red-700', label: 'Obligatoire' },
+  conditionnel: { cls: 'bg-amber-100 text-amber-800', label: 'Conditionnel' },
+  recommande: { cls: 'bg-slate-200 text-slate-600', label: 'Recommandé' },
+};
+
+function QuestionField({
+  q,
+  value,
+  onChange,
+}: {
+  q: Question;
+  value: Answers[string];
+  onChange: (v: Answers[string]) => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-sm font-medium text-slate-800">{q.clientLabel}</label>
+      {q.helpText && <p className="text-xs text-slate-500">{q.helpText}</p>}
+
+      {q.answerType === 'single' && q.choices && (
+        <div className="flex flex-wrap gap-2">
+          {q.choices.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              onClick={() => onChange(c.value)}
+              className={`btn btn-sm ${value === c.value ? 'btn-primary' : 'btn-secondary'}`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {q.answerType === 'multi' && q.choices && (
+        <div className="flex flex-wrap gap-2">
+          {q.choices.map((c) => {
+            const arr = Array.isArray(value) ? value : [];
+            const on = arr.includes(c.value);
+            return (
+              <button
+                key={c.value}
+                type="button"
+                onClick={() => onChange(on ? arr.filter((v) => v !== c.value) : [...arr, c.value])}
+                className={`btn btn-sm ${on ? 'btn-primary' : 'btn-secondary'}`}
+              >
+                {c.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {q.answerType === 'text' && (
+        <input type="text" className="input max-w-md" value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} />
+      )}
+      {q.answerType === 'number' && (
+        <input
+          type="number"
+          className="input max-w-[12rem]"
+          value={(value as number) ?? ''}
+          onChange={(e) => onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+        />
+      )}
+      {q.answerType === 'date' && (
+        <input type="date" className="input max-w-[14rem]" value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} />
+      )}
+    </div>
+  );
+}
+
+export function RectificativeQuestionnaire() {
+  const [answers, setAnswers] = useState<Answers>({});
+  const set = (id: string, v: Answers[string]) => setAnswers((a) => ({ ...a, [id]: v }));
+
+  const sections = useMemo(() => visibleSections(T, answers), [answers]);
+  const qualified = useMemo(() => qualificationComplete(T, answers, QUALIFYING_IDS), [answers]);
+  const docs = useMemo(() => requestedDocuments(T, answers), [answers]);
+  const grouped = useMemo(() => groupByCategory(docs), [docs]);
+
+  const notRectificative = notRectificativeAlert(answers);
+  const touAlert = drisToTouAlert(answers);
+
+  const orientation = sections.find((s) => s.id === 'orientation');
+  const otherSections = sections.filter((s) => s.id !== 'orientation');
+
+  const counts = {
+    obligatoire: docs.filter((d) => d.obligation === 'obligatoire').length,
+    conditionnel: docs.filter((d) => d.obligation === 'conditionnel').length,
+    recommande: docs.filter((d) => d.obligation === 'recommande').length,
+  };
+
+  return (
+    <div className="space-y-6">
+      <header className="space-y-1">
+        <span className="badge bg-brand/10 text-brand">Assistant</span>
+        <h1 className="text-2xl font-bold text-slate-900">{T.title}</h1>
+        <p className="max-w-2xl text-sm text-slate-600">{T.description}</p>
+      </header>
+
+      {/* Étape 1 — qualification (orientation) */}
+      {orientation && (
+        <section className="card space-y-5">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{orientation.clientTitle ?? orientation.title}</h2>
+          {orientation.questions.map((q) => (
+            <QuestionField key={q.id} q={q} value={answers[q.id]} onChange={(v) => set(q.id, v)} />
+          ))}
+        </section>
+      )}
+
+      {/* Aiguillage : pas une rectification */}
+      {notRectificative && (
+        <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <Info className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={1.75} />
+          <p>
+            La déclaration initiale n’a pas encore été déposée : il ne s’agit pas d’une rectification. Ouvrez plutôt une
+            <strong> campagne de déclaration standard</strong>.
+          </p>
+        </div>
+      )}
+
+      {/* Étapes suivantes : seulement une fois qualifié, et si c'est bien une rectification */}
+      {!notRectificative && qualified && (
+        <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+          {/* Colonne questionnaire détaillé */}
+          <div className="space-y-6">
+            {touAlert && (
+              <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={1.75} />
+                <p>
+                  Cette demande relève probablement d’une <strong>TOU (déclaration ordinaire)</strong>, pas d’une simple DRIS :
+                  à Genève, les déductions effectives (3e pilier, rachats LPP, garde, formation…) ne se font pas via l’impôt à la source.
+                </p>
+              </div>
+            )}
+
+            {otherSections.map((s: Section) => (
+              <section key={s.id} className="card space-y-5">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{s.clientTitle ?? s.title}</h2>
+                {s.questions.map((q) => (
+                  <QuestionField key={q.id} q={q} value={answers[q.id]} onChange={(v) => set(q.id, v)} />
+                ))}
+              </section>
+            ))}
+          </div>
+
+          {/* Colonne checklist personnalisée générée en direct */}
+          <aside className="lg:sticky lg:top-20 lg:self-start">
+            <div className="card space-y-4">
+              <div className="flex items-baseline justify-between">
+                <h2 className="font-semibold text-slate-900">Vos documents</h2>
+                <span className="badge bg-brand/10 text-brand">{docs.length} document(s)</span>
+              </div>
+
+              {/* Synthèse */}
+              <div className="flex flex-wrap gap-2 text-xs">
+                <span className="badge bg-red-100 text-red-700">{counts.obligatoire} obligatoire(s)</span>
+                <span className="badge bg-amber-100 text-amber-800">{counts.conditionnel} conditionnel(s)</span>
+                <span className="badge bg-slate-200 text-slate-600">{counts.recommande} recommandé(s)</span>
+              </div>
+              <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                À Genève, le dépôt doit intervenir au plus tard le <strong>31 mars</strong> de l’année suivant l’imposition,
+                même si tous les justificatifs ne sont pas encore disponibles.
+              </p>
+
+              <div className="space-y-4">
+                {grouped.map((g) => (
+                  <div key={g.category}>
+                    <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-400">{g.category}</h3>
+                    <ul className="space-y-2">
+                      {g.docs.map((d) => {
+                        const b = OBLIGATION_BADGE[d.obligation];
+                        return (
+                          <li key={d.id} className="rounded-lg border border-slate-200 p-2.5">
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="flex items-center gap-1.5 text-sm font-medium text-slate-800">
+                                <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400" strokeWidth={1.75} />
+                                {d.clientLabel}
+                              </span>
+                              <span className={`badge shrink-0 ${b.cls}`}>{b.label}</span>
+                            </div>
+                            <p className="mt-1 text-xs text-slate-500">
+                              <span className="font-medium text-slate-600">Pourquoi&nbsp;:</span> {d.reason}
+                            </p>
+                            <p className="mt-0.5 text-[10px] uppercase tracking-wide text-slate-400">
+                              {d.acceptedFormats.join(' · ')}
+                            </p>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </div>
+      )}
+
+      {/* Invitation à finir la qualification */}
+      {!notRectificative && !qualified && (
+        <p className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-center text-sm text-slate-500">
+          Répondez aux questions ci-dessus : votre liste de documents personnalisée s’affichera ensuite.
+        </p>
+      )}
+    </div>
+  );
+}
