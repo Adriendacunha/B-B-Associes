@@ -71,6 +71,12 @@ export interface Question {
   /** Note de logique fiscale, vue B&B uniquement. */
   bbInternalNote?: string;
   riskLevel?: RiskLevel;
+  /**
+   * Donnée du dossier (identité, adresse, état civil…) plutôt que question de
+   * qualification : NON demandée au cabinet lors de la création (il ne remplit
+   * pas le dossier à la place du client). N'influence pas la liste de documents.
+   */
+  clientData?: boolean;
 }
 
 export interface Section {

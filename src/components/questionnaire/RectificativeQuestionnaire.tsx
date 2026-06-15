@@ -103,7 +103,16 @@ export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear 
       await createRectificativeCampaign({ locale, clientCode, fiscalYear, answers });
     });
 
-  const sections = useMemo(() => visibleSections(T, answers), [answers]);
+  // Côté cabinet : on ne montre QUE les questions de qualification (celles qui
+  // déterminent les documents). Les données du dossier (clientData) sont fournies
+  // par le client en déposant ses pièces — le cabinet ne remplit pas à sa place.
+  const sections = useMemo(
+    () =>
+      visibleSections(T, answers)
+        .map((s) => ({ ...s, questions: s.questions.filter((q) => !q.clientData) }))
+        .filter((s) => s.questions.length > 0),
+    [answers],
+  );
   const qualified = useMemo(() => qualificationComplete(T, answers, QUALIFYING_IDS), [answers]);
   const docs = useMemo(() => requestedDocuments(T, answers), [answers]);
   const grouped = useMemo(() => groupByCategory(docs), [docs]);
@@ -123,9 +132,12 @@ export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear 
   return (
     <div className="space-y-6">
       <header className="space-y-1">
-        <span className="badge bg-brand/10 text-brand">Assistant</span>
+        <span className="badge bg-brand/10 text-brand">Qualification</span>
         <h1 className="text-2xl font-bold text-slate-900">{T.title}</h1>
-        <p className="max-w-2xl text-sm text-slate-600">{T.description}</p>
+        <p className="max-w-2xl text-sm text-slate-600">
+          Répondez à ces quelques questions : elles déterminent la <strong>liste de documents à demander au client</strong>.
+          Vous ne remplissez pas le dossier — le client fournira ses informations en déposant ses pièces.
+        </p>
       </header>
 
       {/* Client + année (création de la campagne) */}
@@ -196,7 +208,7 @@ export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear 
           <aside className="lg:sticky lg:top-20 lg:self-start">
             <div className="card space-y-4">
               <div className="flex items-baseline justify-between">
-                <h2 className="font-semibold text-slate-900">Vos documents</h2>
+                <h2 className="font-semibold text-slate-900">Documents demandés au client</h2>
                 <span className="badge bg-brand/10 text-brand">{docs.length} document(s)</span>
               </div>
 
