@@ -49,33 +49,44 @@ export default async function ClientsPage({
         <p className="rounded-lg border border-green-100 bg-green-50 px-3 py-2 text-sm text-green-700">{t('createdOk')}</p>
       )}
 
-      {/* Formulaire de création */}
-      <form action={createClient} className="card grid gap-3 sm:grid-cols-2">
+      {/* Formulaire de création — onglet Identité */}
+      <form action={createClient} className="card grid gap-4 sm:grid-cols-2">
         <input type="hidden" name="uiLocale" value={locale} />
-        <h2 className="text-sm font-semibold text-slate-700 sm:col-span-2">{t('new')}</h2>
-        <Field label={t('code')}><input name="clientCode" required className="input" placeholder="C0123" /></Field>
-        <Field label="Nom du dossier"><input name="displayName" required className="input" placeholder="Borgniet Yves" /></Field>
-        <Field label={t('email')}><input type="email" name="email" required className="input" /></Field>
-        <Field label="Téléphone (optionnel)"><input name="phone" className="input" placeholder="+41 …" /></Field>
-        <Field label={t('type')}>
-          <select name="type" className="select" defaultValue="PARTICULIER">
-            <option value="PARTICULIER">Personne / couple / famille</option>
-            <option value="INDEPENDANT">Indépendant</option>
-            <option value="SOCIETE">Société</option>
-            <option value="HOIRIE">Hoirie</option>
+        <h2 className="text-sm font-semibold text-slate-700 sm:col-span-2">Identité</h2>
+
+        <Field label="Nom *"><input name="lastName" required className="input" placeholder="ex. Meyer" /></Field>
+        <Field label="Prénom *"><input name="firstName" required className="input" placeholder="ex. Thomas" /></Field>
+
+        <Field label="Date de naissance"><input type="date" name="birthDate" className="input" /></Field>
+        <Field label="État civil">
+          <select name="civilStatus" className="select" defaultValue="">
+            <option value="">Sélectionner…</option>
+            <option value="celibataire">Célibataire</option>
+            <option value="marie">Marié·e</option>
+            <option value="partenariat">Partenariat enregistré</option>
+            <option value="separe">Séparé·e</option>
+            <option value="divorce">Divorcé·e</option>
+            <option value="veuf">Veuf·ve</option>
           </select>
         </Field>
-        <Field label="Canton principal">
-          <select name="canton" className="select" defaultValue="GE">
-            <option value="GE">Genève</option>
-            <option value="VD">Vaud</option>
-            <option value="VS">Valais</option>
-            <option value="FR">Fribourg</option>
-            <option value="NE">Neuchâtel</option>
-            <option value="">Autre</option>
-          </select>
-        </Field>
-        <Field label={t('language')}>
+
+        <div className="sm:col-span-2">
+          <Field label="Rue"><input name="street" className="input" placeholder="ex. Bahnhofstrasse 42" /></Field>
+        </div>
+
+        <Field label="NPA"><input name="postalCode" className="input" placeholder="8001" /></Field>
+        <Field label="Ville"><input name="city" className="input" placeholder="Zürich" /></Field>
+
+        <Field label="Nationalité"><input name="nationality" className="input" placeholder="ex. CH, FR, DE" /></Field>
+        <Field label="Type de permis"><input name="permitType" className="input" placeholder="ex. B, C, L" /></Field>
+
+        <Field label="Numéro AVS"><input name="avsNumber" className="input" placeholder="756.XXXX.XXXX.XX" /></Field>
+        <Field label="Religion"><input name="religion" className="input" placeholder="Pour l'impôt ecclésiastique" /></Field>
+
+        <Field label="Téléphone"><input name="phone" className="input" placeholder="+41 XX XXX XX XX" /></Field>
+        <Field label="E-mail du client *"><input type="email" name="email" required className="input" placeholder="ex. client@email.com" /></Field>
+
+        <Field label="Langue">
           <select name="locale" className="select" defaultValue="FR">
             <option value="FR">Français</option>
             <option value="EN">English</option>
@@ -91,8 +102,8 @@ export default async function ClientsPage({
             ))}
           </select>
         </Field>
-        <input type="hidden" name="residence" value="RESIDENT_CH" />
-        <div className="sm:col-span-2">
+
+        <div className="sm:col-span-2 flex justify-end">
           <button type="submit" className="btn btn-primary">
             {t('create')}
           </button>

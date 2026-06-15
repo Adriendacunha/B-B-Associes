@@ -206,6 +206,19 @@ model Client {
   canton String?
   phone  String?
 
+  // Identité (formulaire de création — onglet Identité).
+  firstName   String?
+  lastName    String?
+  birthDate   DateTime?
+  civilStatus String? // état civil : celibataire / marie / partenariat / separe / divorce / veuf
+  street      String?
+  postalCode  String? // NPA
+  city        String?
+  nationality String?
+  permitType  String? // type de permis (B, C, L…)
+  avsNumber   String? // n° AVS (756.XXXX.XXXX.XX)
+  religion    String? // pour l'impôt ecclésiastique
+
   campaigns Campaign[]
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
