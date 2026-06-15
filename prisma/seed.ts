@@ -7,6 +7,7 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { PIECE_REFERENTIAL } from '../src/data/piece-referential';
 import { rectificativePieceEntries } from '../src/data/templates/rectificative-pieces';
+import { CAMPAIGN_TEMPLATES } from '../src/data/campaign-templates';
 import { DEFAULT_EMAIL_TEMPLATES } from '../src/data/email-templates';
 import { DEFAULT_CADENCE } from '../src/lib/reminders/cadence';
 import { hashPassword } from '../src/lib/auth/password';
@@ -136,9 +137,21 @@ async function seedDemo() {
   console.log('   clients  : jean.dupont@example.ch / changeme-client   ·   anna.muller@example.ch / changeme-client');
 }
 
+async function seedCampaignTemplates() {
+  for (const t of CAMPAIGN_TEMPLATES) {
+    await prisma.campaignTemplate.upsert({
+      where: { key: t.key },
+      update: { name: t.name, description: t.description, engine: t.engine, sortOrder: t.sortOrder },
+      create: { key: t.key, name: t.name, description: t.description, engine: t.engine, active: t.active, sortOrder: t.sortOrder },
+    });
+  }
+  console.log(`✓ ${CAMPAIGN_TEMPLATES.length} modèles de campagne`);
+}
+
 async function main() {
   console.log('Seed B&B Associés…');
   await seedPieces();
+  await seedCampaignTemplates();
   await seedCadence();
   await seedEmailTemplates();
   await seedSettings();
