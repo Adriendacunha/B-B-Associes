@@ -352,6 +352,8 @@ model Document {
   sizeBytes        Int
   uploadedByClient Boolean        @default(true)
   status           DocumentStatus @default(RECU)
+  // Texte extrait (OCR/PDF) mémorisé pour éviter de ré-extraire au renommage (perf).
+  extractedText    String?
 
   aiVerdict   AiVerdict?
   humanReview HumanReview?

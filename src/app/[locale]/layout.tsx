@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { routing, Link } from '@/i18n/routing';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { MainNav, type NavItem } from '@/components/MainNav';
+import { MobileNav } from '@/components/MobileNav';
 import { getCurrentPrincipal } from '@/lib/auth/session';
 import { logout } from '@/app/actions/auth';
 import '../globals.css';
@@ -54,7 +55,7 @@ export default async function LocaleLayout({
       <body className="min-h-screen">
         <NextIntlClientProvider>
           <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
-            <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-2.5">
+            <div className="relative mx-auto flex max-w-6xl items-center gap-x-6 px-4 py-2.5">
               <Link href="/" className="flex items-center gap-2 font-semibold text-brand">
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-sm font-bold text-white">
                   B
@@ -79,13 +80,8 @@ export default async function LocaleLayout({
                   </>
                 )}
                 <LanguageSwitcher />
+                <MobileNav items={navItems} />
               </div>
-              {/* Navigation mobile (sous la barre) */}
-              {navItems.length > 0 && (
-                <div className="w-full overflow-x-auto pb-1 md:hidden">
-                  <MainNav items={navItems} />
-                </div>
-              )}
             </div>
           </header>
           <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>

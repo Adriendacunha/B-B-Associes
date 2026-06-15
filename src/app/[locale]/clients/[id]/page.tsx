@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { requireStaff } from '@/lib/auth/session';
 import { baseUrl } from '@/lib/url';
 import { CopyLink } from '@/components/CopyLink';
+import { DeleteClientButton } from '@/components/DeleteClientButton';
 import { Link } from '@/i18n/routing';
 
 export const dynamic = 'force-dynamic';
@@ -143,6 +144,20 @@ export default async function ClientFichePage({
             ))}
           </ul>
         )}
+      </section>
+
+      {/* Zone de suppression (nettoyage). */}
+      <section className="rounded-xl border border-red-200 bg-red-50/40 p-4">
+        <h2 className="text-sm font-semibold text-red-800">Supprimer le client</h2>
+        <p className="mb-2 text-xs text-red-700">
+          Supprime définitivement le client et toutes ses campagnes/pièces. Action irréversible.
+        </p>
+        <DeleteClientButton
+          clientId={client.id}
+          locale={locale}
+          label="Supprimer ce client"
+          confirmText={`Supprimer définitivement ${client.displayName} et toutes ses campagnes ? Cette action est irréversible.`}
+        />
       </section>
     </div>
   );

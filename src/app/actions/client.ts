@@ -88,3 +88,35 @@ export async function createClient(formData: FormData): Promise<void> {
 
   redirect(`/${uiLocale}/clients?created=${clientCode}`);
 }
+
+/**
+ * Suppression d'un client et de toutes ses campagnes (cascade pièces/documents/
+ * relances ; les e-mails sont conservés avec campagne détachée). Utile pour
+ * nettoyer les données de test.
+ */
+export async function deleteClient(formData: FormData): Promise<void> {
+  const uiLocale = String(formData.get('uiLocale') ?? 'fr');
+  const staff = await requireStaff(uiLocale);
+  const clientId = String(formData.get('clientId') ?? '');
+
+  const client = await prisma.client.findUnique({ where: { id: clientId }, select: { id: true, clientCode: true } });
+  if (!client) redirect(`/${uiLocale}/clients`);
+
+  await prisma.$transaction(async (tx) => {
+    // Campaign → ChecklistItem/Reminder en cascade ; EmailMessage.campaignId → null.
+    await tx.campaign.deleteMany({ where: { clientId: client.id } });
+    await tx.client.delete({ where: { id: client.id } });
+  });
+
+  await appendAuditLog(prisma, {
+    actorType: staff.role === 'ADMIN' ? 'ADMIN' : 'COLLABORATEUR',
+    actorId: staff.id,
+    action: 'CLIENT_DELETED',
+    entityType: 'Client',
+    entityId: client.id,
+    metadata: { clientCode: client.clientCode },
+    createdAt: new Date(),
+  });
+
+  redirect(`/${uiLocale}/clients`);
+}
