@@ -48,12 +48,20 @@ export async function getDashboardData() {
   }
 
   const clients: DashboardClientRow[] = [];
+  const buckets: { bloque: DashboardClientRow[]; aRelancer: DashboardClientRow[]; aControler: DashboardClientRow[]; pret: DashboardClientRow[] } = {
+    bloque: [],
+    aRelancer: [],
+    aControler: [],
+    pret: [],
+  };
   const autonomyInput: { isComplete: boolean; humanCorrections: number; manualReminders: number; escalations: number }[] = [];
   let remindersSent = 0;
 
+  const isResolved = (s: string) => s === 'CONFORME' || s === 'NON_CONCERNE';
+
   for (const c of campaigns) {
     const required = c.checklistItems.filter((i) => i.required);
-    const comp = completude({ requiredTotal: required.length, conformes: required.filter((i) => i.status === 'CONFORME').length });
+    const comp = completude({ requiredTotal: required.length, conformes: required.filter((i) => isResolved(i.status)).length });
     const isComplete = c.status === 'COMPLET';
 
     const sentSteps = c.reminders.filter((r) => r.sentAt).map((r) => r.rule.stepOrder);
@@ -66,7 +74,7 @@ export async function getDashboardData() {
       if (next) nextReminderDays = Math.max(0, Math.round((next.scheduledFor.getTime() - now.getTime()) / 86_400_000));
     }
 
-    clients.push({
+    const row: DashboardClientRow = {
       clientCode: c.client.clientCode,
       displayName: c.client.displayName,
       manager: c.client.gestionnaire?.name ?? '—',
@@ -74,7 +82,18 @@ export async function getDashboardData() {
       status: c.status,
       nextReminderDays,
       clientDeclaration: c.clientDeclaration,
-    });
+    };
+    clients.push(row);
+
+    // Triage en 4 buckets (dashboard B&B, écran 6).
+    const resolvedAll = required.length > 0 && required.every((i) => isResolved(i.status));
+    const hasEnValidation = c.checklistItems.some((i) => i.status === 'EN_VALIDATION');
+    const hasPending = c.checklistItems.some((i) => i.status === 'MANQUANT' || i.status === 'NON_CONFORME');
+    const overdue = Boolean(c.dueDate && c.dueDate < now && hasPending);
+    if (resolvedAll) buckets.pret.push(row);
+    else if (overdue) buckets.bloque.push(row);
+    else if (hasEnValidation) buckets.aControler.push(row);
+    else if (hasPending) buckets.aRelancer.push(row);
 
     autonomyInput.push({
       isComplete,
@@ -100,6 +119,7 @@ export async function getDashboardData() {
 
   return {
     clients,
+    buckets,
     totalCampaigns: campaigns.length,
     completeCount: campaigns.filter((c) => c.status === 'COMPLET').length,
     autonomyRate: autonomyCompletionRate(autonomyInput),

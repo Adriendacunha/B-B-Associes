@@ -133,8 +133,11 @@
       "DEPOSE": "Uploaded",
       "EN_VALIDATION": "Under review",
       "CONFORME": "Compliant",
-      "NON_CONFORME": "To resubmit"
+      "NON_CONFORME": "To resubmit",
+      "NON_CONCERNE": "Not applicable"
     },
+    "notConcerned": "I’m not concerned",
+    "concernedAfterAll": "Actually concerned",
     "required": "Required",
     "optional": "Optional",
     "upload": "Upload",

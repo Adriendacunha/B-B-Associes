@@ -133,8 +133,11 @@
       "DEPOSE": "Hochgeladen",
       "EN_VALIDATION": "In Prüfung",
       "CONFORME": "Konform",
-      "NON_CONFORME": "Erneut einzureichen"
+      "NON_CONFORME": "Erneut einzureichen",
+      "NON_CONCERNE": "Nicht betroffen"
     },
+    "notConcerned": "Nicht betroffen",
+    "concernedAfterAll": "Doch betroffen",
     "required": "Erforderlich",
     "optional": "Optional",
     "upload": "Hochladen",

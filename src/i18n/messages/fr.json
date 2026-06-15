@@ -133,8 +133,11 @@
       "DEPOSE": "Déposé",
       "EN_VALIDATION": "En validation",
       "CONFORME": "Conforme",
-      "NON_CONFORME": "À refournir"
+      "NON_CONFORME": "À refournir",
+      "NON_CONCERNE": "Non concerné"
     },
+    "notConcerned": "Je ne suis pas concerné",
+    "concernedAfterAll": "Finalement concerné",
     "required": "Obligatoire",
     "optional": "Facultatif",
     "upload": "Déposer",
