@@ -115,11 +115,18 @@ export async function CampaignChecklist({
       ])
     : [0, 0];
 
-  const byCategory = ORDERED_CATEGORIES.map((cat) => ({
-    category: cat,
-    label: CATEGORY_FOLDERS[cat],
-    items: items.filter((i) => i.category === cat),
-  })).filter((g) => g.items.length > 0);
+  const byCategory = ORDERED_CATEGORIES.map((cat) => {
+    const catItems = items.filter((i) => i.category === cat);
+    const resolved = catItems.filter((i) => isResolved(i.status)).length;
+    return {
+      category: cat,
+      label: CATEGORY_FOLDERS[cat],
+      items: catItems,
+      resolved,
+      total: catItems.length,
+      ratio: catItems.length > 0 ? resolved / catItems.length : 0,
+    };
+  }).filter((g) => g.items.length > 0);
 
   // Catalogue disponible pour « ajouter une pièce » (mode avancé cabinet).
   const presentDefIds = new Set(items.map((i) => i.pieceDefinitionId));
@@ -347,7 +354,20 @@ export async function CampaignChecklist({
       <div className="space-y-5">
         {byCategory.map((group) => (
           <section key={group.category}>
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{group.label}</h2>
+            <div className="mb-1.5 flex items-center justify-between gap-3">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{group.label}</h2>
+              <span className="text-xs font-medium text-slate-400">
+                {group.resolved}/{group.total}
+              </span>
+            </div>
+            <div className="mb-2.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  group.ratio === 1 ? 'bg-green-500' : 'bg-brand'
+                }`}
+                style={{ width: `${Math.round(group.ratio * 100)}%` }}
+              />
+            </div>
             <ul className="space-y-2">
               {group.items.map((item) => {
                 const latest = item.documents[0];
