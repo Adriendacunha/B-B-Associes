@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
-import { PIECE_REFERENTIAL } from '@/data/piece-referential';
+import { PIECE_REFERENTIAL, deriveRequirement, type RequirementLevel } from '@/data/piece-referential';
 import { selectRequiredPieces, type ClientProfile } from '@/lib/checklist/profiling';
 import { resolveLocalized, type AppLocale } from '@/lib/i18n/locales';
 import { createCampaign } from '@/app/actions/campaign';
@@ -36,6 +36,9 @@ const L: Record<string, Dict> = {
   pieces: { fr: 'pièce(s)', en: 'item(s)', de: 'Posten' },
   required: { fr: 'Obligatoire', en: 'Required', de: 'Erforderlich' },
   optional: { fr: 'Facultatif', en: 'Optional', de: 'Optional' },
+  reqOBLIGATOIRE: { fr: 'Obligatoire', en: 'Required', de: 'Erforderlich' },
+  reqSI_CONCERNE: { fr: 'Si concerné', en: 'If applicable', de: 'Falls betroffen' },
+  reqOPTIONNEL: { fr: 'Optionnel', en: 'Optional', de: 'Optional' },
   submit: { fr: 'Créer la campagne', en: 'Create campaign', de: 'Kampagne erstellen' },
   // champs booléens
   nouveauClient: { fr: 'Nouveau client', en: 'New client', de: 'Neukunde' },
@@ -46,6 +49,9 @@ const L: Record<string, Dict> = {
   activiteAccessoire: { fr: 'Activité accessoire', en: 'Secondary activity', de: 'Nebenerwerb' },
   rentes: { fr: 'Rentes (AVS/LPP)', en: 'Pensions (AVS/LPP)', de: 'Renten (AHV/BVG)' },
   immoLocatif: { fr: 'Revenus locatifs', en: 'Rental income', de: 'Mieteinnahmen' },
+  chomage: { fr: 'Indemnités chômage / APG', en: 'Unemployment / APG', de: 'Arbeitslosen- / EO-Geld' },
+  allocationsFamiliales: { fr: 'Allocations familiales', en: 'Family allowances', de: 'Familienzulagen' },
+  subsides: { fr: 'Subsides maladie / logement', en: 'Health / housing subsidies', de: 'Subventionen Kranken / Wohnen' },
   titres: { fr: 'Titres / comptes bancaires', en: 'Securities / bank accounts', de: 'Wertschriften / Bankkonten' },
   compteEtranger: { fr: 'Compte à l’étranger', en: 'Foreign account', de: 'Auslandskonto' },
   crypto: { fr: 'Cryptomonnaies', en: 'Cryptocurrencies', de: 'Kryptowährungen' },
@@ -74,10 +80,17 @@ const CATEGORY_LABEL: Record<string, Dict> = {
 
 const BOOLEAN_FIELDS = {
   situation: ['nouveauClient', 'retraite', 'enfantsMajeursACharge'],
-  revenus: ['revenuSalarie', 'revenuIndependant', 'activiteAccessoire', 'rentes', 'immoLocatif'],
+  revenus: ['revenuSalarie', 'revenuIndependant', 'activiteAccessoire', 'rentes', 'immoLocatif', 'chomage', 'allocationsFamiliales', 'subsides'],
   fortune: ['titres', 'compteEtranger', 'crypto'],
   deductions: ['pilier3a', 'pilier3b', 'rachatLpp', 'fraisGarde', 'fraisMedicaux', 'formation', 'fraisProEffectifs', 'dons', 'pensions', 'dettes', 'assujettiTva'],
 } as const;
+
+// Couleurs du badge de niveau d'exigence (§4.2).
+const REQ_BADGE: Record<RequirementLevel, string> = {
+  OBLIGATOIRE: 'bg-rose-50 text-rose-600',
+  SI_CONCERNE: 'bg-amber-50 text-amber-700',
+  OPTIONNEL: 'bg-slate-100 text-slate-500',
+};
 
 interface Props {
   locale: AppLocale;
@@ -219,17 +232,20 @@ export function ProfilageForm({ locale, clients, defaultFiscalYear }: Props) {
             </span>
           </div>
           <ul className="space-y-2">
-            {preview.map((p) => (
-              <li key={p.code} className="text-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-slate-700">{resolveLocalized(p.nom, locale)}</span>
-                  <span className={`shrink-0 text-[10px] uppercase ${p.requiredByDefault ? 'text-rose-500' : 'text-slate-400'}`}>
-                    {p.requiredByDefault ? t('required') : t('optional')}
-                  </span>
-                </div>
-                <span className="text-[11px] text-slate-400">{CATEGORY_LABEL[p.category]?.[locale] ?? p.category}</span>
-              </li>
-            ))}
+            {preview.map((p) => {
+              const level = deriveRequirement(p);
+              return (
+                <li key={p.code} className="text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-slate-700">{resolveLocalized(p.nom, locale)}</span>
+                    <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase ${REQ_BADGE[level]}`}>
+                      {t(`req${level}`)}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-slate-400">{CATEGORY_LABEL[p.category]?.[locale] ?? p.category}</span>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </aside>

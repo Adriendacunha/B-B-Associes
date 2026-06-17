@@ -34,6 +34,18 @@ const STATUS_STYLE: Record<string, string> = {
   NON_CONCERNE: 'bg-slate-200 text-slate-500',
 };
 
+// Badge de niveau d'exigence (§4.2) — couleur + libellé tri-langue.
+const REQ_STYLE: Record<string, string> = {
+  OBLIGATOIRE: 'text-rose-600',
+  SI_CONCERNE: 'text-amber-700',
+  OPTIONNEL: 'text-slate-400',
+};
+const REQ_LABEL: Record<string, Record<AppLocale, string>> = {
+  OBLIGATOIRE: { fr: 'Obligatoire', en: 'Required', de: 'Erforderlich' },
+  SI_CONCERNE: { fr: 'Si concerné', en: 'If applicable', de: 'Falls betroffen' },
+  OPTIONNEL: { fr: 'Optionnel', en: 'Optional', de: 'Optional' },
+};
+
 /**
  * Vue de la checklist d'une campagne, réutilisée par l'espace client (§4/§7) et
  * par la vue cabinet (§11). `showMeta` affiche l'en-tête de suivi (cabinet).
@@ -385,8 +397,8 @@ export async function CampaignChecklist({
                             {resolveLocalized(item.pieceDefinition.nom as unknown as LocalizedText, locale)}
                           </span>
                           <span className="font-mono text-[10px] text-slate-300">{item.pieceCode}</span>
-                          <span className="text-[10px] uppercase tracking-wide text-slate-400">
-                            {item.required ? tStatus('required') : tStatus('optional')}
+                          <span className={`text-[10px] font-medium uppercase tracking-wide ${REQ_STYLE[item.pieceDefinition.requirement] ?? 'text-slate-400'}`}>
+                            {REQ_LABEL[item.pieceDefinition.requirement]?.[locale] ?? (item.required ? tStatus('required') : tStatus('optional'))}
                           </span>
                         </div>
                         <p className="mt-0.5 text-xs text-slate-500">

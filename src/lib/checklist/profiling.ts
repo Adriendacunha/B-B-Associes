@@ -36,6 +36,9 @@ export const PROFILE_TAGS = {
   ACTIVITE_ACCESSOIRE: 'ACTIVITE_ACCESSOIRE',
   RENTES: 'RENTES',
   IMMO_LOCATIF: 'IMMO_LOCATIF',
+  CHOMAGE: 'CHOMAGE',
+  ALLOC_FAMILIALES: 'ALLOC_FAMILIALES',
+  SUBSIDES: 'SUBSIDES',
   // Niveau 2 — Situations fiscales : fortune
   TITRES: 'TITRES',
   COMPTE_ETRANGER: 'COMPTE_ETRANGER',
@@ -76,6 +79,9 @@ export interface ClientProfile {
   activiteAccessoire?: boolean;
   rentes?: boolean;
   immoLocatif?: boolean;
+  chomage?: boolean;
+  allocationsFamiliales?: boolean;
+  subsides?: boolean;
   titres?: boolean;
   compteEtranger?: boolean;
   crypto?: boolean;
@@ -115,6 +121,9 @@ export function deriveProfileTags(p: ClientProfile): Set<ProfileTag> {
   if (p.activiteAccessoire) tags.add(PROFILE_TAGS.ACTIVITE_ACCESSOIRE);
   if (p.rentes) tags.add(PROFILE_TAGS.RENTES);
   if (p.immoLocatif) tags.add(PROFILE_TAGS.IMMO_LOCATIF);
+  if (p.chomage) tags.add(PROFILE_TAGS.CHOMAGE);
+  if (p.allocationsFamiliales) tags.add(PROFILE_TAGS.ALLOC_FAMILIALES);
+  if (p.subsides) tags.add(PROFILE_TAGS.SUBSIDES);
   if (p.titres) tags.add(PROFILE_TAGS.TITRES);
   if (p.compteEtranger) tags.add(PROFILE_TAGS.COMPTE_ETRANGER);
   if (p.crypto) tags.add(PROFILE_TAGS.CRYPTO);
