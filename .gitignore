@@ -38,3 +38,6 @@ yarn-error.log*
 /playwright-report
 /test-results
 /blob-report
+
+# Documents de test générés (reproductibles via npm run gen:test-docs)
+test-documents/
