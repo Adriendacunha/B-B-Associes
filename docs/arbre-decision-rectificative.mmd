@@ -1,0 +1,20 @@
+flowchart TD
+  START([Début]) --> DEJA{{"dejaDeposee ?<br/>Déclaration initiale déjà déposée ?"}}
+  DEJA -- non --> STOP["⛔ Pas une rectification<br/>→ ouvrir une déclaration standard"]:::stop
+  DEJA -- oui --> SRC{{"source ?<br/>Imposé à la source ?"}}
+
+  SRC -- oui --> DRIS["🟦 Branche DRIS<br/>(impôt à la source)"]:::branch
+  SRC -- non --> TOU["🟩 Branche TOU<br/>(déclaration ordinaire)"]:::branch
+
+  DEJA -- oui --> DEC{{"decisionTaxation ?<br/>Décision reçue ?"}}
+  DEC -- oui --> DECDOCS["📄 Décision + bordereau + dateNotification<br/>⏱ délai réclamation 30 j"]
+  DEC -- non --> COPIE["📄 Copie déclaration transmise / sauvegarde"]
+
+  DEJA -- oui --> MOTIF{{"motif (multi)<br/>Que corriger ?"}}
+  MOTIF --> MOTIFDOCS["📄 Documents selon motifs<br/>(revenu, déduction, fortune, immobilier, dette…)"]
+
+  DRIS --> DEDUC{{"drisDeductionsEffectives ?<br/>3a / LPP / garde / formation"}}
+  DEDUC -- coché --> BASCULE["⚠️ Bascule DRIS → TOU<br/>(les déductions effectives passent par une TOU)"]:::stop
+
+  classDef stop fill:#fee2e2,stroke:#ef4444,color:#7f1d1d;
+  classDef branch fill:#eef2ff,stroke:#6366f1,color:#312e81;
