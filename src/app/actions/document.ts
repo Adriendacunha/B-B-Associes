@@ -114,6 +114,7 @@ export async function uploadDocument(formData: FormData): Promise<void> {
     clientLocale: item.campaign.client.locale.toLowerCase() as AppLocale,
     filename: originalFilename,
     text,
+    context: { documentId: doc.id, campaignId: item.campaignId, clientId: item.campaign.client.id },
   });
 
   await prisma.aiVerdict.create({
@@ -320,6 +321,7 @@ export async function renameDocument(formData: FormData): Promise<void> {
       clientLocale: item.campaign.client.locale.toLowerCase() as AppLocale,
       filename: newName,
       text,
+      context: { documentId, campaignId: item.campaignId, clientId: item.campaign.client.id },
     });
     await prisma.aiVerdict.upsert({
       where: { documentId },
@@ -409,7 +411,7 @@ export async function bulkUpload(formData: FormData): Promise<void> {
   for (const file of files) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const extraction = await extractText(buffer, file.type, file.name);
-    const matchedCode = await classifyDocument({ filename: file.name, text: extraction.text, candidates });
+    const matchedCode = await classifyDocument({ filename: file.name, text: extraction.text, candidates, context: { campaignId, clientId: campaign.client.id } });
     const target = matchedCode ? itemByCode.get(matchedCode) : undefined;
 
     if (target) {
@@ -429,6 +431,7 @@ export async function bulkUpload(formData: FormData): Promise<void> {
         clientLocale,
         filename: file.name,
         text: extraction.text,
+        context: { documentId: doc.id, campaignId, clientId: campaign.client.id },
       });
       await prisma.aiVerdict.create({
         data: {
@@ -499,6 +502,7 @@ export async function reassignDocument(formData: FormData): Promise<void> {
     clientLocale,
     filename: doc.originalFilename,
     text,
+    context: { documentId, campaignId: newItem.campaignId, clientId: newItem.campaign.client.id },
   });
   await prisma.aiVerdict.upsert({
     where: { documentId },

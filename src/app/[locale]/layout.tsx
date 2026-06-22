@@ -45,6 +45,7 @@ export default async function LocaleLayout({
       { href: '/clients', label: tClients('title') },
       { href: '/profilage', label: tCampagne('newCampaign') },
       { href: '/validation', label: tHome('validation') },
+      { href: '/analytics', label: tHome('aiUsage') },
     ];
   } else if (principal?.type === 'CLIENT') {
     navItems = [{ href: '/espace', label: tHome('clientSpace') }];

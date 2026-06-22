@@ -14,7 +14,8 @@
     "newCampaignDesc": "Einen Kunden profilieren und seine dynamische Checkliste erstellen.",
     "clientSpaceDesc": "Kundenseitiger Upload-Bereich, durch die KI geprüft.",
     "validationDesc": "KI-Urteile prüfen und Dokumente freigeben (Mensch in der Schleife).",
-    "dashboardDesc": "Dossierfortschritt, KI-Zuverlässigkeit und Erinnerungen verfolgen."
+    "dashboardDesc": "Dossierfortschritt, KI-Zuverlässigkeit und Erinnerungen verfolgen.",
+    "aiUsage": "KI-Verbrauch"
   },
   "clients": {
     "title": "Kunden / Betatester",

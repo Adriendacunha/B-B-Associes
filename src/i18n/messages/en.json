@@ -14,7 +14,8 @@
     "newCampaignDesc": "Profile a client and generate their dynamic document checklist.",
     "clientSpaceDesc": "Client-side upload area for documents, checked by AI.",
     "validationDesc": "Review AI verdicts and approve documents (human in the loop).",
-    "dashboardDesc": "Track file progress, AI reliability and reminders."
+    "dashboardDesc": "Track file progress, AI reliability and reminders.",
+    "aiUsage": "AI usage"
   },
   "clients": {
     "title": "Clients / beta testers",
