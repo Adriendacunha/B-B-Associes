@@ -12,6 +12,18 @@ function run(cmd) {
   execSync(cmd, { stdio: 'inherit', env: process.env });
 }
 
+// Sur Vercel, une base Postgres/Neon rattachée expose souvent POSTGRES_PRISMA_URL
+// / POSTGRES_URL_NON_POOLING plutôt que DATABASE_URL. On normalise vers le nom
+// attendu par schema.prisma pour que migrations et seed s'exécutent.
+if (!process.env.DATABASE_URL) {
+  const fallback =
+    process.env.POSTGRES_PRISMA_URL || process.env.POSTGRES_URL || process.env.DATABASE_URL_UNPOOLED || '';
+  if (fallback) {
+    process.env.DATABASE_URL = fallback;
+    console.log('ℹ DATABASE_URL déduit depuis les variables Postgres de l’hôte.');
+  }
+}
+
 const hasDb = Boolean(process.env.DATABASE_URL);
 
 // Prisma a besoin de DIRECT_URL pour les migrations. Si l'hébergeur n'expose
