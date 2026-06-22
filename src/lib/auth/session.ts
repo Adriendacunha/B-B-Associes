@@ -54,25 +54,34 @@ export async function getCurrentPrincipal(): Promise<CurrentPrincipal> {
   const id = store.get(SESSION_COOKIE)?.value;
   if (!id) return null;
 
-  const session = await prisma.session.findUnique({ where: { id } });
-  if (!session) return null;
-  if (session.expiresAt.getTime() <= Date.now()) {
-    await prisma.session.deleteMany({ where: { id } });
+  try {
+    const session = await prisma.session.findUnique({ where: { id } });
+    if (!session) return null;
+    if (session.expiresAt.getTime() <= Date.now()) {
+      await prisma.session.deleteMany({ where: { id } });
+      return null;
+    }
+
+    // Expiration glissante (déconnexion après inactivité §8).
+    await prisma.session.update({
+      where: { id },
+      data: { lastSeenAt: new Date(), expiresAt: sessionExpiry() },
+    });
+
+    if (session.principalType === 'STAFF') {
+      const user = await prisma.user.findUnique({ where: { id: session.subjectId } });
+      return user && user.active ? { type: 'STAFF', user } : null;
+    }
+    const client = await prisma.client.findUnique({ where: { id: session.subjectId } });
+    return client ? { type: 'CLIENT', client } : null;
+  } catch (err) {
+    // Base injoignable (ex. variables d'environnement manquantes sur un
+    // déploiement) : on échoue « fermé » (déconnecté) au lieu de faire planter
+    // l'ensemble du site, pour que les pages publiques / la connexion restent
+    // accessibles. L'erreur est tracée pour diagnostic.
+    console.error('[getCurrentPrincipal] lecture de session impossible :', err);
     return null;
   }
-
-  // Expiration glissante (déconnexion après inactivité §8).
-  await prisma.session.update({
-    where: { id },
-    data: { lastSeenAt: new Date(), expiresAt: sessionExpiry() },
-  });
-
-  if (session.principalType === 'STAFF') {
-    const user = await prisma.user.findUnique({ where: { id: session.subjectId } });
-    return user && user.active ? { type: 'STAFF', user } : null;
-  }
-  const client = await prisma.client.findUnique({ where: { id: session.subjectId } });
-  return client ? { type: 'CLIENT', client } : null;
 }
 
 /** Garde de route : exige un collaborateur connecté, sinon redirige vers /login. */
