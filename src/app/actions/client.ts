@@ -60,6 +60,7 @@ export async function createClient(formData: FormData): Promise<void> {
         street: str('street'),
         postalCode: str('postalCode'),
         city: str('city'),
+        pays: str('pays'),
         nationality: str('nationality'),
         permitType: str('permitType'),
         avsNumber: str('avsNumber'),
@@ -87,6 +88,75 @@ export async function createClient(formData: FormData): Promise<void> {
   }
 
   redirect(`/${uiLocale}/clients?created=${clientCode}`);
+}
+
+/**
+ * Mise à jour des informations d'identité d'un client (compléter / corriger la
+ * fiche). Ne touche ni au code client, ni à l'activation, ni aux campagnes.
+ */
+export async function updateClient(formData: FormData): Promise<void> {
+  const uiLocale = String(formData.get('uiLocale') ?? 'fr');
+  const staff = await requireStaff(uiLocale);
+  const clientId = String(formData.get('clientId') ?? '');
+
+  const existing = await prisma.client.findUnique({ where: { id: clientId }, select: { id: true, clientCode: true } });
+  if (!existing) redirect(`/${uiLocale}/clients`);
+
+  const lastName = String(formData.get('lastName') ?? '').trim();
+  const firstName = String(formData.get('firstName') ?? '').trim();
+  const email = String(formData.get('email') ?? '').trim().toLowerCase();
+  const locale = String(formData.get('locale') ?? 'FR').toUpperCase();
+  const civilStatus = String(formData.get('civilStatus') ?? '').trim() || null;
+  const birthRaw = String(formData.get('birthDate') ?? '').trim();
+  const birthDate = birthRaw ? new Date(birthRaw) : null;
+  const gestionnaireId = String(formData.get('gestionnaireId') ?? '').trim() || null;
+  const str = (k: string) => String(formData.get(k) ?? '').trim() || null;
+
+  const back = `/${uiLocale}/clients/${clientId}`;
+  if (!lastName || !firstName || !email) redirect(`${back}?error=champs`);
+  if (!LOCALES.has(locale)) redirect(`${back}?error=valeurs`);
+
+  try {
+    await prisma.client.update({
+      where: { id: clientId },
+      data: {
+        displayName: `${lastName} ${firstName}`.trim(),
+        firstName,
+        lastName,
+        email,
+        locale: locale as Prisma.ClientUpdateInput['locale'],
+        birthDate,
+        civilStatus,
+        street: str('street'),
+        postalCode: str('postalCode'),
+        city: str('city'),
+        pays: str('pays'),
+        nationality: str('nationality'),
+        permitType: str('permitType'),
+        avsNumber: str('avsNumber'),
+        religion: str('religion'),
+        phone: str('phone'),
+        gestionnaireId,
+      },
+    });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      redirect(`${back}?error=existe`); // e-mail déjà utilisé par un autre client
+    }
+    throw e;
+  }
+
+  await appendAuditLog(prisma, {
+    actorType: staff.role === 'ADMIN' ? 'ADMIN' : 'COLLABORATEUR',
+    actorId: staff.id,
+    action: 'CLIENT_UPDATED',
+    entityType: 'Client',
+    entityId: clientId,
+    metadata: { clientCode: existing.clientCode },
+    createdAt: new Date(),
+  });
+
+  redirect(`${back}?updated=1`);
 }
 
 /**

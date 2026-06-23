@@ -6,6 +6,8 @@ import { requireStaff } from '@/lib/auth/session';
 import { baseUrl } from '@/lib/url';
 import { CopyLink } from '@/components/CopyLink';
 import { DeleteClientButton } from '@/components/DeleteClientButton';
+import { ClientIdentityFields } from '@/components/ClientIdentityFields';
+import { updateClient } from '@/app/actions/client';
 import { Link } from '@/i18n/routing';
 
 export const dynamic = 'force-dynamic';
@@ -21,20 +23,26 @@ const STATUS_LABEL: Record<string, string> = {
 
 export default async function ClientFichePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
+  searchParams: Promise<{ updated?: string; error?: string }>;
 }) {
   const { locale, id } = await params;
+  const { updated, error } = await searchParams;
   setRequestLocale(locale);
   await requireStaff(locale);
 
-  const client = await prisma.client.findUnique({
-    where: { id },
-    include: {
-      gestionnaire: true,
-      campaigns: { orderBy: { fiscalYear: 'desc' }, include: { _count: { select: { checklistItems: true } } } },
-    },
-  });
+  const [client, staff] = await Promise.all([
+    prisma.client.findUnique({
+      where: { id },
+      include: {
+        gestionnaire: true,
+        campaigns: { orderBy: { fiscalYear: 'desc' }, include: { _count: { select: { checklistItems: true } } } },
+      },
+    }),
+    prisma.user.findMany({ where: { active: true }, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
+  ]);
   if (!client) notFound();
 
   const templates = await prisma.campaignTemplate.findMany({ select: { key: true, name: true } });
@@ -67,6 +75,7 @@ export default async function ClientFichePage({
     ['Date de naissance', fmtDate(client.birthDate)],
     ['État civil', client.civilStatus ? (CIVIL_LABEL[client.civilStatus] ?? client.civilStatus) : '—'],
     ['Adresse', address],
+    ['Pays', client.pays ?? '—'],
     ['Nationalité', client.nationality ?? '—'],
     ['Type de permis', client.permitType ?? '—'],
     ['Numéro AVS', client.avsNumber ?? '—'],
@@ -96,6 +105,19 @@ export default async function ClientFichePage({
         </Link>
       </header>
 
+      {updated && (
+        <p className="rounded-lg border border-green-100 bg-green-50 px-3 py-2 text-sm text-green-700">
+          Informations mises à jour.
+        </p>
+      )}
+      {error && (
+        <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error === 'existe'
+            ? 'Cet e-mail est déjà utilisé par un autre client.'
+            : 'Veuillez vérifier les champs obligatoires (nom, prénom, e-mail).'}
+        </p>
+      )}
+
       {/* Informations essentielles */}
       <section className="card">
         <h2 className="mb-3 text-sm font-semibold text-slate-900">Informations</h2>
@@ -116,6 +138,23 @@ export default async function ClientFichePage({
           </div>
         )}
       </section>
+
+      {/* Édition de la fiche (compléter / corriger) */}
+      <details className="card">
+        <summary className="cursor-pointer select-none text-sm font-semibold text-slate-900">
+          Modifier les informations
+        </summary>
+        <form action={updateClient} className="mt-4 grid gap-4 sm:grid-cols-2">
+          <input type="hidden" name="uiLocale" value={locale} />
+          <input type="hidden" name="clientId" value={client.id} />
+          <ClientIdentityFields staff={staff} client={client} />
+          <div className="sm:col-span-2 flex justify-end">
+            <button type="submit" className="btn btn-primary">
+              Enregistrer
+            </button>
+          </div>
+        </form>
+      </details>
 
       {/* Campagnes */}
       <section className="space-y-3">

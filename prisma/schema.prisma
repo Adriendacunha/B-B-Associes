@@ -221,6 +221,7 @@ model Client {
   street      String?
   postalCode  String? // NPA
   city        String?
+  pays        String? // pays de résidence (adresse)
   nationality String?
   permitType  String? // type de permis (B, C, L…)
   avsNumber   String? // n° AVS (756.XXXX.XXXX.XX)
