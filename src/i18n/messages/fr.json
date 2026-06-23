@@ -15,7 +15,8 @@
     "clientSpaceDesc": "Espace de dépôt des pièces côté client, vérifiées par l’IA.",
     "validationDesc": "Vérifier les verdicts de l’IA et valider les pièces (humain dans la boucle).",
     "dashboardDesc": "Suivre l’avancement des dossiers, la fiabilité IA et les relances.",
-    "aiUsage": "Consommation IA"
+    "aiUsage": "Consommation IA",
+    "baremes": "Barèmes"
   },
   "clients": {
     "title": "Clients / bêta-testeurs",

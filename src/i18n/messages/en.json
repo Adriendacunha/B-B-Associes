@@ -15,7 +15,8 @@
     "clientSpaceDesc": "Client-side upload area for documents, checked by AI.",
     "validationDesc": "Review AI verdicts and approve documents (human in the loop).",
     "dashboardDesc": "Track file progress, AI reliability and reminders.",
-    "aiUsage": "AI usage"
+    "aiUsage": "AI usage",
+    "baremes": "Tax thresholds"
   },
   "clients": {
     "title": "Clients / beta testers",

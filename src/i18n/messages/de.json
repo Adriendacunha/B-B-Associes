@@ -15,7 +15,8 @@
     "clientSpaceDesc": "Kundenseitiger Upload-Bereich, durch die KI geprüft.",
     "validationDesc": "KI-Urteile prüfen und Dokumente freigeben (Mensch in der Schleife).",
     "dashboardDesc": "Dossierfortschritt, KI-Zuverlässigkeit und Erinnerungen verfolgen.",
-    "aiUsage": "KI-Verbrauch"
+    "aiUsage": "KI-Verbrauch",
+    "baremes": "Steuertarife"
   },
   "clients": {
     "title": "Kunden / Betatester",
