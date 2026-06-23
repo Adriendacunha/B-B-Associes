@@ -6,6 +6,7 @@ import {
   QUALIFYING_IDS,
   drisToTouAlert,
   notRectificativeAlert,
+  notEligibleTouAlert,
 } from '@/data/templates/declaration-rectificative';
 
 describe('evalCondition', () => {
@@ -86,6 +87,11 @@ describe('alertes métier', () => {
   it('alerte « pas une rectification » si déclaration initiale non déposée', () => {
     expect(notRectificativeAlert({ dejaDeposee: 'non' })).toBe(true);
     expect(notRectificativeAlert({ dejaDeposee: 'oui' })).toBe(false);
+  });
+  it('gate quasi-résident : non-résident avec < 90 % → non éligible TOU', () => {
+    expect(notEligibleTouAlert({ statutResidence: 'non_resident', touQuasiResident: 'non' })).toBe(true);
+    expect(notEligibleTouAlert({ statutResidence: 'non_resident', touQuasiResident: 'oui' })).toBe(false);
+    expect(notEligibleTouAlert({ statutResidence: 'resident_ch', touQuasiResident: 'non' })).toBe(false);
   });
 });
 

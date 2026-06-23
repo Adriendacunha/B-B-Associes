@@ -9,6 +9,7 @@ import {
   QUALIFYING_IDS,
   drisToTouAlert,
   notRectificativeAlert,
+  notEligibleTouAlert,
 } from '@/data/templates/declaration-rectificative';
 import { createRectificativeCampaign } from '@/app/actions/campaign';
 import { QuestionField } from '@/components/questionnaire/QuestionField';
@@ -54,6 +55,7 @@ export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear 
 
   const notRectificative = notRectificativeAlert(answers);
   const touAlert = drisToTouAlert(answers);
+  const notEligibleTou = notEligibleTouAlert(answers);
 
   const orientation = sections.find((s) => s.id === 'orientation');
   const otherSections = sections.filter((s) => s.id !== 'orientation');
@@ -137,6 +139,17 @@ export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear 
                 <p>
                   Cette demande relève probablement d’une <strong>TOU (déclaration ordinaire)</strong>, pas d’une simple DRIS :
                   à Genève, les déductions effectives (3e pilier, rachats LPP, garde, formation…) ne se font pas via l’impôt à la source.
+                </p>
+              </div>
+            )}
+
+            {notEligibleTou && (
+              <div className="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={1.75} />
+                <p>
+                  <strong>Quasi-résident non éligible</strong> : moins de 90 % des revenus mondiaux du foyer sont imposables
+                  en Suisse. La déclaration ordinaire (TOU) n’est pas ouverte → rabattre sur l’<strong>impôt à la source (DRIS)</strong>
+                  {' '}standard et arrêter la collecte TOU.
                 </p>
               </div>
             )}
