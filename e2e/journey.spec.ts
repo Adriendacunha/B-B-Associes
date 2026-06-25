@@ -39,8 +39,9 @@ test('parcours : client → campagne Déclaration d’impôt → dépôt → val
   const activationLink = await sp.locator('input[readonly]').first().inputValue();
   expect(activationLink).toContain('/activation?token=');
 
-  // 4) Créer une campagne « Déclaration d'impôt » (assistant guidé) depuis la fiche
-  await sp.getByRole('link', { name: 'Créer une campagne' }).click();
+  // 4) Créer une campagne « Déclaration d'impôt » (assistant guidé) depuis la fiche.
+  // Scopé au contenu principal : le menu porte désormais aussi « Créer une campagne ».
+  await sp.getByRole('main').getByRole('link', { name: 'Créer une campagne' }).click();
   await sp.waitForURL('**/nouvelle-campagne');
   await sp.getByRole('button', { name: /Déclaration d.impôt/ }).click();
   // Qualification minimale : pas d'impôt à la source + déclaration de l'année

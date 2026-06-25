@@ -9,18 +9,18 @@
     "subtitle": "Déposez vos pièces en toute sécurité pour la préparation de votre déclaration fiscale.",
     "clientSpace": "Mon espace client",
     "dashboard": "Tableau de bord cabinet",
-    "validation": "File de validation",
+    "validation": "Documents à contrôler",
     "clientsDesc": "Créer et suivre vos clients bêta-testeurs, transmettre les liens d’activation.",
-    "newCampaignDesc": "Profiler un client et générer sa checklist documentaire dynamique.",
-    "clientSpaceDesc": "Espace de dépôt des pièces côté client, vérifiées par l’IA.",
-    "validationDesc": "Vérifier les verdicts de l’IA et valider les pièces (humain dans la boucle).",
-    "dashboardDesc": "Suivre l’avancement des dossiers, la fiabilité IA et les relances.",
-    "aiUsage": "Consommation IA",
+    "newCampaignDesc": "Créer une campagne et générer la checklist des documents à demander.",
+    "clientSpaceDesc": "Espace de dépôt des pièces, côté client.",
+    "validationDesc": "Contrôler et valider les documents déposés par les clients.",
+    "dashboardDesc": "Suivre l’avancement des dossiers et les relances.",
+    "aiUsage": "Coûts d’analyse",
     "baremes": "Barèmes"
   },
   "clients": {
     "title": "Clients / bêta-testeurs",
-    "subtitle": "Créez un client et transmettez-lui son lien d’activation (§15.2).",
+    "subtitle": "Créez un client et transmettez-lui son lien d’activation.",
     "new": "Nouveau client",
     "code": "Code client",
     "name": "Nom affiché",
@@ -95,7 +95,7 @@
   "upload": {
     "deposit": "Déposer un fichier",
     "send": "Envoyer",
-    "aiProposes": "Verdict IA proposé",
+    "aiProposes": "Analyse proposée",
     "conforme": "conforme",
     "nonConforme": "non conforme",
     "depositedAs": "Déposé sur OneDrive :",
@@ -108,18 +108,19 @@
     "uploading": "Téléversement & analyse…",
     "multiHint": "Plusieurs fichiers possibles (fusionnés en un seul PDF).",
     "dropzone": "Glissez-déposez un nouveau fichier ici ou cliquez sur la flèche pour importer un fichier",
-    "bulkTitle": "Dépôt groupé — tri automatique par l’IA",
-    "bulkHint": "Déposez tous vos documents d’un coup : l’IA identifie chacun et le range dans la bonne pièce. Ce qui n’est pas reconnu va dans « À trier ».",
+    "bulkTitle": "Dépôt groupé — tri automatique",
+    "bulkHint": "Déposez tous vos documents d’un coup : le système identifie chaque document et le range dans la bonne pièce. Ce qui n’est pas reconnu va dans « À trier ».",
     "bulkDropzone": "Glissez-déposez tous vos documents ici ou cliquez sur la flèche pour les importer",
-    "bulkSend": "Déposer et trier"
+    "bulkSend": "Déposer et trier",
+    "ai": "Analyse automatique"
   },
   "validation": {
-    "title": "File de validation",
-    "subtitle": "Vérifiez le verdict proposé par l’IA et tranchez (humain dans la boucle, §15.1).",
+    "title": "Documents à contrôler",
+    "subtitle": "Contrôlez les documents déposés et validez-les, ou demandez une correction.",
     "empty": "Aucun document en attente de validation.",
     "client": "Client",
     "piece": "Pièce",
-    "ai": "Analyse IA",
+    "ai": "Analyse automatique",
     "anomalies": "Anomalies",
     "readability": "Lisibilité",
     "model": "Modèle",
@@ -163,7 +164,7 @@
     "client": "Client",
     "manager": "Gestionnaire",
     "completude": "Complétude",
-    "newCampaign": "Ouvrir une campagne",
+    "newCampaign": "Créer une campagne",
     "declarationLabel": "Déclaration du client",
     "declNone": "Aucune réponse",
     "declNon": "En cours (non terminé)",
@@ -171,11 +172,11 @@
     "declNonConcerne": "Client non concerné cet exercice"
   },
   "dashboard": {
-    "title": "Tableau de bord — suivi des dossiers",
+    "title": "Collecte documentaire B&B Associés",
     "demoNote": "Indicateurs illustratifs calculés sur des données de démonstration.",
     "metrics": {
       "autonomy": "Complétion en autonomie",
-      "reliability": "Fiabilité IA (seuil 90%)",
+      "reliability": "Fiabilité de l’analyse",
       "timeSaved": "Temps cabinet économisé",
       "complete": "Dossiers complets"
     },
@@ -202,6 +203,9 @@
       "A_VALIDER": "À contrôler",
       "COMPLET": "Prête à traiter",
       "SUSPENDU": "Suspendue"
-    }
+    },
+    "subtitle": "Créez une campagne, envoyez un lien sécurisé, suivez les pièces manquantes.",
+    "viewCases": "Voir les dossiers en cours",
+    "indicators": "Indicateurs"
   }
 }
