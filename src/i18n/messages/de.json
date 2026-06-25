@@ -130,6 +130,7 @@
   },
   "espace": {
     "title": "Meine Dokumenten-Checkliste",
+    "checklistTitle": "Unterlagen für Ihre {label} {year}",
     "intro": "Hier sind die für Ihr Dossier erwarteten Unterlagen. Laden Sie jedes Dokument hoch; es wird vor der Validierung geprüft.",
     "demoNote": "Demonstrationsdaten (nicht mit der Datenbank verbunden).",
     "status": {

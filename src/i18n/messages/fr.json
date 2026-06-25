@@ -130,6 +130,7 @@
   },
   "espace": {
     "title": "Ma checklist documentaire",
+    "checklistTitle": "Documents pour votre {label} {year}",
     "intro": "Voici les pièces attendues pour votre dossier. Déposez chaque document ; il sera vérifié avant validation.",
     "demoNote": "Données de démonstration (parcours non connecté à la base).",
     "status": {
