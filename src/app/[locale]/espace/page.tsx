@@ -6,9 +6,9 @@ import { CampaignChecklist } from '@/components/CampaignChecklist';
 import { ClientIdentityFields } from '@/components/ClientIdentityFields';
 import { updateOwnIdentity } from '@/app/actions/client';
 import { ValidatedInput } from '@/components/ValidatedInput';
-import { IntakeForm } from '@/components/questionnaire/IntakeForm';
-import { intakeQuestions } from '@/lib/questionnaire/intake';
+import { ClientDeclarationForm } from '@/components/questionnaire/ClientDeclarationForm';
 import { RECTIFICATIVE_TEMPLATE } from '@/data/templates/declaration-rectificative';
+import type { Answers } from '@/lib/questionnaire/types';
 import type { AppLocale } from '@/lib/i18n/locales';
 
 export const dynamic = 'force-dynamic';
@@ -69,12 +69,13 @@ export default async function EspacePage({
     select: { id: true, profile: true, templateId: true },
   });
 
-  // Intake : questions « données du dossier » à remplir par le client (rectificative).
-  let intake: { questions: import('@/lib/questionnaire/types').Question[]; initial: Record<string, unknown> } | null = null;
+  // Déclaration : le client répond lui-même à toutes les questions que le cabinet
+  // a laissées sans réponse (verrou = cabinetKeys). Sa checklist se met à jour.
+  let declaration: { initial: Answers; lockedIds: string[] } | null = null;
   if (campaign?.templateId === RECTIFICATIVE_TEMPLATE.id) {
-    const answers = ((campaign.profile as { answers?: Record<string, unknown> } | null)?.answers ?? {}) as never;
-    const questions = intakeQuestions(RECTIFICATIVE_TEMPLATE, answers);
-    if (questions.length > 0) intake = { questions, initial: answers };
+    const profile = (campaign.profile as { answers?: Answers; cabinetKeys?: string[] } | null) ?? {};
+    const initial = profile.answers ?? {};
+    declaration = { initial, lockedIds: profile.cabinetKeys ?? Object.keys(initial) };
   }
 
   return (
@@ -116,12 +117,12 @@ export default async function EspacePage({
 
       {campaign ? (
         <>
-          {intake && (
-            <IntakeForm
+          {declaration && (
+            <ClientDeclarationForm
               locale={locale as AppLocale}
               campaignId={campaign.id}
-              questions={intake.questions}
-              initial={intake.initial as never}
+              initial={declaration.initial}
+              lockedIds={declaration.lockedIds}
             />
           )}
           <CampaignChecklist campaignId={campaign.id} locale={locale as AppLocale} showMeta={false} />

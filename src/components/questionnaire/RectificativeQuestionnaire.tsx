@@ -222,17 +222,26 @@ export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear 
         </div>
       )}
 
-      {/* Création de la campagne (persistance) */}
-      {qualified && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4">
-          <p className="text-sm text-slate-600">
-            {docs.length} document(s) seront demandés à <span className="font-medium text-slate-800">{clientCode}</span> pour {fiscalYear}.
-          </p>
-          <button type="button" onClick={createCampaign} disabled={isPending || !clientCode} className="btn btn-primary">
-            {isPending ? 'Création…' : 'Créer la campagne'}
-          </button>
-        </div>
-      )}
+      {/* Création de la campagne (persistance). Possible même sans qualification
+          complète : le client répondra lui-même aux questions restantes dans son
+          espace, et sa liste de documents se mettra à jour. */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4">
+        <p className="text-sm text-slate-600">
+          {qualified ? (
+            <>
+              {docs.length} document(s) seront demandés à <span className="font-medium text-slate-800">{clientCode}</span> pour {fiscalYear}.
+            </>
+          ) : (
+            <>
+              Vous pouvez créer la campagne maintenant : <span className="font-medium text-slate-800">{clientCode}</span> complétera
+              lui-même les questions restantes dans son espace.
+            </>
+          )}
+        </p>
+        <button type="button" onClick={createCampaign} disabled={isPending || !clientCode} className="btn btn-primary">
+          {isPending ? 'Création…' : 'Créer la campagne'}
+        </button>
+      </div>
     </div>
   );
 }

@@ -103,11 +103,9 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
       clientTitle: 'Vos informations',
       visibilityCondition: { q: 'typeDeclaration', answered: true },
       questions: [
-        { id: 'nomPrenom', question: 'Nom et prénom', clientLabel: 'Nom et prénom', answerType: 'text', clientData: true },
-        { id: 'dateNaissance', question: 'Date de naissance', clientLabel: 'Date de naissance', answerType: 'date', clientData: true },
-        { id: 'adresse', question: 'Adresse', clientLabel: 'Adresse', answerType: 'text', clientData: true },
-        { id: 'telephone', question: 'Téléphone', clientLabel: 'Téléphone', answerType: 'text', clientData: true },
-        { id: 'email', question: 'E-mail', clientLabel: 'E-mail', answerType: 'text', clientData: true },
+        // Identité (nom, naissance, adresse, téléphone, e-mail, état civil) : NON
+        // redemandée ici — elle est saisie dans « Mes informations » (fiche client).
+        // L'intake ne porte que ce qui est propre à la déclaration.
         {
           id: 'numContribuable',
           question: 'Numéro de contribuable / numéro fiscal',
@@ -115,7 +113,7 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
           answerType: 'text',
           clientData: true,
         },
-        { id: 'anneeFiscale', question: 'Année fiscale concernée', clientLabel: 'Année concernée', answerType: 'number', clientData: true },
+        // « Année concernée » : déjà portée par la campagne (fiscalYear) — pas redemandée.
         {
           id: 'canton',
           question: 'Canton concerné',
@@ -139,25 +137,15 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
             { value: 'non_resident', label: 'Non-résident' },
           ],
         },
-        {
-          id: 'etatCivil',
-          question: 'État civil au 31 décembre de l’année fiscale',
-          clientLabel: 'Votre état civil au 31 décembre',
-          answerType: 'single',
-          clientData: true,
-          choices: [
-            { value: 'celibataire', label: 'Célibataire' },
-            { value: 'marie_pacs', label: 'Marié·e / partenariat' },
-            { value: 'separe_divorce', label: 'Séparé·e / divorcé·e' },
-            { value: 'veuf', label: 'Veuf·ve' },
-          ],
-        },
+        // État civil : saisi dans « Mes informations » (fiche client) — pas redemandé.
         {
           id: 'motifLibre',
           question: 'Motif libre de rectification',
           clientLabel: 'Expliquez en quelques mots ce qui doit être corrigé',
           answerType: 'text',
           clientData: true,
+          // Spécifique à une rectification / réclamation (pas une déclaration ordinaire).
+          visibilityCondition: { q: 'typeDeclaration', eq: 'rectification' },
         },
         {
           id: 'mandatBB',
