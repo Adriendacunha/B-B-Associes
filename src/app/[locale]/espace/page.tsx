@@ -7,6 +7,7 @@ import { ClientIdentityFields } from '@/components/ClientIdentityFields';
 import { updateOwnIdentity } from '@/app/actions/client';
 import { ValidatedInput } from '@/components/ValidatedInput';
 import { ClientDeclarationForm } from '@/components/questionnaire/ClientDeclarationForm';
+import { Logo } from '@/components/Logo';
 import { RECTIFICATIVE_TEMPLATE } from '@/data/templates/declaration-rectificative';
 import type { Answers } from '@/lib/questionnaire/types';
 import type { AppLocale } from '@/lib/i18n/locales';
@@ -33,9 +34,7 @@ export default async function EspacePage({
     return (
       <div className="mx-auto max-w-sm py-6">
         <div className="mb-6 flex flex-col items-center text-center">
-          <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand text-lg font-bold text-white">
-            B
-          </span>
+          <Logo className="mb-3 h-12 w-auto" />
           <h1 className="text-2xl font-bold text-slate-900">{t('clientTitle')}</h1>
         </div>
         {error && (

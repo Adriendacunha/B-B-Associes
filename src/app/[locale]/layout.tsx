@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing, Link } from '@/i18n/routing';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { Logo } from '@/components/Logo';
 import { MainNav, type NavItem } from '@/components/MainNav';
 import { MobileNav } from '@/components/MobileNav';
 import { getCurrentPrincipal } from '@/lib/auth/session';
@@ -58,11 +59,8 @@ export default async function LocaleLayout({
         <NextIntlClientProvider>
           <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
             <div className="relative mx-auto flex max-w-6xl items-center gap-x-6 px-4 py-2.5">
-              <Link href="/" className="flex items-center gap-2 font-semibold text-brand">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-sm font-bold text-white">
-                  B
-                </span>
-                <span className="hidden sm:inline">{t('appName')}</span>
+              <Link href="/" className="flex items-center" aria-label={t('appName')}>
+                <Logo className="h-8 w-auto" />
               </Link>
               <div className="hidden md:block">
                 <MainNav items={navItems} />

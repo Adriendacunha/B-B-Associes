@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { staffLogin } from '@/app/actions/auth';
 import { getCurrentPrincipal } from '@/lib/auth/session';
 import { ValidatedInput } from '@/components/ValidatedInput';
+import { Logo } from '@/components/Logo';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,9 +25,7 @@ export default async function LoginPage({
   return (
     <div className="mx-auto max-w-sm py-6">
       <div className="mb-6 flex flex-col items-center text-center">
-        <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand text-lg font-bold text-white">
-          B
-        </span>
+        <Logo className="mb-3 h-12 w-auto" />
         <h1 className="text-2xl font-bold text-slate-900">{t('staffTitle')}</h1>
       </div>
       {error && (
