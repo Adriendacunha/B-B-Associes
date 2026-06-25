@@ -22,8 +22,8 @@ export const CAMPAIGN_TEMPLATES: CampaignTemplateSeed[] = [
   },
   {
     key: 'declaration-rectificative',
-    name: 'Déclaration rectificative',
-    description: 'Assistant conditionnel : rectification d’impôt à la source (DRIS) ou déclaration ordinaire (TOU).',
+    name: 'Déclaration d’impôt (assistant guidé)',
+    description: 'Assistant conditionnel : déclaration de l’année (corriger les données pré-remplies), impôt à la source (DRIS) ou réclamation contre une taxation reçue.',
     engine: 'QUESTIONNAIRE',
     active: true,
     sortOrder: 2,

@@ -43,7 +43,7 @@ flowchart TD
 | Question (id) | Type | Visible si | Déclenche |
 | --- | --- | --- | --- |
 | Votre demande concerne-t-elle une personne imposée à la source ? `(source)` | single | — | — |
-| Type de démarche `(typeDeclaration)` | single | — | — |
+| Nature de la démarche `(typeDeclaration)` | single | — | — |
 | Avez-vous reçu une décision de taxation ? `(decisionTaxation)` | single | `typeDeclaration` = rectification | `decision-taxation`, `bordereau`, `copie-declaration-initiale` |
 | Date de notification de la décision `(dateNotification)` | date | `decisionTaxation` = oui | — |
 | Quel est le motif principal de rectification ? `(motif)` | multi | `typeDeclaration` = rectification | — |

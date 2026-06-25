@@ -19,9 +19,9 @@ const OUI_NON = [
 
 export const RECTIFICATIVE_TEMPLATE: Template = {
   id: 'declaration-rectificative',
-  title: 'Déclaration fiscale (ordinaire ou rectificative)',
+  title: 'Déclaration d’impôt',
   description:
-    'Assistant de collecte conditionnelle : déclaration ordinaire de l’année (pré-remplie à compléter) ou rectification / réclamation. Branches impôt à la source (DRIS) et taxation ordinaire (TOU).',
+    'Assistant de collecte conditionnelle pour la déclaration d’impôt : déclaration de l’année (compléter / corriger les données pré-remplies transmises à l’administration) ou, le cas échéant, rectification de l’impôt à la source (DRIS) / réclamation contre une taxation reçue.',
   sections: [
     // ─────────────── Niveau 1 : orientation (qualification) ───────────────
     {
@@ -41,17 +41,17 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
         },
         {
           id: 'typeDeclaration',
-          question: 'Type de démarche',
+          question: 'Nature de la démarche',
           clientLabel: 'De quelle démarche s’agit-il ?',
           helpText:
-            'En Suisse, vous recevez chaque année une déclaration pré-remplie à compléter. « Ordinaire » = la déclaration de l’année. « Rectification » = corriger une déclaration déjà déposée, ou contester une taxation déjà reçue.',
+            'Dans la plupart des cas, il s’agit de votre déclaration d’impôt de l’année : vous complétez et corrigez les données déjà transmises à l’administration (employeur, banques, caisses…) pour refléter votre situation réelle. Choisissez la seconde option uniquement pour rectifier l’impôt à la source (DRIS) ou contester une décision de taxation déjà reçue.',
           answerType: 'single',
           choices: [
-            { value: 'ordinaire', label: 'Déclaration ordinaire de l’année' },
-            { value: 'rectification', label: 'Rectification / réclamation (déjà déposée ou taxée)' },
+            { value: 'ordinaire', label: 'Déclaration d’impôt de l’année (à compléter / corriger)' },
+            { value: 'rectification', label: 'Rectification impôt à la source (DRIS) ou réclamation (taxation reçue)' },
           ],
           riskLevel: 'high',
-          bbInternalNote: 'ordinaire → déclaration annuelle (pré-remplie). rectification → correction d’une déclaration soumise / réclamation contre une taxation.',
+          bbInternalNote: 'ordinaire → déclaration d’impôt annuelle (le pré-rempli à corriger). rectification → DRIS (impôt à la source) ou réclamation contre une décision de taxation.',
         },
         {
           id: 'decisionTaxation',
