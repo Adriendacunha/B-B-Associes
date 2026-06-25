@@ -130,6 +130,7 @@
   },
   "espace": {
     "title": "My document checklist",
+    "checklistTitle": "Documents for your {label} {year}",
     "intro": "Here are the documents expected for your file. Upload each one; it will be reviewed before validation.",
     "demoNote": "Demonstration data (flow not connected to the database).",
     "status": {

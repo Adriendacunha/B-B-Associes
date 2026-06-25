@@ -66,8 +66,15 @@ export default async function EspacePage({
   const campaign = await prisma.campaign.findFirst({
     where: { clientId: principal.client.id },
     orderBy: { fiscalYear: 'desc' },
-    select: { id: true, profile: true, templateId: true },
+    select: { id: true, fiscalYear: true, profile: true, templateId: true },
   });
+
+  // Libellé du modèle → titre « Documents pour votre {label} {année} », identique
+  // à l'aperçu client côté cabinet.
+  const template = campaign?.templateId
+    ? await prisma.campaignTemplate.findUnique({ where: { key: campaign.templateId }, select: { name: true } })
+    : null;
+  const declarationLabel = template?.name ?? 'déclaration';
 
   // Déclaration : le client répond lui-même à toutes les questions que le cabinet
   // a laissées sans réponse (verrou = cabinetKeys). Sa checklist se met à jour.
@@ -81,7 +88,9 @@ export default async function EspacePage({
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-2xl font-bold text-slate-900">{te('title')}</h1>
+        <h1 className="text-2xl font-bold text-slate-900">
+          {campaign ? te('checklistTitle', { label: declarationLabel, year: String(campaign.fiscalYear) }) : te('title')}
+        </h1>
         <p className="text-sm text-slate-600">{te('intro')}</p>
       </header>
 

@@ -1,4 +1,4 @@
-import { setRequestLocale } from 'next-intl/server';
+import { setRequestLocale, getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Eye } from 'lucide-react';
 import { prisma } from '@/lib/db';
@@ -17,6 +17,7 @@ export default async function ApercuPage({
   const { locale, id } = await params;
   setRequestLocale(locale);
   await requireStaff(locale);
+  const te = await getTranslations('espace');
 
   const campaign = await prisma.campaign.findUnique({
     where: { id },
@@ -46,11 +47,9 @@ export default async function ApercuPage({
 
       <header className="space-y-1">
         <h1 className="text-2xl font-bold text-slate-900">
-          Documents pour votre {label} {campaign.fiscalYear}
+          {te('checklistTitle', { label, year: String(campaign.fiscalYear) })}
         </h1>
-        <p className="text-sm text-slate-600">
-          Voici les pièces attendues pour votre dossier. Déposez chaque document ; il sera vérifié avant validation.
-        </p>
+        <p className="text-sm text-slate-600">{te('intro')}</p>
       </header>
 
       {/* Rendu réel de la checklist côté client (showMeta=false). */}
