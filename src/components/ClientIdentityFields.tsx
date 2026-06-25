@@ -38,11 +38,17 @@ const v = (x: string | null | undefined) => x ?? undefined;
 const dateValue = (d: Date | null | undefined) => (d ? new Date(d).toISOString().slice(0, 10) : undefined);
 
 export function ClientIdentityFields({
-  staff,
+  staff = [],
   client,
+  omitGestionnaire = false,
+  emailReadOnly = false,
 }: {
-  staff: { id: string; name: string }[];
+  staff?: { id: string; name: string }[];
   client?: ClientIdentityDefaults;
+  /** Masque le sélecteur de collaborateur (vue client). */
+  omitGestionnaire?: boolean;
+  /** Affiche l'e-mail en lecture seule (identifiant de connexion, vue client). */
+  emailReadOnly?: boolean;
 }) {
   return (
     <>
@@ -105,7 +111,15 @@ export function ClientIdentityFields({
       </Field>
 
       <Field label="E-mail du client *">
-        <input type="email" name="email" required defaultValue={v(client?.email)} className="input" placeholder="ex. client@email.com" />
+        <input
+          type="email"
+          name="email"
+          required
+          readOnly={emailReadOnly}
+          defaultValue={v(client?.email)}
+          className={`input${emailReadOnly ? ' bg-slate-50 text-slate-500' : ''}`}
+          placeholder="ex. client@email.com"
+        />
       </Field>
       <Field label="Langue">
         <select name="locale" className="select" defaultValue={v(client?.locale) ?? 'FR'}>
@@ -115,15 +129,17 @@ export function ClientIdentityFields({
         </select>
       </Field>
 
-      <Field label="Collaborateur responsable">
-        <select name="gestionnaireId" className="select" defaultValue={v(client?.gestionnaireId) ?? staff[0]?.id ?? ''}>
-          {staff.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.name}
-            </option>
-          ))}
-        </select>
-      </Field>
+      {!omitGestionnaire && (
+        <Field label="Collaborateur responsable">
+          <select name="gestionnaireId" className="select" defaultValue={v(client?.gestionnaireId) ?? staff[0]?.id ?? ''}>
+            {staff.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
     </>
   );
 }

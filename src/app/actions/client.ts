@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { randomBytes } from 'node:crypto';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
-import { requireStaff } from '@/lib/auth/session';
+import { requireStaff, getCurrentPrincipal } from '@/lib/auth/session';
 import { appendAuditLog } from '@/lib/audit/log';
 
 const LOCALES = new Set(['FR', 'EN', 'DE']);
@@ -157,6 +157,60 @@ export async function updateClient(formData: FormData): Promise<void> {
   });
 
   redirect(`${back}?updated=1`);
+}
+
+/**
+ * Mise à jour par le CLIENT lui-même de ses informations d'identité depuis son
+ * espace. N'autorise que sa propre fiche (principal courant) et ne touche pas aux
+ * champs réservés au cabinet (e-mail de connexion, collaborateur, code client).
+ */
+export async function updateOwnIdentity(formData: FormData): Promise<void> {
+  const uiLocale = String(formData.get('uiLocale') ?? 'fr');
+  const principal = await getCurrentPrincipal();
+  if (!principal || principal.type !== 'CLIENT') redirect(`/${uiLocale}/espace`);
+
+  const lastName = String(formData.get('lastName') ?? '').trim();
+  const firstName = String(formData.get('firstName') ?? '').trim();
+  const locale = String(formData.get('locale') ?? 'FR').toUpperCase();
+  const civilStatus = String(formData.get('civilStatus') ?? '').trim() || null;
+  const birthRaw = String(formData.get('birthDate') ?? '').trim();
+  const birthDate = birthRaw ? new Date(birthRaw) : null;
+  const str = (k: string) => String(formData.get(k) ?? '').trim() || null;
+
+  if (!lastName || !firstName) redirect(`/${uiLocale}/espace?iderror=champs`);
+
+  await prisma.client.update({
+    where: { id: principal.client.id },
+    data: {
+      displayName: `${lastName} ${firstName}`.trim(),
+      firstName,
+      lastName,
+      locale: (LOCALES.has(locale) ? locale : principal.client.locale) as Prisma.ClientUpdateInput['locale'],
+      birthDate,
+      civilStatus,
+      street: str('street'),
+      postalCode: str('postalCode'),
+      city: str('city'),
+      pays: str('pays'),
+      nationality: str('nationality'),
+      permitType: str('permitType'),
+      avsNumber: str('avsNumber'),
+      religion: str('religion'),
+      phone: str('phone'),
+    },
+  });
+
+  await appendAuditLog(prisma, {
+    actorType: 'CLIENT',
+    actorId: principal.client.id,
+    action: 'CLIENT_SELF_UPDATED',
+    entityType: 'Client',
+    entityId: principal.client.id,
+    metadata: {},
+    createdAt: new Date(),
+  });
+
+  redirect(`/${uiLocale}/espace?idok=1`);
 }
 
 /**

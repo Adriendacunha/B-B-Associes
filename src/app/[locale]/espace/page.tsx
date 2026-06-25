@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db';
 import { clientLogin } from '@/app/actions/auth';
 import { getCurrentPrincipal } from '@/lib/auth/session';
 import { CampaignChecklist } from '@/components/CampaignChecklist';
+import { ClientIdentityFields } from '@/components/ClientIdentityFields';
+import { updateOwnIdentity } from '@/app/actions/client';
 import { ValidatedInput } from '@/components/ValidatedInput';
 import { IntakeForm } from '@/components/questionnaire/IntakeForm';
 import { intakeQuestions } from '@/lib/questionnaire/intake';
@@ -16,10 +18,10 @@ export default async function EspacePage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; idok?: string; iderror?: string }>;
 }) {
   const { locale } = await params;
-  const { error } = await searchParams;
+  const { error, idok, iderror } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations('auth');
   const te = await getTranslations('espace');
@@ -81,6 +83,37 @@ export default async function EspacePage({
         <h1 className="text-2xl font-bold text-slate-900">{te('title')}</h1>
         <p className="text-sm text-slate-600">{te('intro')}</p>
       </header>
+
+      {idok && (
+        <p className="rounded-lg border border-green-100 bg-green-50 px-3 py-2 text-sm text-green-700">
+          Vos informations ont été enregistrées. Merci !
+        </p>
+      )}
+      {iderror && (
+        <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">
+          Veuillez renseigner au moins votre nom et votre prénom.
+        </p>
+      )}
+
+      {/* Mes informations d'identité — le client complète/corrige sa fiche. */}
+      <details className="card" open={Boolean(iderror)}>
+        <summary className="cursor-pointer select-none text-sm font-semibold text-slate-900">
+          Mes informations
+        </summary>
+        <p className="mt-1 text-xs text-slate-500">
+          Complétez ou corrigez vos informations d’identité. Elles facilitent la préparation de votre déclaration.
+        </p>
+        <form action={updateOwnIdentity} className="mt-4 grid gap-4 sm:grid-cols-2">
+          <input type="hidden" name="uiLocale" value={locale} />
+          <ClientIdentityFields client={principal.client} omitGestionnaire emailReadOnly />
+          <div className="sm:col-span-2 flex justify-end">
+            <button type="submit" className="btn btn-primary">
+              Enregistrer mes informations
+            </button>
+          </div>
+        </form>
+      </details>
+
       {campaign ? (
         <>
           {intake && (
