@@ -12,6 +12,7 @@ import { RECTIFICATIVE_TEMPLATE } from '@/data/templates/declaration-rectificati
 import { rectPieceCode } from '@/data/templates/rectificative-pieces';
 import { planChecklistSync } from '@/lib/checklist/rectificative-sync';
 import { A_TRIER_CODE } from '@/data/piece-referential';
+import { sendInvitationFor } from '@/app/actions/email';
 
 /** Borne l'année fiscale (2015 ≤ année ≤ année courante + 1). */
 function assertFiscalYear(y: number): void {
@@ -108,6 +109,83 @@ export async function createRectificativeCampaign(input: CreateRectificativeInpu
   });
 
   redirect(`/${input.locale}/campagne/${campaign.id}`);
+}
+
+/**
+ * Wizard « Créer une campagne » : crée (ou régénère) la campagne « Déclaration
+ * d'impôt » à partir des réponses, PUIS envoie le lien sécurisé au client. Ne
+ * redirige pas — renvoie l'id pour que le wizard affiche l'écran « Envoyée ».
+ */
+export async function wizardCreateAndSend(
+  input: CreateRectificativeInput,
+): Promise<{ ok: true; campaignId: string } | { ok: false; error: string }> {
+  await requireStaff(input.locale);
+  assertFiscalYear(input.fiscalYear);
+
+  const client = await prisma.client.findUnique({ where: { clientCode: input.clientCode } });
+  if (!client) return { ok: false, error: 'client' };
+
+  const docs = requestedDocuments(RECTIFICATIVE_TEMPLATE, input.answers);
+  const codes = docs.map((d) => rectPieceCode(d.id));
+  const defs = await prisma.pieceDefinition.findMany({ where: { code: { in: codes } } });
+  const defByCode = new Map(defs.map((d) => [d.code, d]));
+  const profileBlob = {
+    templateId: RECTIFICATIVE_TEMPLATE.id,
+    answers: input.answers,
+    cabinetKeys: Object.keys(input.answers),
+  } as unknown as Prisma.InputJsonValue;
+
+  const campaign = await prisma.$transaction(async (tx) => {
+    const existing = await tx.campaign.findUnique({
+      where: { clientId_fiscalYear: { clientId: client.id, fiscalYear: input.fiscalYear } },
+    });
+    const camp = existing
+      ? await tx.campaign.update({
+          where: { id: existing.id },
+          data: { profile: profileBlob, templateId: RECTIFICATIVE_TEMPLATE.id, status: 'EN_COURS', openedAt: new Date() },
+        })
+      : await tx.campaign.create({
+          data: {
+            clientId: client.id,
+            fiscalYear: input.fiscalYear,
+            profile: profileBlob,
+            templateId: RECTIFICATIVE_TEMPLATE.id,
+            status: 'EN_COURS',
+            openedAt: new Date(),
+          },
+        });
+    if (existing) await tx.checklistItem.deleteMany({ where: { campaignId: camp.id } });
+    const items = docs.flatMap((d) => {
+      const def = defByCode.get(rectPieceCode(d.id));
+      if (!def) return [];
+      return [
+        {
+          campaignId: camp.id,
+          pieceDefinitionId: def.id,
+          pieceCode: def.code,
+          category: def.category as Prisma.ChecklistItemCreateManyInput['category'],
+          required: d.obligation === 'obligatoire',
+          expectedFiscalYear: input.fiscalYear,
+          modeValidation: 'HUMAIN_REQUIS' as Prisma.ChecklistItemCreateManyInput['modeValidation'],
+        },
+      ];
+    });
+    await tx.checklistItem.createMany({ data: items });
+    return camp;
+  });
+
+  await appendAuditLog(prisma, {
+    actorType: 'COLLABORATEUR',
+    actorId: client.gestionnaireId,
+    action: 'CAMPAIGN_CREATED',
+    entityType: 'Campaign',
+    entityId: campaign.id,
+    metadata: { clientCode: input.clientCode, fiscalYear: input.fiscalYear, template: RECTIFICATIVE_TEMPLATE.id, items: docs.length, via: 'wizard' },
+    createdAt: new Date(),
+  });
+
+  await sendInvitationFor(campaign.id, input.locale);
+  return { ok: true, campaignId: campaign.id };
 }
 
 const DECLARATIONS: ClientDeclaration[] = ['NON', 'OUI', 'NON_CONCERNE'];
