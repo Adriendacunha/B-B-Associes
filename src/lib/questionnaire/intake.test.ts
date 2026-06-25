@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { intakeQuestions, intakeComplete, intakeSummary } from './intake';
 import { RECTIFICATIVE_TEMPLATE as T } from '@/data/templates/declaration-rectificative';
 
-const base = { source: 'oui', dejaDeposee: 'oui', decisionTaxation: 'oui', motif: ['bareme_taux'] };
+const base = { source: 'oui', typeDeclaration: 'rectification', decisionTaxation: 'oui', motif: ['bareme_taux'] };
 
 describe('intake (données du dossier remplies par le client)', () => {
   it('ne retient que les questions clientData visibles', () => {

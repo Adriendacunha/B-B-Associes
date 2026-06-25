@@ -2,11 +2,11 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { prisma } from '@/lib/db';
 import { requireStaff } from '@/lib/auth/session';
 import { createClient } from '@/app/actions/client';
+import { ClientIdentityFields } from '@/components/ClientIdentityFields';
+import { baseUrl } from '@/lib/url';
 import { Link } from '@/i18n/routing';
 
 export const dynamic = 'force-dynamic';
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
 export default async function ClientsPage({
   params,
@@ -29,6 +29,7 @@ export default async function ClientsPage({
     prisma.user.findMany({ where: { active: true }, select: { id: true, name: true }, orderBy: { name: 'asc' } }),
   ]);
 
+  const APP_URL = await baseUrl();
   const activationUrl = (loc: string, token: string) =>
     `${APP_URL}/${loc.toLowerCase()}/activation?token=${token}`;
   const activeCount = (cs: { status: string }[]) => cs.filter((c) => c.status !== 'COMPLET' && c.status !== 'NON_COMMENCE').length;
@@ -52,56 +53,7 @@ export default async function ClientsPage({
       {/* Formulaire de création — onglet Identité */}
       <form action={createClient} className="card grid gap-4 sm:grid-cols-2">
         <input type="hidden" name="uiLocale" value={locale} />
-        <h2 className="text-sm font-semibold text-slate-700 sm:col-span-2">Identité</h2>
-
-        <Field label="Nom *"><input name="lastName" required className="input" placeholder="ex. Meyer" /></Field>
-        <Field label="Prénom *"><input name="firstName" required className="input" placeholder="ex. Thomas" /></Field>
-
-        <Field label="Date de naissance"><input type="date" name="birthDate" className="input" /></Field>
-        <Field label="État civil">
-          <select name="civilStatus" className="select" defaultValue="">
-            <option value="">Sélectionner…</option>
-            <option value="celibataire">Célibataire</option>
-            <option value="marie">Marié·e</option>
-            <option value="partenariat">Partenariat enregistré</option>
-            <option value="separe">Séparé·e</option>
-            <option value="divorce">Divorcé·e</option>
-            <option value="veuf">Veuf·ve</option>
-          </select>
-        </Field>
-
-        <div className="sm:col-span-2">
-          <Field label="Rue"><input name="street" className="input" placeholder="ex. Bahnhofstrasse 42" /></Field>
-        </div>
-
-        <Field label="NPA"><input name="postalCode" className="input" placeholder="8001" /></Field>
-        <Field label="Ville"><input name="city" className="input" placeholder="Zürich" /></Field>
-
-        <Field label="Nationalité"><input name="nationality" className="input" placeholder="ex. CH, FR, DE" /></Field>
-        <Field label="Type de permis"><input name="permitType" className="input" placeholder="ex. B, C, L" /></Field>
-
-        <Field label="Numéro AVS"><input name="avsNumber" className="input" placeholder="756.XXXX.XXXX.XX" /></Field>
-        <Field label="Religion"><input name="religion" className="input" placeholder="Pour l'impôt ecclésiastique" /></Field>
-
-        <Field label="Téléphone"><input name="phone" className="input" placeholder="+41 XX XXX XX XX" /></Field>
-        <Field label="E-mail du client *"><input type="email" name="email" required className="input" placeholder="ex. client@email.com" /></Field>
-
-        <Field label="Langue">
-          <select name="locale" className="select" defaultValue="FR">
-            <option value="FR">Français</option>
-            <option value="EN">English</option>
-            <option value="DE">Deutsch</option>
-          </select>
-        </Field>
-        <Field label="Collaborateur responsable">
-          <select name="gestionnaireId" className="select" defaultValue={staff[0]?.id ?? ''}>
-            {staff.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name}
-              </option>
-            ))}
-          </select>
-        </Field>
+        <ClientIdentityFields staff={staff} />
 
         <div className="sm:col-span-2 flex justify-end">
           <button type="submit" className="btn btn-primary">
@@ -161,14 +113,5 @@ export default async function ClientsPage({
         })}
       </ul>
     </div>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-xs font-medium text-slate-500">{label}</span>
-      {children}
-    </label>
   );
 }

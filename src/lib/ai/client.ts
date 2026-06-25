@@ -16,6 +16,7 @@ import {
   type ExpectedPiece,
 } from './verification';
 import type { AppLocale } from '@/lib/i18n/locales';
+import { toTokenUsage, type TokenUsage } from './usage';
 
 function getClient(): Anthropic {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -31,6 +32,7 @@ export interface VerificationResult {
   verdict: AiVerdict;
   model: string;
   raw: string;
+  usage: TokenUsage;
 }
 
 /**
@@ -65,5 +67,5 @@ export async function verifyDocument(
   const cleaned = raw.replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
   const verdict = AiVerdictSchema.parse(JSON.parse(cleaned));
 
-  return { verdict, model: MODEL, raw };
+  return { verdict, model: MODEL, raw, usage: toTokenUsage(response.usage) };
 }

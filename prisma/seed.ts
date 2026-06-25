@@ -5,7 +5,7 @@
 // Usage : npm run db:seed  (nécessite DATABASE_URL et une base migrée).
 
 import { PrismaClient, Prisma } from '@prisma/client';
-import { PIECE_REFERENTIAL } from '../src/data/piece-referential';
+import { PIECE_REFERENTIAL, deriveRequirement } from '../src/data/piece-referential';
 import { rectificativePieceEntries } from '../src/data/templates/rectificative-pieces';
 import { CAMPAIGN_TEMPLATES } from '../src/data/campaign-templates';
 import { DEFAULT_EMAIL_TEMPLATES } from '../src/data/email-templates';
@@ -17,12 +17,14 @@ const prisma = new PrismaClient();
 async function seedPieces() {
   const allPieces = [...PIECE_REFERENTIAL, ...rectificativePieceEntries()];
   for (const p of allPieces) {
+    const requirement = deriveRequirement(p);
     await prisma.pieceDefinition.upsert({
       where: { code: p.code },
       update: {
         category: p.category,
         profils: p.profils,
         requiredByDefault: p.requiredByDefault,
+        requirement,
         modeValidation: p.modeValidation,
         acceptedFormats: p.acceptedFormats,
         expectedYearOffset: p.expectedYearOffset,
@@ -35,6 +37,7 @@ async function seedPieces() {
         category: p.category,
         profils: p.profils,
         requiredByDefault: p.requiredByDefault,
+        requirement,
         modeValidation: p.modeValidation,
         acceptedFormats: p.acceptedFormats,
         expectedYearOffset: p.expectedYearOffset,
@@ -141,7 +144,7 @@ async function seedCampaignTemplates() {
   for (const t of CAMPAIGN_TEMPLATES) {
     await prisma.campaignTemplate.upsert({
       where: { key: t.key },
-      update: { name: t.name, description: t.description, engine: t.engine, sortOrder: t.sortOrder },
+      update: { name: t.name, description: t.description, engine: t.engine, active: t.active, sortOrder: t.sortOrder },
       create: { key: t.key, name: t.name, description: t.description, engine: t.engine, active: t.active, sortOrder: t.sortOrder },
     });
   }

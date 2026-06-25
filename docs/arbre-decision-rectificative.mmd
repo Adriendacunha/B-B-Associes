@@ -1,0 +1,16 @@
+flowchart TD
+  START([Début]) --> TYPE{{"typeDeclaration ?<br/>Ordinaire ou rectification ?"}}
+  TYPE --> SRC{{"source ?<br/>Imposé à la source ?"}}
+
+  SRC -- "oui ET rectification" --> DRIS["🟦 Branche DRIS<br/>(rectifier l'impôt à la source)"]:::branch
+  SRC -- "non, OU ordinaire" --> TOU["🟩 Branche TOU<br/>(taxation ordinaire)"]:::branch
+
+  TOU --> QR{{"touQuasiResident ?<br/>(si non-résident) ≥ 90 % en CH ?"}}
+  QR -- non --> NELIG["⛔ Quasi-résident non éligible<br/>→ DRIS standard (stop)"]:::stop
+  QR -- oui --> TOUOK["Checklist TOU complète"]
+
+  DRIS --> DEDUC{{"drisDeductionsEffectives ?"}}
+  DEDUC -- coché --> BASCULE["⚠️ Bascule DRIS → TOU"]:::stop
+
+  classDef stop fill:#fee2e2,stroke:#ef4444,color:#7f1d1d;
+  classDef branch fill:#eef2ff,stroke:#6366f1,color:#312e81;

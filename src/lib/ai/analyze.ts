@@ -5,6 +5,7 @@
 import type { AppLocale, LocalizedText } from '@/lib/i18n/locales';
 import { stubVerdict } from './stub';
 import { verifyDocument } from './client';
+import { recordAiUsage, type UsageContext } from './usage';
 
 export interface AnalyzeArgs {
   pieceCode: string;
@@ -18,6 +19,8 @@ export interface AnalyzeArgs {
   filename: string;
   /** Texte extrait/OCR du document (vide si non extractible). */
   text: string;
+  /** Attribution pour le suivi de consommation (facultatif). */
+  context?: UsageContext;
 }
 
 export interface AnalysisResult {
@@ -37,7 +40,7 @@ export async function analyzeDocument(args: AnalyzeArgs): Promise<AnalysisResult
   // proprement sur l'analyseur de démonstration plutôt que de planter le dépôt.
   if (process.env.ANTHROPIC_API_KEY) {
     try {
-      const { verdict, model, raw } = await verifyDocument(
+      const { verdict, model, raw, usage } = await verifyDocument(
         {
           code: args.pieceCode,
           nom: args.pieceNom,
@@ -50,6 +53,7 @@ export async function analyzeDocument(args: AnalyzeArgs): Promise<AnalysisResult
         args.text || args.filename,
         args.clientLocale,
       );
+      await recordAiUsage('VERIFY', model, usage, args.context);
       // Le modèle renvoie un message dans la langue du client ; on le range sous sa locale.
       const messageClient = { [args.clientLocale]: verdict.message_client } as LocalizedText;
       return {

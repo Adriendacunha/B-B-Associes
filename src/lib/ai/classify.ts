@@ -3,6 +3,7 @@
 // mots-clés (déterministe). Renvoie le CodePiece le mieux correspondant, ou null.
 
 import Anthropic from '@anthropic-ai/sdk';
+import { recordAiUsage, toTokenUsage, type UsageContext } from './usage';
 
 export interface ClassifyCandidate {
   pieceCode: string;
@@ -14,6 +15,8 @@ export interface ClassifyInput {
   filename: string;
   text: string;
   candidates: ClassifyCandidate[];
+  /** Attribution pour le suivi de consommation (facultatif). */
+  context?: UsageContext;
 }
 
 function normalize(s: string): string {
@@ -72,6 +75,7 @@ export async function classifyDocument(input: ClassifyInput): Promise<string | n
         temperature: 0,
         messages: [{ role: 'user', content: prompt }],
       });
+      await recordAiUsage('CLASSIFY', MODEL, toTokenUsage(res.usage), input.context);
       const answer = res.content
         .filter((b): b is Anthropic.TextBlock => b.type === 'text')
         .map((b) => b.text)

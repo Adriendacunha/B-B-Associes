@@ -14,7 +14,9 @@
     "newCampaignDesc": "Profile a client and generate their dynamic document checklist.",
     "clientSpaceDesc": "Client-side upload area for documents, checked by AI.",
     "validationDesc": "Review AI verdicts and approve documents (human in the loop).",
-    "dashboardDesc": "Track file progress, AI reliability and reminders."
+    "dashboardDesc": "Track file progress, AI reliability and reminders.",
+    "aiUsage": "AI usage",
+    "baremes": "Tax thresholds"
   },
   "clients": {
     "title": "Clients / beta testers",
@@ -53,7 +55,9 @@
     "newPassword": "Choose a password",
     "activate": "Activate",
     "firstConnection": "First time? Activate your account using the link sent by email.",
-    "noCampaign": "No collection campaign open at the moment."
+    "noCampaign": "No collection campaign open at the moment.",
+    "fieldRequired": "Please fill out this field.",
+    "emailInvalid": "Please enter a valid email address."
   },
   "export": {
     "title": "Accounting export",
@@ -183,6 +187,20 @@
     "declOui": "Done",
     "declNon": "In progress",
     "declNonConcerne": "Not applicable",
-    "declNone": "—"
+    "declNone": "—",
+    "buckets": {
+      "bloque": "Blocked files",
+      "aRelancer": "To remind",
+      "aControler": "To review",
+      "pret": "Ready to process"
+    },
+    "campaignStatus": {
+      "NON_COMMENCE": "Draft",
+      "EN_COURS": "In preparation",
+      "EN_ATTENTE_CLIENT": "Sent",
+      "A_VALIDER": "To review",
+      "COMPLET": "Ready to process",
+      "SUSPENDU": "Suspended"
+    }
   }
 }
