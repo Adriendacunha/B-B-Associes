@@ -2,7 +2,8 @@ import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 
 // Parcours complet (flux consolidé) : création d'un client → fiche → ouverture
-// d'une campagne (Déclaration d'impôt PP) → activation client → dépôt → validation.
+// d'une campagne « Déclaration d'impôt » (assistant guidé) → activation client →
+// dépôt groupé → validation.
 
 const FIXTURE = path.join(__dirname, 'fixtures', '2025_certificat_salaire.pdf');
 const last = 'E2E' + Date.now().toString().slice(-7);
@@ -16,7 +17,7 @@ async function loginStaff(page: Page) {
   await page.waitForURL('**/tableau-de-bord');
 }
 
-test('parcours : client → campagne PP → dépôt → validation', async ({ browser }) => {
+test('parcours : client → campagne Déclaration d’impôt → dépôt → validation', async ({ browser }) => {
   const staff = await browser.newContext();
   const sp = await staff.newPage();
   await loginStaff(sp);
@@ -38,10 +39,14 @@ test('parcours : client → campagne PP → dépôt → validation', async ({ br
   const activationLink = await sp.locator('input[readonly]').first().inputValue();
   expect(activationLink).toContain('/activation?token=');
 
-  // 4) Créer une campagne « Déclaration d'impôt PP » depuis la fiche
+  // 4) Créer une campagne « Déclaration d'impôt » (assistant guidé) depuis la fiche
   await sp.getByRole('link', { name: 'Créer une campagne' }).click();
   await sp.waitForURL('**/nouvelle-campagne');
-  await sp.getByRole('button', { name: /Déclaration d.impôt PP/ }).click();
+  await sp.getByRole('button', { name: /Déclaration d.impôt/ }).click();
+  // Qualification minimale : pas d'impôt à la source + déclaration de l'année
+  // (les questions DRIS / réclamation restent alors masquées).
+  await sp.getByRole('button', { name: 'Non' }).click();
+  await sp.getByRole('button', { name: /Déclaration d.impôt de l.année/ }).click();
   await sp.getByRole('button', { name: 'Créer la campagne' }).click();
   await sp.waitForURL('**/campagne/**');
 
