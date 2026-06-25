@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { redirect } from 'next/navigation';
 import { LayoutDashboard, Users, ClipboardList, CheckCircle2, FolderUp, ArrowRight } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { getCurrentPrincipal } from '@/lib/auth/session';
@@ -19,6 +20,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const tc = await getTranslations('campagne');
   const tcl = await getTranslations('clients');
   const principal = await getCurrentPrincipal();
+  // Un utilisateur connecté a un accueil dédié (action principale) : pas de page
+  // de cartes équivalentes. Le collaborateur va au tableau de bord, le client à son espace.
+  if (principal?.type === 'STAFF') redirect(`/${locale}/tableau-de-bord`);
+  if (principal?.type === 'CLIENT') redirect(`/${locale}/espace`);
 
   const staffCards: Card[] = [
     { href: '/tableau-de-bord', title: t('dashboard'), desc: t('dashboardDesc'), Icon: LayoutDashboard },
@@ -29,8 +34,9 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   const clientCards: Card[] = [
     { href: '/espace', title: t('clientSpace'), desc: t('clientSpaceDesc'), Icon: FolderUp },
   ];
-  const cards =
-    principal?.type === 'STAFF' ? staffCards : principal?.type === 'CLIENT' ? clientCards : [...staffCards, ...clientCards];
+  // Seuls les visiteurs non connectés atteignent cette page (les autres sont redirigés
+  // vers leur accueil dédié). On leur montre les points d'entrée vers la connexion.
+  const cards = [...staffCards, ...clientCards];
 
   return (
     <div className="space-y-10">

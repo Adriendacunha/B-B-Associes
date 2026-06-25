@@ -34,6 +34,7 @@ export default async function DashboardPage({
   await requireStaff(locale); // tableau de bord cabinet (§11)
   const t = await getTranslations('dashboard');
   const tR = await getTranslations('relances');
+  const tc = await getTranslations('campagne');
   const d = await getDashboardData();
   const pct = (n: number) => `${Math.round(n * 100)}%`;
 
@@ -54,18 +55,30 @@ export default async function DashboardPage({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold text-slate-900">{t('title')}</h1>
-        <div className="flex items-center gap-3">
-          <Link href="/emails" className="text-xs font-medium text-brand hover:underline">
-            {tR('outbox')} →
+      {/* Accueil cabinet : action principale + blocages d'abord (pas de stats décoratives en tête). */}
+      <header className="space-y-3">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-slate-900">{t('title')}</h1>
+          <p className="text-sm text-slate-600">{t('subtitle')}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link href="/profilage" className="btn btn-primary">
+            {tc('newCampaign')}
           </Link>
-          <form action={processDueReminders}>
-            <input type="hidden" name="locale" value={locale} />
-            <button type="submit" className="btn btn-primary btn-sm">
-              {tR('processDue')}
-            </button>
-          </form>
+          <Link href="/clients" className="btn btn-secondary">
+            {t('viewCases')}
+          </Link>
+          <span className="ml-auto flex items-center gap-3">
+            <Link href="/emails" className="text-xs font-medium text-brand hover:underline">
+              {tR('outbox')} →
+            </Link>
+            <form action={processDueReminders}>
+              <input type="hidden" name="locale" value={locale} />
+              <button type="submit" className="btn btn-secondary btn-sm">
+                {tR('processDue')}
+              </button>
+            </form>
+          </span>
         </div>
       </header>
 
@@ -75,14 +88,7 @@ export default async function DashboardPage({
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric label={t('metrics.autonomy')} value={pct(d.autonomyRate)} Icon={Gauge} />
-        <Metric label={t('metrics.reliability')} value={pct(d.overallReliability)} Icon={ShieldCheck} />
-        <Metric label={t('metrics.timeSaved')} value={`${Math.round(d.minutesSaved / 60)} h`} Icon={Clock} />
-        <Metric label={t('metrics.complete')} value={`${d.completeCount}/${d.totalCampaigns}`} Icon={FolderCheck} />
-      </div>
-
-      {/* Triage en 4 buckets (écran 6). */}
+      {/* Blocages d'abord : triage en 4 buckets. */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { title: t('buckets.bloque'), rows: d.buckets.bloque, cls: 'border-red-200', dot: 'bg-red-500' },
@@ -195,6 +201,17 @@ export default async function DashboardPage({
           </li>
         ))}
       </ul>
+
+      {/* Indicateurs (secondaires) — relégués en bas, après les blocages et les dossiers. */}
+      <section className="space-y-2 pt-2">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t('indicators')}</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Metric label={t('metrics.autonomy')} value={pct(d.autonomyRate)} Icon={Gauge} />
+          <Metric label={t('metrics.reliability')} value={pct(d.overallReliability)} Icon={ShieldCheck} />
+          <Metric label={t('metrics.timeSaved')} value={`${Math.round(d.minutesSaved / 60)} h`} Icon={Clock} />
+          <Metric label={t('metrics.complete')} value={`${d.completeCount}/${d.totalCampaigns}`} Icon={FolderCheck} />
+        </div>
+      </section>
     </div>
   );
 }

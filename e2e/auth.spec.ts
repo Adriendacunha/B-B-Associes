@@ -8,7 +8,7 @@ test.describe('Authentification', () => {
     await page.fill('input[name=password]', 'changeme-collab');
     await page.getByRole('button', { name: 'Se connecter' }).click();
     await expect(page).toHaveURL(/\/fr\/tableau-de-bord/);
-    await expect(page.getByRole('heading', { name: /Tableau de bord/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Collecte documentaire/ })).toBeVisible();
   });
 
   test('identifiants incorrects → message d’erreur', async ({ page }) => {
