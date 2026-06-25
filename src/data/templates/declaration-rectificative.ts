@@ -19,9 +19,9 @@ const OUI_NON = [
 
 export const RECTIFICATIVE_TEMPLATE: Template = {
   id: 'declaration-rectificative',
-  title: 'Déclaration rectificative',
+  title: 'Déclaration d’impôt',
   description:
-    'Assistant de collecte conditionnelle pour une rectification fiscale (impôt à la source DRIS ou déclaration ordinaire TOU).',
+    'Assistant de collecte conditionnelle pour la déclaration d’impôt : déclaration de l’année (compléter / corriger les données pré-remplies transmises à l’administration) ou, le cas échéant, rectification de l’impôt à la source (DRIS) / réclamation contre une taxation reçue.',
   sections: [
     // ─────────────── Niveau 1 : orientation (qualification) ───────────────
     {
@@ -40,13 +40,18 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
           bbInternalNote: 'Oui → branche DRIS. Non → branche déclaration ordinaire rectificative (TOU).',
         },
         {
-          id: 'dejaDeposee',
-          question: 'La déclaration initiale a-t-elle déjà été déposée ?',
-          clientLabel: 'Une première déclaration a-t-elle déjà été déposée pour cette année ?',
+          id: 'typeDeclaration',
+          question: 'Nature de la démarche',
+          clientLabel: 'De quelle démarche s’agit-il ?',
+          helpText:
+            'Dans la plupart des cas, il s’agit de votre déclaration d’impôt de l’année : vous complétez et corrigez les données déjà transmises à l’administration (employeur, banques, caisses…) pour refléter votre situation réelle. Choisissez la seconde option uniquement pour rectifier l’impôt à la source (DRIS) ou contester une décision de taxation déjà reçue.',
           answerType: 'single',
-          choices: OUI_NON,
+          choices: [
+            { value: 'ordinaire', label: 'Déclaration d’impôt de l’année (à compléter / corriger)' },
+            { value: 'rectification', label: 'Rectification impôt à la source (DRIS) ou réclamation (taxation reçue)' },
+          ],
           riskLevel: 'high',
-          bbInternalNote: 'Non → ce n’est pas une rectification : ouvrir une campagne de déclaration standard.',
+          bbInternalNote: 'ordinaire → déclaration d’impôt annuelle (le pré-rempli à corriger). rectification → DRIS (impôt à la source) ou réclamation contre une décision de taxation.',
         },
         {
           id: 'decisionTaxation',
@@ -54,9 +59,9 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
           clientLabel: 'Avez-vous reçu une décision de taxation (bordereau) de l’administration ?',
           answerType: 'single',
           choices: OUI_NON,
-          visibilityCondition: { q: 'dejaDeposee', eq: 'oui' },
+          visibilityCondition: { q: 'typeDeclaration', eq: 'rectification' },
           requiredDocuments: ['decision-taxation', 'bordereau', 'copie-declaration-initiale'],
-          bbInternalNote: 'Oui → décision + bordereau + date de notification + motif de contestation. Non → copie de la déclaration transmise / sauvegarde fiscale.',
+          bbInternalNote: 'Oui → décision + bordereau + date de notification + motif de contestation (réclamation). Non → copie de la déclaration transmise / sauvegarde fiscale.',
         },
         {
           id: 'dateNotification',
@@ -74,7 +79,7 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
           question: 'Quel est le motif principal de rectification ?',
           clientLabel: 'Que faut-il corriger ? (plusieurs choix possibles)',
           answerType: 'multi',
-          visibilityCondition: { q: 'dejaDeposee', eq: 'oui' },
+          visibilityCondition: { q: 'typeDeclaration', eq: 'rectification' },
           choices: [
             { value: 'erreur_revenu', label: 'Erreur de revenu' },
             { value: 'bareme_taux', label: 'Barème / taux d’impôt à la source' },
@@ -96,7 +101,7 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
       id: 'identification',
       title: 'Identification du dossier',
       clientTitle: 'Vos informations',
-      visibilityCondition: { q: 'dejaDeposee', eq: 'oui' },
+      visibilityCondition: { q: 'typeDeclaration', answered: true },
       questions: [
         { id: 'nomPrenom', question: 'Nom et prénom', clientLabel: 'Nom et prénom', answerType: 'text', clientData: true },
         { id: 'dateNaissance', question: 'Date de naissance', clientLabel: 'Date de naissance', answerType: 'date', clientData: true },
@@ -170,7 +175,8 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
       id: 'dris',
       title: 'Rectification impôt à la source (DRIS)',
       clientTitle: 'Votre impôt à la source',
-      visibilityCondition: { all: [{ q: 'source', eq: 'oui' }, { q: 'dejaDeposee', eq: 'oui' }] },
+      // Rectifier l'impôt à la source : source = oui ET démarche de rectification.
+      visibilityCondition: { all: [{ q: 'source', eq: 'oui' }, { q: 'typeDeclaration', eq: 'rectification' }] },
       questions: [
         { id: 'drisEmployeurs', question: 'Employeur(s) durant l’année', clientLabel: 'Quel(s) employeur(s) avez-vous eu durant l’année ?', answerType: 'text' },
         { id: 'drisSalaireCorrect', question: 'Le salaire imposé à la source est-il correct ?', clientLabel: 'Le salaire retenu est-il correct ?', answerType: 'single', choices: OUI_NON },
@@ -215,9 +221,10 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
     // ─────────────── Branche TOU (déclaration rectificative complète) ───────────────
     {
       id: 'tou',
-      title: 'Déclaration ordinaire rectificative (TOU)',
+      title: 'Taxation ordinaire (TOU)',
       clientTitle: 'Votre situation fiscale complète',
-      visibilityCondition: { all: [{ q: 'source', eq: 'non' }, { q: 'dejaDeposee', eq: 'oui' }] },
+      // Taxation ordinaire : résident (source = non) OU déclaration ordinaire de l'année.
+      visibilityCondition: { any: [{ q: 'source', eq: 'non' }, { q: 'typeDeclaration', eq: 'ordinaire' }] },
       questions: [
         {
           id: 'touQuasiResident',
@@ -248,6 +255,19 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
             { value: 'proprietaire', label: 'Propriétaire' },
           ],
         },
+        { id: 'touConjointEtranger', question: 'Le conjoint perçoit-il un revenu hors de Suisse ?', clientLabel: 'Votre conjoint perçoit-il un revenu hors de Suisse ?', answerType: 'single', choices: OUI_NON, requiredDocuments: ['attestation-revenu-etranger-conjoint'], riskLevel: 'medium', bbInternalNote: 'Influence le taux + test des 90 %.' },
+        { id: 'touEnfants', question: 'Enfants à charge ?', clientLabel: 'Avez-vous des enfants à charge ?', answerType: 'single', choices: OUI_NON, requiredDocuments: ['attestation-charge-enfant'] },
+        { id: 'touFraisProReels', question: 'Frais professionnels effectifs (> forfait 3 %) ?', clientLabel: 'Souhaitez-vous faire valoir des frais professionnels effectifs ?', answerType: 'single', choices: OUI_NON, helpText: 'À Genève, déplacements plafonnés (534/an ICC) : l’effectif dépasse rarement le forfait pour un frontalier.' },
+        { id: 'touPensionVersee', question: 'Pension alimentaire versée ?', clientLabel: 'Versez-vous une pension alimentaire ?', answerType: 'single', choices: OUI_NON, requiredDocuments: ['pension-versee'] },
+        { id: 'touPensionRecue', question: 'Pension alimentaire reçue ?', clientLabel: 'Recevez-vous une pension alimentaire ?', answerType: 'single', choices: OUI_NON, requiredDocuments: ['pension-recue'] },
+        { id: 'touPropEtranger', question: 'Propriétaire d’un bien hors CH ?', clientLabel: 'Êtes-vous propriétaire d’un bien hors de Suisse ?', answerType: 'single', choices: OUI_NON, requiredDocuments: ['pieces-bien-etranger'], riskLevel: 'medium' },
+        { id: 'touBienLoue', question: 'Revenus locatifs ?', clientLabel: 'Percevez-vous des revenus locatifs ?', answerType: 'single', choices: OUI_NON, requiredDocuments: ['etat-locatif'] },
+        { id: 'touBienAcquis', question: 'Bien immobilier acquis dans l’année ?', clientLabel: 'Avez-vous acheté un bien immobilier cette année ?', answerType: 'single', choices: OUI_NON, requiredDocuments: ['acte-achat'] },
+        { id: 'touCrypto', question: 'Détention de cryptomonnaies ?', clientLabel: 'Détenez-vous des cryptomonnaies ?', answerType: 'single', choices: OUI_NON, requiredDocuments: ['releve-crypto'] },
+        { id: 'touDons', question: 'Dons à des organisations reconnues ?', clientLabel: 'Avez-vous fait des dons à des organisations reconnues ?', answerType: 'single', choices: OUI_NON, requiredDocuments: ['attestation-dons-tou'] },
+        { id: 'touPartiPolitique', question: 'Versements à un parti politique ?', clientLabel: 'Avez-vous versé à un parti politique ?', answerType: 'single', choices: OUI_NON, requiredDocuments: ['recu-parti'] },
+        { id: 'touProche', question: 'Proche nécessiteux à charge ?', clientLabel: 'Soutenez-vous financièrement un proche nécessiteux ?', answerType: 'single', choices: OUI_NON, requiredDocuments: ['justif-proche'] },
+        { id: 'touHandicap', question: 'Frais liés à un handicap ?', clientLabel: 'Avez-vous des frais liés à un handicap ?', answerType: 'single', choices: OUI_NON, requiredDocuments: ['justif-handicap'] },
       ],
     },
   ],
@@ -263,7 +283,7 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
       reason: 'Pour repartir de ce qui a déjà été déclaré et cibler précisément la correction.',
       acceptedFormats: ['pdf'],
       reminderMessage: 'Merci de nous transmettre une copie (ou la sauvegarde) de la déclaration déjà déposée.',
-      condition: { q: 'dejaDeposee', eq: 'oui' },
+      condition: { q: 'typeDeclaration', eq: 'rectification' },
     },
     {
       id: 'decision-taxation',
@@ -293,7 +313,7 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
       reason: 'Tout courrier de l’administration peut contenir des délais ou demandes à respecter.',
       acceptedFormats: ['pdf', 'jpg', 'png'],
       reminderMessage: 'Si vous avez reçu un courrier de l’administration, merci de nous le transmettre.',
-      condition: { q: 'dejaDeposee', eq: 'oui' },
+      condition: { q: 'typeDeclaration', eq: 'rectification' },
     },
     {
       id: 'mandat-procuration',
@@ -355,7 +375,7 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
       reason: 'Justifie la charge d’un enfant majeur encore en formation.',
       acceptedFormats: ['pdf'],
       reminderMessage: 'Merci de déposer l’attestation d’études/apprentissage de votre enfant majeur.',
-      condition: { any: [{ q: 'drisEnfantNonPris', eq: 'oui' }, { q: 'motif', in: ['enfant_charge'] }] },
+      condition: { any: [{ q: 'drisEnfantNonPris', eq: 'oui' }, { q: 'motif', in: ['enfant_charge'] }, { q: 'touEnfants', eq: 'oui' }] },
     },
     {
       id: 'jugement-garde',
@@ -527,7 +547,7 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
       reason: 'Les frais de formation/perfectionnement sont déductibles.',
       acceptedFormats: ['pdf', 'jpg', 'png'],
       reminderMessage: 'Merci de déposer vos justificatifs de frais de formation.',
-      condition: { any: [{ q: 'drisDeductionsEffectives', in: ['formation'] }, { q: 'motif', in: ['deduction_oubliee'] }] },
+      condition: { any: [{ q: 'drisDeductionsEffectives', in: ['formation'] }, { q: 'motif', in: ['deduction_oubliee'] }, { q: 'touFraisProReels', eq: 'oui' }] },
     },
     {
       id: 'frais-medicaux',
@@ -569,11 +589,183 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
       reminderMessage: 'Merci de déposer votre avis d’imposition étranger.',
       condition: { q: 'statutResidence', eq: 'non_resident' },
     },
+
+    // ─────── Socle complémentaire & quasi-résident / TOU (checklist détaillée) ───────
+    {
+      id: 'piece-identite',
+      clientLabel: 'Pièce d’identité (passeport / carte d’identité)',
+      category: 'Pièces administratives',
+      obligation: 'obligatoire',
+      reason: 'Identifie le contribuable au dossier.',
+      acceptedFormats: ['pdf', 'jpg', 'png'],
+      reminderMessage: 'Merci de déposer une copie de votre pièce d’identité.',
+      condition: { q: 'typeDeclaration', answered: true },
+    },
+    {
+      id: 'tou-primes-maladie',
+      clientLabel: 'Attestation des primes d’assurance-maladie (LAMal + complémentaires)',
+      category: 'Assurances et prévoyance',
+      obligation: 'obligatoire',
+      reason: 'Les primes entrent dans le calcul des déductions — quasi toujours pertinent.',
+      acceptedFormats: ['pdf'],
+      reminderMessage: 'Merci de déposer l’attestation fiscale de vos primes d’assurance-maladie.',
+      condition: { q: 'source', eq: 'non' },
+    },
+    {
+      id: 'attestation-revenu-etranger-conjoint',
+      clientLabel: 'Attestation du revenu étranger du conjoint',
+      category: 'Revenus',
+      obligation: 'conditionnel',
+      reason: 'Influence le taux d’imposition et le test des 90 % (quasi-résident).',
+      acceptedFormats: ['pdf'],
+      reminderMessage: 'Merci de déposer un justificatif du revenu hors de Suisse de votre conjoint.',
+      condition: { q: 'touConjointEtranger', eq: 'oui' },
+    },
+    {
+      id: 'attestation-charge-enfant',
+      clientLabel: 'Attestation de charge / acte de naissance (par enfant)',
+      category: 'Événements familiaux',
+      obligation: 'conditionnel',
+      reason: 'Justifie la déduction pour enfant à charge.',
+      acceptedFormats: ['pdf'],
+      reminderMessage: 'Merci de déposer un justificatif de charge pour chaque enfant.',
+      condition: { q: 'touEnfants', eq: 'oui' },
+    },
+    {
+      id: 'pension-versee',
+      clientLabel: 'Pension alimentaire versée (preuves + bénéficiaire)',
+      category: 'Déductions',
+      obligation: 'conditionnel',
+      reason: 'Les pensions versées sont déductibles du revenu.',
+      acceptedFormats: ['pdf'],
+      reminderMessage: 'Merci de déposer les preuves de versement et les coordonnées du bénéficiaire.',
+      condition: { q: 'touPensionVersee', eq: 'oui' },
+    },
+    {
+      id: 'pension-recue',
+      clientLabel: 'Pension alimentaire reçue (attestation des montants)',
+      category: 'Revenus',
+      obligation: 'conditionnel',
+      reason: 'Les pensions reçues sont imposables.',
+      acceptedFormats: ['pdf'],
+      reminderMessage: 'Merci de déposer l’attestation des pensions alimentaires reçues.',
+      condition: { q: 'touPensionRecue', eq: 'oui' },
+    },
+    {
+      id: 'frais-deplacement',
+      clientLabel: 'Justificatifs de frais de déplacement professionnels',
+      category: 'Déductions',
+      obligation: 'conditionnel',
+      reason: 'Frais de déplacement effectifs (plafonnés à 534/an ICC).',
+      acceptedFormats: ['pdf', 'jpg', 'png'],
+      reminderMessage: 'Merci de déposer vos justificatifs de transports professionnels.',
+      condition: { q: 'touFraisProReels', eq: 'oui' },
+    },
+    {
+      id: 'frais-repas',
+      clientLabel: 'Attestation employeur (repas / cantine)',
+      category: 'Déductions',
+      obligation: 'conditionnel',
+      reason: 'Le forfait repas dépend de la participation de l’employeur.',
+      acceptedFormats: ['pdf'],
+      reminderMessage: 'Merci de déposer l’attestation indiquant si l’employeur participe aux repas.',
+      condition: { q: 'touFraisProReels', eq: 'oui' },
+    },
+    {
+      id: 'charges-ppe',
+      clientLabel: 'Décompte de charges de copropriété (PPE)',
+      category: 'Immobilier',
+      obligation: 'recommande',
+      reason: 'Une partie des charges PPE peut être déductible (entretien).',
+      acceptedFormats: ['pdf'],
+      reminderMessage: 'Si vous êtes en PPE, merci de déposer le décompte de charges de copropriété.',
+      condition: { q: 'touProprietaire', eq: 'oui' },
+    },
+    {
+      id: 'acte-achat',
+      clientLabel: 'Acte d’achat du bien immobilier',
+      category: 'Immobilier',
+      obligation: 'conditionnel',
+      reason: 'Établit l’acquisition et les frais liés pour l’année.',
+      acceptedFormats: ['pdf'],
+      reminderMessage: 'Merci de déposer l’acte d’achat du bien acquis cette année.',
+      condition: { q: 'touBienAcquis', eq: 'oui' },
+    },
+    {
+      id: 'etat-locatif',
+      clientLabel: 'État locatif / quittances de loyers perçus',
+      category: 'Immobilier',
+      obligation: 'conditionnel',
+      reason: 'Les loyers perçus sont un revenu imposable.',
+      acceptedFormats: ['pdf'],
+      reminderMessage: 'Merci de déposer l’état locatif et les quittances de loyers perçus.',
+      condition: { q: 'touBienLoue', eq: 'oui' },
+    },
+    {
+      id: 'pieces-bien-etranger',
+      clientLabel: 'Pièces du bien immobilier à l’étranger',
+      category: 'Immobilier',
+      obligation: 'conditionnel',
+      reason: 'Le bien étranger influence le taux (valeur, intérêts, revenus).',
+      acceptedFormats: ['pdf'],
+      reminderMessage: 'Merci de déposer les justificatifs de votre bien immobilier à l’étranger.',
+      condition: { q: 'touPropEtranger', eq: 'oui' },
+    },
+    {
+      id: 'releve-crypto',
+      clientLabel: 'Relevés de portefeuille de cryptomonnaies au 31.12',
+      category: 'Fortune et comptes',
+      obligation: 'conditionnel',
+      reason: 'Les cryptomonnaies font partie de la fortune imposable.',
+      acceptedFormats: ['pdf'],
+      reminderMessage: 'Merci de déposer vos relevés crypto avec la valeur au 31.12.',
+      condition: { q: 'touCrypto', eq: 'oui' },
+    },
+    {
+      id: 'attestation-dons-tou',
+      clientLabel: 'Attestations de dons (organisations reconnues)',
+      category: 'Déductions',
+      obligation: 'conditionnel',
+      reason: 'Les dons aux institutions reconnues sont déductibles.',
+      acceptedFormats: ['pdf'],
+      reminderMessage: 'Merci de déposer les reçus de dons des organisations reconnues.',
+      condition: { q: 'touDons', eq: 'oui' },
+    },
+    {
+      id: 'recu-parti',
+      clientLabel: 'Reçus de versement à un parti politique',
+      category: 'Déductions',
+      obligation: 'conditionnel',
+      reason: 'Déductibles dans la limite légale (10’000 ICC).',
+      acceptedFormats: ['pdf'],
+      reminderMessage: 'Merci de déposer les reçus de versement à un parti politique.',
+      condition: { q: 'touPartiPolitique', eq: 'oui' },
+    },
+    {
+      id: 'justif-proche',
+      clientLabel: 'Justificatifs de prise en charge d’un proche nécessiteux',
+      category: 'Déductions',
+      obligation: 'conditionnel',
+      reason: 'La charge d’un proche nécessiteux ouvre une déduction.',
+      acceptedFormats: ['pdf'],
+      reminderMessage: 'Merci de déposer les justificatifs de prise en charge du proche.',
+      condition: { q: 'touProche', eq: 'oui' },
+    },
+    {
+      id: 'justif-handicap',
+      clientLabel: 'Justificatifs des frais liés à un handicap',
+      category: 'Déductions',
+      obligation: 'conditionnel',
+      reason: 'Les frais liés à un handicap sont déductibles.',
+      acceptedFormats: ['pdf', 'jpg', 'png'],
+      reminderMessage: 'Merci de déposer les justificatifs des frais liés au handicap.',
+      condition: { q: 'touHandicap', eq: 'oui' },
+    },
   ],
 };
 
 /** Questions d'orientation (qualification) qui pilotent la génération. */
-export const QUALIFYING_IDS = ['source', 'dejaDeposee', 'decisionTaxation', 'motif'];
+export const QUALIFYING_IDS = ['source', 'typeDeclaration', 'decisionTaxation', 'motif'];
 
 /**
  * Alerte de bascule DRIS → TOU : à Genève, les déductions effectives (3e pilier,
@@ -586,7 +778,15 @@ export function drisToTouAlert(answers: Answers): boolean {
   );
 }
 
-/** Le dossier n'est en réalité pas une rectification (déclaration initiale non déposée). */
-export function notRectificativeAlert(answers: Answers): boolean {
-  return evalCondition({ q: 'dejaDeposee', eq: 'non' }, answers);
+/**
+ * Gate quasi-résident (TOU) : un non-résident dont MOINS de 90 % des revenus
+ * mondiaux du foyer sont imposables en Suisse n'est PAS éligible à la déclaration
+ * ordinaire (TOU) → rabattre sur l'impôt à la source (DRIS) standard et arrêter
+ * la collecte TOU.
+ */
+export function notEligibleTouAlert(answers: Answers): boolean {
+  return (
+    evalCondition({ q: 'statutResidence', eq: 'non_resident' }, answers) &&
+    evalCondition({ q: 'touQuasiResident', eq: 'non' }, answers)
+  );
 }

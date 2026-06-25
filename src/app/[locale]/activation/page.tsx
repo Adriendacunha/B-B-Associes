@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { activateClient } from '@/app/actions/auth';
+import { ValidatedInput } from '@/components/ValidatedInput';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +34,15 @@ export default async function ActivationPage({
         <input type="hidden" name="token" value={token ?? ''} />
         <label className="block">
           <span className="mb-1.5 block text-xs font-medium text-slate-600">{t('newPassword')}</span>
-          <input type="password" name="password" required minLength={8} autoComplete="new-password" className="input" />
+          <ValidatedInput
+            type="password"
+            name="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            className="input"
+            requiredMessage={t('fieldRequired')}
+          />
         </label>
         <button type="submit" className="btn btn-primary w-full">
           {t('activate')}

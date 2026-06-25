@@ -21,8 +21,15 @@ function Metric({ label, value, Icon }: { label: string; value: string; Icon: Lu
   );
 }
 
-export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function DashboardPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ relancesSent?: string }>;
+}) {
   const { locale } = await params;
+  const { relancesSent } = await searchParams;
   setRequestLocale(locale);
   await requireStaff(locale); // tableau de bord cabinet (§11)
   const t = await getTranslations('dashboard');
@@ -62,6 +69,12 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
         </div>
       </header>
 
+      {relancesSent !== undefined && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+          {relancesSent} {tR('remindersSent')}
+        </div>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Metric label={t('metrics.autonomy')} value={pct(d.autonomyRate)} Icon={Gauge} />
         <Metric label={t('metrics.reliability')} value={pct(d.overallReliability)} Icon={ShieldCheck} />
@@ -72,10 +85,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       {/* Triage en 4 buckets (écran 6). */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { title: 'Dossiers bloqués', rows: d.buckets.bloque, cls: 'border-red-200', dot: 'bg-red-500' },
-          { title: 'À relancer', rows: d.buckets.aRelancer, cls: 'border-amber-200', dot: 'bg-amber-500' },
-          { title: 'À contrôler', rows: d.buckets.aControler, cls: 'border-blue-200', dot: 'bg-blue-500' },
-          { title: 'Prêts à traiter', rows: d.buckets.pret, cls: 'border-green-200', dot: 'bg-green-500' },
+          { title: t('buckets.bloque'), rows: d.buckets.bloque, cls: 'border-red-200', dot: 'bg-red-500' },
+          { title: t('buckets.aRelancer'), rows: d.buckets.aRelancer, cls: 'border-amber-200', dot: 'bg-amber-500' },
+          { title: t('buckets.aControler'), rows: d.buckets.aControler, cls: 'border-blue-200', dot: 'bg-blue-500' },
+          { title: t('buckets.pret'), rows: d.buckets.pret, cls: 'border-green-200', dot: 'bg-green-500' },
         ].map((b) => (
           <div key={b.title} className={`card ${b.cls}`}>
             <div className="mb-2 flex items-center justify-between">
@@ -86,9 +99,11 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
             </div>
             <ul className="space-y-1">
               {b.rows.slice(0, 6).map((r) => (
-                <li key={r.clientCode} className="truncate text-xs text-slate-600">
-                  <span className="font-mono text-[10px] text-slate-400">{r.clientCode}</span> {r.displayName}
-                  <span className="text-slate-400"> · {r.completude.label}</span>
+                <li key={r.clientCode} className="truncate text-xs">
+                  <Link href={`/clients/${r.clientId}`} className="text-slate-600 hover:text-brand hover:underline">
+                    <span className="font-mono text-[10px] text-slate-400">{r.clientCode}</span> {r.displayName}
+                    <span className="text-slate-400"> · {r.completude.label}</span>
+                  </Link>
                 </li>
               ))}
               {b.rows.length === 0 && <li className="text-xs text-slate-400">—</li>}
@@ -121,10 +136,15 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
             {d.clients.map((c) => {
               const decl = declMeta(c.clientDeclaration);
               return (
-                <tr key={c.clientCode} className={c.clientDeclaration === 'OUI' ? 'bg-green-50/60' : undefined}>
+                <tr
+                  key={c.clientCode}
+                  className={`cursor-pointer hover:bg-slate-50 ${c.clientDeclaration === 'OUI' ? 'bg-green-50/60' : ''}`}
+                >
                   <td className="px-4 py-3">
-                    <span className="font-mono text-xs text-slate-400">{c.clientCode}</span> {c.displayName}
-                    <span className="ml-2 text-[10px] uppercase text-slate-400">{c.status}</span>
+                    <Link href={`/clients/${c.clientId}`} className="hover:text-brand hover:underline">
+                      <span className="font-mono text-xs text-slate-400">{c.clientCode}</span> {c.displayName}
+                    </Link>
+                    <span className="ml-2 text-[10px] uppercase text-slate-400">{t(`campaignStatus.${c.status}`)}</span>
                   </td>
                   <td className="px-4 py-3 text-slate-600">{c.manager}</td>
                   <td className="px-4 py-3">
@@ -150,12 +170,12 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       <ul className="space-y-3 sm:hidden">
         {d.clients.map((c) => (
           <li key={c.clientCode} className="rounded-lg border border-slate-200 bg-white p-4">
-            <div className="flex items-center justify-between">
+            <Link href={`/clients/${c.clientId}`} className="flex items-center justify-between">
               <span className="font-semibold text-slate-800">{c.displayName}</span>
               <span className="font-mono text-xs text-slate-400">{c.clientCode}</span>
-            </div>
+            </Link>
             <div className="mt-1 text-xs text-slate-500">
-              {t('manager')} : {c.manager} · {c.status}
+              {t('manager')} : {c.manager} · {t(`campaignStatus.${c.status}`)}
             </div>
             <div className="mt-3 flex items-center gap-2">
               <div className="h-1.5 flex-1 overflow-hidden rounded bg-slate-100">

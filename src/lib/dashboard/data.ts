@@ -8,6 +8,7 @@ import { planCadence, nextReminder, type CadenceRule } from '@/lib/reminders/cad
 const BASELINE_REMINDERS_PER_CAMPAIGN = 4; // hypothèse historique (relances manuelles)
 
 export interface DashboardClientRow {
+  clientId: string;
   clientCode: string;
   displayName: string;
   manager: string;
@@ -75,6 +76,7 @@ export async function getDashboardData() {
     }
 
     const row: DashboardClientRow = {
+      clientId: c.client.id,
       clientCode: c.client.clientCode,
       displayName: c.client.displayName,
       manager: c.client.gestionnaire?.name ?? '—',

@@ -75,6 +75,13 @@ enum ModeValidation {
   AUTO_AUTORISE // Validation auto possible si fiabilité IA > seuil (§15.4)
 }
 
+// Niveau d'exigence d'une pièce (§4.2) — règle d'affichage du portail.
+enum RequirementLevel {
+  OBLIGATOIRE // nécessaire pour presque tous les clients / ouverture du dossier
+  SI_CONCERNE // requis, mais après une question de filtrage (profil)
+  OPTIONNEL // cas ponctuel / justificatif complémentaire / optimisation
+}
+
 enum CampaignStatus {
   NON_COMMENCE
   EN_COURS
@@ -214,6 +221,7 @@ model Client {
   street      String?
   postalCode  String? // NPA
   city        String?
+  pays        String? // pays de résidence (adresse)
   nationality String?
   permitType  String? // type de permis (B, C, L…)
   avsNumber   String? // n° AVS (756.XXXX.XXXX.XX)
@@ -256,6 +264,9 @@ model PieceDefinition {
   profils String[]
 
   requiredByDefault Boolean        @default(true)
+  // Niveau d'exigence affiché dans le portail (badge). Dérivé de requiredByDefault
+  // + profils au seed, éditable ensuite par le cabinet.
+  requirement       RequirementLevel @default(SI_CONCERNE)
   // Drapeau central pour la bascule vers l'offre auto (§4.2/§15.4). MVP : HUMAIN_REQUIS.
   modeValidation    ModeValidation @default(HUMAIN_REQUIS)
   acceptedFormats   String[]       @default(["pdf", "jpg", "png"])
@@ -352,6 +363,8 @@ model Document {
   sizeBytes        Int
   uploadedByClient Boolean        @default(true)
   status           DocumentStatus @default(RECU)
+  // Texte extrait (OCR/PDF) mémorisé pour éviter de ré-extraire au renommage (perf).
+  extractedText    String?
 
   aiVerdict   AiVerdict?
   humanReview HumanReview?
@@ -388,6 +401,28 @@ model AiVerdict {
   model          String
   rawResponse    Json
   createdAt      DateTime @default(now())
+}
+
+// Consommation de tokens des appels au modèle (§ suivi de coûts / analytics).
+// Pas de clé étrangère : les enregistrements survivent à la suppression d'un
+// document/campagne pour préserver l'historique d'analyse.
+model AiUsage {
+  id                  String   @id @default(cuid())
+  createdAt           DateTime @default(now())
+  operation           String // 'VERIFY' | 'CLASSIFY'
+  model               String
+  inputTokens         Int      @default(0)
+  outputTokens        Int      @default(0)
+  cacheReadTokens     Int      @default(0)
+  cacheCreationTokens Int      @default(0)
+  // Attribution facultative (pour les analyses par dossier).
+  documentId          String?
+  campaignId          String?
+  clientId            String?
+
+  @@index([createdAt])
+  @@index([campaignId])
+  @@index([clientId])
 }
 
 // Décision humaine (MVP : humain dans la boucle, §15.1).

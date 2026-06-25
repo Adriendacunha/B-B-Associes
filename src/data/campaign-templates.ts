@@ -13,20 +13,22 @@ export interface CampaignTemplateSeed {
 
 export const CAMPAIGN_TEMPLATES: CampaignTemplateSeed[] = [
   {
-    key: 'declaration-pp',
-    name: 'Déclaration d’impôt PP',
-    description: 'Déclaration ordinaire d’une personne physique : profilage par situations fiscales.',
-    engine: 'PROFILAGE_TAGS',
+    key: 'declaration-rectificative',
+    name: 'Déclaration d’impôt',
+    description: 'Assistant guidé : déclaration de l’année (corriger les données pré-remplies), impôt à la source (DRIS) ou réclamation contre une taxation reçue.',
+    engine: 'QUESTIONNAIRE',
     active: true,
     sortOrder: 1,
   },
   {
-    key: 'declaration-rectificative',
-    name: 'Déclaration rectificative',
-    description: 'Assistant conditionnel : rectification d’impôt à la source (DRIS) ou déclaration ordinaire (TOU).',
-    engine: 'QUESTIONNAIRE',
-    active: true,
-    sortOrder: 2,
+    // Retiré du parcours : le profilage par tags a été fusionné dans l'assistant
+    // guidé « Déclaration d'impôt ». Conservé inactif pour les campagnes existantes.
+    key: 'declaration-pp',
+    name: 'Déclaration d’impôt PP (ancien profilage)',
+    description: 'Ancien flux de profilage par situations fiscales — remplacé par l’assistant guidé.',
+    engine: 'PROFILAGE_TAGS',
+    active: false,
+    sortOrder: 9,
   },
   {
     key: 'bouclement-annuel',

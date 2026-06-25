@@ -9,6 +9,7 @@ import { setClientDeclaration, setItemConcern } from '@/app/actions/campaign';
 import { setItemRequired, deleteItem, updateItemDetails, addItemFromCatalogue } from '@/app/actions/checklist';
 import { formatAnomalies } from '@/lib/ai/anomalies';
 import { intakeSummary } from '@/lib/questionnaire/intake';
+import { baseUrl } from '@/lib/url';
 import { RECTIFICATIVE_TEMPLATE } from '@/data/templates/declaration-rectificative';
 import { Dropzone } from '@/components/Dropzone';
 import { CopyLink } from '@/components/CopyLink';
@@ -31,6 +32,18 @@ const STATUS_STYLE: Record<string, string> = {
   CONFORME: 'bg-green-100 text-green-700',
   NON_CONFORME: 'bg-red-100 text-red-700',
   NON_CONCERNE: 'bg-slate-200 text-slate-500',
+};
+
+// Badge de niveau d'exigence (§4.2) — couleur + libellé tri-langue.
+const REQ_STYLE: Record<string, string> = {
+  OBLIGATOIRE: 'text-rose-600',
+  SI_CONCERNE: 'text-amber-700',
+  OPTIONNEL: 'text-slate-400',
+};
+const REQ_LABEL: Record<string, Record<AppLocale, string>> = {
+  OBLIGATOIRE: { fr: 'Obligatoire', en: 'Required', de: 'Erforderlich' },
+  SI_CONCERNE: { fr: 'Si concerné', en: 'If applicable', de: 'Falls betroffen' },
+  OPTIONNEL: { fr: 'Optionnel', en: 'Optional', de: 'Optional' },
 };
 
 /**
@@ -89,7 +102,7 @@ export async function CampaignChecklist({
   const isRectificative = campaign.templateId !== null;
 
   // Lien à transmettre au client pour qu'il complète sa campagne.
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const APP_URL = showMeta ? await baseUrl() : process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
   const clientLocale = campaign.client.locale.toLowerCase();
   const clientActivated = Boolean(campaign.client.passwordHash);
   const clientLink = clientActivated
@@ -114,11 +127,18 @@ export async function CampaignChecklist({
       ])
     : [0, 0];
 
-  const byCategory = ORDERED_CATEGORIES.map((cat) => ({
-    category: cat,
-    label: CATEGORY_FOLDERS[cat],
-    items: items.filter((i) => i.category === cat),
-  })).filter((g) => g.items.length > 0);
+  const byCategory = ORDERED_CATEGORIES.map((cat) => {
+    const catItems = items.filter((i) => i.category === cat);
+    const resolved = catItems.filter((i) => isResolved(i.status)).length;
+    return {
+      category: cat,
+      label: CATEGORY_FOLDERS[cat],
+      items: catItems,
+      resolved,
+      total: catItems.length,
+      ratio: catItems.length > 0 ? resolved / catItems.length : 0,
+    };
+  }).filter((g) => g.items.length > 0);
 
   // Catalogue disponible pour « ajouter une pièce » (mode avancé cabinet).
   const presentDefIds = new Set(items.map((i) => i.pieceDefinitionId));
@@ -202,6 +222,11 @@ export async function CampaignChecklist({
               Prévisualiser (côté client)
             </Link>
           </div>
+          <p className="text-xs text-slate-400">
+            {advanced
+              ? 'Mode avancé : ajoutez/retirez des pièces, basculez obligatoire/optionnel, ajoutez notes et dates limites.'
+              : 'Mode simple : consultez le dossier. Passez en mode avancé pour personnaliser la checklist.'}
+          </p>
         </header>
       )}
 
@@ -220,7 +245,10 @@ export async function CampaignChecklist({
 
       <div className="card">
         <div className="mb-1.5 flex items-center justify-between text-sm">
-          <span className="font-medium text-slate-700">{t('completude')}</span>
+          <span className="font-medium text-slate-700">
+            {t('completude')}
+            {showMeta && <span className="ml-1 text-xs font-normal text-slate-400">(pièces obligatoires)</span>}
+          </span>
           <span className="font-semibold text-brand">{comp.label}</span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
@@ -338,7 +366,20 @@ export async function CampaignChecklist({
       <div className="space-y-5">
         {byCategory.map((group) => (
           <section key={group.category}>
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{group.label}</h2>
+            <div className="mb-1.5 flex items-center justify-between gap-3">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-slate-500">{group.label}</h2>
+              <span className="text-xs font-medium text-slate-400">
+                {group.resolved}/{group.total}
+              </span>
+            </div>
+            <div className="mb-2.5 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+              <div
+                className={`h-full rounded-full transition-all duration-500 ${
+                  group.ratio === 1 ? 'bg-green-500' : 'bg-brand'
+                }`}
+                style={{ width: `${Math.round(group.ratio * 100)}%` }}
+              />
+            </div>
             <ul className="space-y-2">
               {group.items.map((item) => {
                 const latest = item.documents[0];
@@ -356,8 +397,8 @@ export async function CampaignChecklist({
                             {resolveLocalized(item.pieceDefinition.nom as unknown as LocalizedText, locale)}
                           </span>
                           <span className="font-mono text-[10px] text-slate-300">{item.pieceCode}</span>
-                          <span className="text-[10px] uppercase tracking-wide text-slate-400">
-                            {item.required ? tStatus('required') : tStatus('optional')}
+                          <span className={`text-[10px] font-medium uppercase tracking-wide ${REQ_STYLE[item.pieceDefinition.requirement] ?? 'text-slate-400'}`}>
+                            {REQ_LABEL[item.pieceDefinition.requirement]?.[locale] ?? (item.required ? tStatus('required') : tStatus('optional'))}
                           </span>
                         </div>
                         <p className="mt-0.5 text-xs text-slate-500">

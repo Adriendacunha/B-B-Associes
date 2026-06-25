@@ -14,7 +14,9 @@
     "newCampaignDesc": "Profiler un client et générer sa checklist documentaire dynamique.",
     "clientSpaceDesc": "Espace de dépôt des pièces côté client, vérifiées par l’IA.",
     "validationDesc": "Vérifier les verdicts de l’IA et valider les pièces (humain dans la boucle).",
-    "dashboardDesc": "Suivre l’avancement des dossiers, la fiabilité IA et les relances."
+    "dashboardDesc": "Suivre l’avancement des dossiers, la fiabilité IA et les relances.",
+    "aiUsage": "Consommation IA",
+    "baremes": "Barèmes"
   },
   "clients": {
     "title": "Clients / bêta-testeurs",
@@ -53,7 +55,9 @@
     "newPassword": "Choisir un mot de passe",
     "activate": "Activer",
     "firstConnection": "Première connexion ? Activez votre compte via le lien reçu par e-mail.",
-    "noCampaign": "Aucune campagne de collecte ouverte pour le moment."
+    "noCampaign": "Aucune campagne de collecte ouverte pour le moment.",
+    "fieldRequired": "Veuillez renseigner ce champ.",
+    "emailInvalid": "Veuillez saisir une adresse e-mail valide."
   },
   "export": {
     "title": "Export comptable",
@@ -183,6 +187,20 @@
     "declOui": "Terminé",
     "declNon": "En cours",
     "declNonConcerne": "Non concerné",
-    "declNone": "—"
+    "declNone": "—",
+    "buckets": {
+      "bloque": "Dossiers bloqués",
+      "aRelancer": "À relancer",
+      "aControler": "À contrôler",
+      "pret": "Prêts à traiter"
+    },
+    "campaignStatus": {
+      "NON_COMMENCE": "Brouillon",
+      "EN_COURS": "En préparation",
+      "EN_ATTENTE_CLIENT": "Envoyée",
+      "A_VALIDER": "À contrôler",
+      "COMPLET": "Prête à traiter",
+      "SUSPENDU": "Suspendue"
+    }
   }
 }

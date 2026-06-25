@@ -114,6 +114,7 @@ export async function uploadDocument(formData: FormData): Promise<void> {
     clientLocale: item.campaign.client.locale.toLowerCase() as AppLocale,
     filename: originalFilename,
     text,
+    context: { documentId: doc.id, campaignId: item.campaignId, clientId: item.campaign.client.id },
   });
 
   await prisma.aiVerdict.create({
@@ -132,7 +133,7 @@ export async function uploadDocument(formData: FormData): Promise<void> {
 
   // MVP : toutes les pièces sont HUMAIN_REQUIS → file de validation, quel que soit
   // le verdict (§4.2/§15.1). Le routage auto viendra avec AUTO_AUTORISE + client AUTO.
-  await prisma.document.update({ where: { id: doc.id }, data: { status: 'EN_VALIDATION' } });
+  await prisma.document.update({ where: { id: doc.id }, data: { status: 'EN_VALIDATION', extractedText: text } });
   await prisma.checklistItem.update({ where: { id: checklistItemId }, data: { status: 'EN_VALIDATION' } });
 
   await appendAuditLog(prisma, {
@@ -301,11 +302,15 @@ export async function renameDocument(formData: FormData): Promise<void> {
     createdAt: new Date(),
   });
 
-  // Ré-analyse si la pièce est encore en file de validation.
+  // Ré-analyse si la pièce est encore en file de validation. Le contenu n'a pas
+  // changé : on réutilise le texte déjà extrait (évite une ré-OCR coûteuse, P1.1).
   if (doc.status === 'EN_VALIDATION') {
     const item = doc.checklistItem;
-    const content = await getDocumentContent(documentId);
-    const text = content ? (await extractText(content, doc.mimeType, newName)).text : '';
+    let text = doc.extractedText ?? '';
+    if (!text) {
+      const content = await getDocumentContent(documentId);
+      text = content ? (await extractText(content, doc.mimeType, newName)).text : '';
+    }
     const result = await analyzeDocument({
       pieceCode: item.pieceCode,
       pieceNom: resolveLocalized(item.pieceDefinition.nom as unknown as LocalizedText, locale),
@@ -316,6 +321,7 @@ export async function renameDocument(formData: FormData): Promise<void> {
       clientLocale: item.campaign.client.locale.toLowerCase() as AppLocale,
       filename: newName,
       text,
+      context: { documentId, campaignId: item.campaignId, clientId: item.campaign.client.id },
     });
     await prisma.aiVerdict.upsert({
       where: { documentId },
@@ -405,7 +411,7 @@ export async function bulkUpload(formData: FormData): Promise<void> {
   for (const file of files) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const extraction = await extractText(buffer, file.type, file.name);
-    const matchedCode = await classifyDocument({ filename: file.name, text: extraction.text, candidates });
+    const matchedCode = await classifyDocument({ filename: file.name, text: extraction.text, candidates, context: { campaignId, clientId: campaign.client.id } });
     const target = matchedCode ? itemByCode.get(matchedCode) : undefined;
 
     if (target) {
@@ -425,6 +431,7 @@ export async function bulkUpload(formData: FormData): Promise<void> {
         clientLocale,
         filename: file.name,
         text: extraction.text,
+        context: { documentId: doc.id, campaignId, clientId: campaign.client.id },
       });
       await prisma.aiVerdict.create({
         data: {
@@ -439,14 +446,14 @@ export async function bulkUpload(formData: FormData): Promise<void> {
           rawResponse: result.raw as Prisma.InputJsonValue,
         },
       });
-      await prisma.document.update({ where: { id: doc.id }, data: { status: 'EN_VALIDATION' } });
+      await prisma.document.update({ where: { id: doc.id }, data: { status: 'EN_VALIDATION', extractedText: extraction.text } });
       await prisma.checklistItem.update({ where: { id: target.id }, data: { status: 'EN_VALIDATION' } });
       await appendAuditLog(prisma, { actorType, actorId, action: 'BULK_UPLOAD_CLASSIFIED', entityType: 'Document', entityId: doc.id, metadata: { pieceCode: target.pieceCode, filename: file.name }, createdAt: new Date() });
     } else {
       const atrierId = await ensureATrierItem(campaignId, campaign.fiscalYear);
       const version = (await prisma.document.count({ where: { checklistItemId: atrierId } })) + 1;
       const doc = await prisma.document.create({
-        data: { checklistItemId: atrierId, version, originalFilename: file.name, mimeType: file.type || 'application/octet-stream', sizeBytes: buffer.length, uploadedByClient, status: 'EN_VALIDATION' },
+        data: { checklistItemId: atrierId, version, originalFilename: file.name, mimeType: file.type || 'application/octet-stream', sizeBytes: buffer.length, uploadedByClient, status: 'EN_VALIDATION', extractedText: extraction.text },
       });
       await putDocumentContent(doc.id, buffer);
       await prisma.aiVerdict.create({
@@ -495,6 +502,7 @@ export async function reassignDocument(formData: FormData): Promise<void> {
     clientLocale,
     filename: doc.originalFilename,
     text,
+    context: { documentId, campaignId: newItem.campaignId, clientId: newItem.campaign.client.id },
   });
   await prisma.aiVerdict.upsert({
     where: { documentId },

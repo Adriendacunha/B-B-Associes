@@ -5,7 +5,7 @@ import {
   RECTIFICATIVE_TEMPLATE,
   QUALIFYING_IDS,
   drisToTouAlert,
-  notRectificativeAlert,
+  notEligibleTouAlert,
 } from '@/data/templates/declaration-rectificative';
 
 describe('evalCondition', () => {
@@ -28,18 +28,19 @@ describe('evalCondition', () => {
 
 describe('visibilité des questions / sections', () => {
   const tmpl: Template = RECTIFICATIVE_TEMPLATE;
-  it('la branche DRIS n’apparaît que pour source=oui + déclaration déposée', () => {
+  it('la branche DRIS n’apparaît que pour source=oui + démarche de rectification', () => {
     const drisVisible = (answers: Record<string, unknown>) =>
       visibleSections(tmpl, answers as never).some((s) => s.id === 'dris');
-    expect(drisVisible({ source: 'oui', dejaDeposee: 'oui' })).toBe(true);
-    expect(drisVisible({ source: 'non', dejaDeposee: 'oui' })).toBe(false);
-    expect(drisVisible({ source: 'oui', dejaDeposee: 'non' })).toBe(false);
+    expect(drisVisible({ source: 'oui', typeDeclaration: 'rectification' })).toBe(true);
+    expect(drisVisible({ source: 'non', typeDeclaration: 'rectification' })).toBe(false);
+    expect(drisVisible({ source: 'oui', typeDeclaration: 'ordinaire' })).toBe(false); // ordinaire → TOU
   });
-  it('la branche TOU n’apparaît que pour source=non', () => {
+  it('la branche TOU apparaît pour source=non OU déclaration ordinaire', () => {
     const touVisible = (answers: Record<string, unknown>) =>
       visibleSections(tmpl, answers as never).some((s) => s.id === 'tou');
-    expect(touVisible({ source: 'non', dejaDeposee: 'oui' })).toBe(true);
-    expect(touVisible({ source: 'oui', dejaDeposee: 'oui' })).toBe(false);
+    expect(touVisible({ source: 'non', typeDeclaration: 'rectification' })).toBe(true);
+    expect(touVisible({ source: 'oui', typeDeclaration: 'ordinaire' })).toBe(true);
+    expect(touVisible({ source: 'oui', typeDeclaration: 'rectification' })).toBe(false); // → DRIS
   });
   it('question conditionnelle (quasi-résident) visible seulement si non-résident', () => {
     const q = tmpl.sections.flatMap((s) => s.questions).find((x) => x.id === 'touQuasiResident')!;
@@ -52,7 +53,7 @@ describe('documents demandés (checklist conditionnelle)', () => {
   it('un dossier DRIS simple demande les pièces source, pas les déductions TOU', () => {
     const docs = requestedDocuments(RECTIFICATIVE_TEMPLATE, {
       source: 'oui',
-      dejaDeposee: 'oui',
+      typeDeclaration: 'rectification',
       decisionTaxation: 'oui',
       drisSalaireCorrect: 'non',
     }).map((d) => d.id);
@@ -67,7 +68,7 @@ describe('documents demandés (checklist conditionnelle)', () => {
   it('un dossier TOU propriétaire demande les pièces immobilières', () => {
     const docs = requestedDocuments(RECTIFICATIVE_TEMPLATE, {
       source: 'non',
-      dejaDeposee: 'oui',
+      typeDeclaration: 'ordinaire',
       touProprietaire: 'oui',
     }).map((d) => d.id);
     expect(docs).toContain('tou-certificats-salaire');
@@ -83,20 +84,26 @@ describe('alertes métier', () => {
     expect(drisToTouAlert({ source: 'oui', drisDeductionsEffectives: [] })).toBe(false);
     expect(drisToTouAlert({ source: 'non', drisDeductionsEffectives: ['3a'] })).toBe(false);
   });
-  it('alerte « pas une rectification » si déclaration initiale non déposée', () => {
-    expect(notRectificativeAlert({ dejaDeposee: 'non' })).toBe(true);
-    expect(notRectificativeAlert({ dejaDeposee: 'oui' })).toBe(false);
+  it('gate quasi-résident : non-résident avec < 90 % → non éligible TOU', () => {
+    expect(notEligibleTouAlert({ statutResidence: 'non_resident', touQuasiResident: 'non' })).toBe(true);
+    expect(notEligibleTouAlert({ statutResidence: 'non_resident', touQuasiResident: 'oui' })).toBe(false);
+    expect(notEligibleTouAlert({ statutResidence: 'resident_ch', touQuasiResident: 'non' })).toBe(false);
   });
 });
 
 describe('qualification', () => {
   it('complète quand les questions d’orientation visibles sont répondues', () => {
-    // source=non → pas de question DRIS ; orientation : source, dejaDeposee, decisionTaxation, motif
-    const answers = { source: 'non', dejaDeposee: 'oui', decisionTaxation: 'non', motif: ['immobilier'] };
+    // orientation : source, typeDeclaration, decisionTaxation, motif (ces 2 derniers visibles si rectification)
+    const answers = { source: 'non', typeDeclaration: 'rectification', decisionTaxation: 'non', motif: ['immobilier'] };
     expect(qualificationComplete(RECTIFICATIVE_TEMPLATE, answers, QUALIFYING_IDS)).toBe(true);
   });
   it('incomplète si un motif manque', () => {
-    const answers = { source: 'non', dejaDeposee: 'oui', decisionTaxation: 'non' };
+    const answers = { source: 'non', typeDeclaration: 'rectification', decisionTaxation: 'non' };
     expect(qualificationComplete(RECTIFICATIVE_TEMPLATE, answers, QUALIFYING_IDS)).toBe(false);
+  });
+  it('déclaration ordinaire : qualifiée sans motif/décision (questions masquées)', () => {
+    // En mode ordinaire, decisionTaxation et motif sont masqués → non requis.
+    const answers = { source: 'non', typeDeclaration: 'ordinaire' };
+    expect(qualificationComplete(RECTIFICATIVE_TEMPLATE, answers, QUALIFYING_IDS)).toBe(true);
   });
 });

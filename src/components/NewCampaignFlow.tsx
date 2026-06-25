@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { ArrowLeft, ClipboardList, FileSearch, FileBox } from 'lucide-react';
-import { ProfilageForm } from '@/components/ProfilageForm';
 import { RectificativeQuestionnaire } from '@/components/questionnaire/RectificativeQuestionnaire';
 import type { AppLocale } from '@/lib/i18n/locales';
 
@@ -72,18 +71,14 @@ export function NewCampaignFlow({ locale, client, templates, defaultFiscalYear }
         Changer de modèle
       </button>
 
-      {selected.engine === 'QUESTIONNAIRE' && (
+      {(selected.engine === 'QUESTIONNAIRE' || selected.engine === 'PROFILAGE_TAGS') && (
         <RectificativeQuestionnaire locale={locale} clients={clients} defaultFiscalYear={defaultFiscalYear} />
-      )}
-      {selected.engine === 'PROFILAGE_TAGS' && (
-        <ProfilageForm locale={locale} clients={clients} defaultFiscalYear={defaultFiscalYear} />
       )}
       {selected.engine === 'CUSTOM' && (
         <div className="card text-sm text-slate-600">
           <h2 className="text-base font-semibold text-slate-900">{selected.name}</h2>
           <p className="mt-1">
-            Ce modèle (checklist manuelle) sera bientôt disponible. Pour l’instant, utilisez « Déclaration d’impôt PP » ou
-            « Déclaration rectificative ».
+            Ce modèle (checklist manuelle) sera bientôt disponible. Pour l’instant, utilisez « Déclaration d’impôt ».
           </p>
         </div>
       )}

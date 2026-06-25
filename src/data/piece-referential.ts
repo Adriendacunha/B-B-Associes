@@ -21,6 +21,29 @@ export type PieceCategoryKey =
 
 export type ModeValidationKey = 'HUMAIN_REQUIS' | 'AUTO_AUTORISE';
 
+/**
+ * Niveau d'exigence (§4.2) — règle simple appliquée dans le portail :
+ *  • OBLIGATOIRE  : nécessaire pour presque tous les clients / pour ouvrir le dossier.
+ *  • SI_CONCERNE  : requis, mais seulement après une question de filtrage (profil/tag).
+ *  • OPTIONNEL    : cas ponctuel, justificatif complémentaire ou optimisation fiscale.
+ */
+export type RequirementLevel = 'OBLIGATOIRE' | 'SI_CONCERNE' | 'OPTIONNEL';
+
+// Tags « universels » : ne constituent pas une question de filtrage (la pièce est
+// servie à tout le profil de base). Sert à distinguer OBLIGATOIRE de SI_CONCERNE.
+const UNIVERSAL_TAGS = new Set<string>(['PARTICULIER']);
+
+/**
+ * Dérive le niveau d'exigence d'une pièce à partir de ses deux drapeaux
+ * opérationnels (`requiredByDefault` + `profils`). Source unique de vérité pour
+ * le champ `requirement` persisté (badge portail) — évite toute incohérence.
+ */
+export function deriveRequirement(p: { profils: string[]; requiredByDefault: boolean }): RequirementLevel {
+  if (!p.requiredByDefault) return 'OPTIONNEL';
+  const gatedByFilter = p.profils.some((t) => !UNIVERSAL_TAGS.has(t));
+  return gatedByFilter ? 'SI_CONCERNE' : 'OBLIGATOIRE';
+}
+
 export interface PieceReferentialEntry {
   code: string;
   category: PieceCategoryKey;
@@ -68,9 +91,33 @@ export const PIECE_REFERENTIAL: PieceReferentialEntry[] = [
   },
   // ─────────── A. Particuliers — Identité & base ───────────
   {
+    code: 'IDENT-FISCAL',
+    category: 'A_TRIER',
+    profils: [T.PARTICULIER],
+    requiredByDefault: true,
+    modeValidation: 'HUMAIN_REQUIS',
+    acceptedFormats: PDF_IMG,
+    expectedYearOffset: 0,
+    nom: tx(
+      'Identifiant fiscal (n° de contribuable + code de déclaration)',
+      'Tax identifier (taxpayer no. + filing code)',
+      'Steueridentifikation (Steuernummer + Erklärungscode)',
+    ),
+    description: tx(
+      'Identifiant pour la déclaration fiscale : numéro de contribuable et code de déclaration.',
+      'Tax filing identifier: taxpayer number and filing code.',
+      'Identifikation für die Steuererklärung: Steuernummer und Erklärungscode.',
+    ),
+    texteAide: tx(
+      'Figure sur le courrier d’invitation à déclarer de l’administration fiscale.',
+      'Shown on the tax authority’s invitation-to-file letter.',
+      'Steht im Aufforderungsschreiben der Steuerbehörde.',
+    ),
+  },
+  {
     code: 'DECL-N1',
     category: 'A_TRIER',
-    profils: [T.PARTICULIER, T.NOUVEAU_CLIENT],
+    profils: [T.PARTICULIER],
     requiredByDefault: true,
     modeValidation: 'HUMAIN_REQUIS',
     acceptedFormats: PDF,
@@ -176,8 +223,8 @@ export const PIECE_REFERENTIAL: PieceReferentialEntry[] = [
   {
     code: 'DECOMPTE-CHOMAGE',
     category: 'REVENUS',
-    profils: [T.REVENU_SALARIE],
-    requiredByDefault: false,
+    profils: [T.CHOMAGE],
+    requiredByDefault: true,
     modeValidation: 'HUMAIN_REQUIS',
     acceptedFormats: PDF,
     expectedYearOffset: 0,
@@ -224,6 +271,70 @@ export const PIECE_REFERENTIAL: PieceReferentialEntry[] = [
       'Rentenbescheinigungen: AHV/IV, BVG (2. Säule), Leibrenten.',
     ),
     texteAide: tx('Remis annuellement par la caisse de rente.', 'Issued annually by the pension fund.', 'Jährlich von der Rentenkasse ausgestellt.'),
+  },
+  {
+    code: 'ALLOC-FAMILIALES',
+    category: 'REVENUS',
+    profils: [T.ALLOC_FAMILIALES],
+    requiredByDefault: true,
+    modeValidation: 'HUMAIN_REQUIS',
+    acceptedFormats: PDF,
+    expectedYearOffset: 0,
+    nom: tx('Attestation d’allocations familiales', 'Family allowance statement', 'Bescheinigung Familienzulagen'),
+    description: tx(
+      'Attestation annuelle des allocations familiales perçues.',
+      'Annual statement of family allowances received.',
+      'Jährliche Bescheinigung der erhaltenen Familienzulagen.',
+    ),
+    texteAide: tx('Remise par la caisse d’allocations familiales ou l’employeur.', 'Issued by the family allowance fund or the employer.', 'Von der Familienausgleichskasse oder dem Arbeitgeber ausgestellt.'),
+  },
+  {
+    code: 'SUBSIDES',
+    category: 'REVENUS',
+    profils: [T.SUBSIDES],
+    requiredByDefault: true,
+    modeValidation: 'HUMAIN_REQUIS',
+    acceptedFormats: PDF,
+    expectedYearOffset: 0,
+    nom: tx('Subsides assurance-maladie / logement', 'Health insurance / housing subsidies', 'Subventionen Krankenkasse / Wohnen'),
+    description: tx(
+      'Décisions de subsides d’assurance-maladie et/ou subventions de logement perçus dans l’année.',
+      'Health insurance subsidy decisions and/or housing subsidies received during the year.',
+      'Entscheide über Krankenkassensubventionen und/oder Wohnbeihilfen im Jahr.',
+    ),
+    texteAide: tx('Décision du service compétent (SAM, OCLPF…).', 'Decision from the relevant office (SAM, OCLPF…).', 'Entscheid der zuständigen Stelle (SAM, OCLPF…).'),
+  },
+  {
+    code: 'PENSIONS-RECUES',
+    category: 'REVENUS',
+    profils: [T.PENSIONS],
+    requiredByDefault: true,
+    modeValidation: 'HUMAIN_REQUIS',
+    acceptedFormats: PDF,
+    expectedYearOffset: 0,
+    nom: tx('Pensions alimentaires reçues', 'Alimony received', 'Erhaltene Unterhaltsbeiträge'),
+    description: tx(
+      'Justificatifs des pensions alimentaires reçues (montants, identité du débiteur).',
+      'Proof of alimony received (amounts, payer identity).',
+      'Belege für erhaltene Unterhaltsbeiträge (Beträge, Identität des Schuldners).',
+    ),
+    texteAide: tx('Relevés des versements reçus dans l’année.', 'Statements of payments received during the year.', 'Auszüge der im Jahr erhaltenen Zahlungen.'),
+  },
+  {
+    code: 'ASSUR-MILITAIRE',
+    category: 'REVENUS',
+    profils: [T.RENTES],
+    requiredByDefault: false,
+    modeValidation: 'HUMAIN_REQUIS',
+    acceptedFormats: PDF,
+    expectedYearOffset: 0,
+    nom: tx('Prestations d’assurance militaire', 'Military insurance benefits', 'Leistungen der Militärversicherung'),
+    description: tx(
+      'Attestation des prestations versées par l’assurance militaire le cas échéant.',
+      'Statement of benefits paid by the military insurance if applicable.',
+      'Bescheinigung der von der Militärversicherung ausgerichteten Leistungen falls zutreffend.',
+    ),
+    texteAide: tx('Décompte annuel de l’assurance militaire.', 'Annual statement from the military insurance.', 'Jahresabrechnung der Militärversicherung.'),
   },
 
   // ─────────── A. Titres & fortune ───────────
@@ -275,6 +386,54 @@ export const PIECE_REFERENTIAL: PieceReferentialEntry[] = [
     ),
     texteAide: tx('Export de la plateforme avec valeur au 31.12.', 'Export from the platform with value as of 31.12.', 'Export der Plattform mit Wert per 31.12.'),
   },
+  {
+    code: 'PARTICIPATION-QUALIFIEE',
+    category: 'TITRES_FORTUNE',
+    profils: [T.TITRES],
+    requiredByDefault: false,
+    modeValidation: 'HUMAIN_REQUIS',
+    acceptedFormats: PDF,
+    expectedYearOffset: 0,
+    nom: tx('Participation qualifiée (> 10 %)', 'Qualified participation (> 10%)', 'Qualifizierte Beteiligung (> 10 %)'),
+    description: tx(
+      'Justificatifs d’une participation qualifiée (détention de plus de 10 % du capital d’une société).',
+      'Documents for a qualified participation (holding more than 10% of a company’s capital).',
+      'Belege für eine qualifizierte Beteiligung (mehr als 10 % des Kapitals einer Gesellschaft).',
+    ),
+    texteAide: tx('Attestation de dividendes / état de la participation.', 'Dividend statement / participation overview.', 'Dividendenbescheinigung / Beteiligungsübersicht.'),
+  },
+  {
+    code: 'GAIN-LOTERIE',
+    category: 'TITRES_FORTUNE',
+    profils: [T.TITRES],
+    requiredByDefault: false,
+    modeValidation: 'HUMAIN_REQUIS',
+    acceptedFormats: PDF,
+    expectedYearOffset: 0,
+    nom: tx('Gains de loterie / jeux', 'Lottery / gambling winnings', 'Lotterie- / Spielgewinne'),
+    description: tx(
+      'Justificatifs des gains de loterie ou de jeux d’argent imposables.',
+      'Proof of taxable lottery or gambling winnings.',
+      'Belege für steuerbare Lotterie- oder Spielgewinne.',
+    ),
+    texteAide: tx('Attestation de l’organisateur (montant et impôt anticipé).', 'Statement from the operator (amount and withholding tax).', 'Bescheinigung des Veranstalters (Betrag und Verrechnungssteuer).'),
+  },
+  {
+    code: 'CREANCES',
+    category: 'TITRES_FORTUNE',
+    profils: [T.TITRES],
+    requiredByDefault: false,
+    modeValidation: 'HUMAIN_REQUIS',
+    acceptedFormats: PDF,
+    expectedYearOffset: 0,
+    nom: tx('Diverses créances / autres fortunes', 'Various receivables / other assets', 'Diverse Forderungen / übriges Vermögen'),
+    description: tx(
+      'Justificatifs de diverses créances et autres éléments de fortune (prêts accordés, etc.).',
+      'Proof of various receivables and other assets (loans granted, etc.).',
+      'Belege für diverse Forderungen und übrige Vermögenswerte (gewährte Darlehen usw.).',
+    ),
+    texteAide: tx('Contrats de prêt, reconnaissances de dette, relevés au 31.12.', 'Loan agreements, acknowledgments of debt, statements as of 31.12.', 'Darlehensverträge, Schuldanerkennungen, Auszüge per 31.12.'),
+  },
 
   // ─────────── A. Immobilier ───────────
   {
@@ -297,7 +456,7 @@ export const PIECE_REFERENTIAL: PieceReferentialEntry[] = [
     code: 'IMMO-TRAVAUX',
     category: 'IMMOBILIER',
     profils: [T.PROPRIETAIRE],
-    requiredByDefault: false,
+    requiredByDefault: true,
     modeValidation: 'HUMAIN_REQUIS',
     acceptedFormats: PDF_IMG,
     expectedYearOffset: 0,
@@ -320,6 +479,22 @@ export const PIECE_REFERENTIAL: PieceReferentialEntry[] = [
     nom: tx('Revenus locatifs', 'Rental income', 'Mieteinnahmen'),
     description: tx('Revenus locatifs (baux, décomptes).', 'Rental income (leases, statements).', 'Mieteinnahmen (Mietverträge, Abrechnungen).'),
     texteAide: tx('Baux et décomptes de charges des locataires.', 'Leases and tenant expense statements.', 'Mietverträge und Nebenkostenabrechnungen der Mieter.'),
+  },
+  {
+    code: 'IMMO-IIC',
+    category: 'IMMOBILIER',
+    profils: [T.PROPRIETAIRE],
+    requiredByDefault: true,
+    modeValidation: 'HUMAIN_REQUIS',
+    acceptedFormats: PDF,
+    expectedYearOffset: 0,
+    nom: tx('Avis de taxation immobilier (IIC)', 'Property tax assessment (IIC)', 'Liegenschaftssteuerveranlagung (IIC)'),
+    description: tx(
+      'Avis de taxation immobilier (impôt immobilier complémentaire IIC) pour chaque bien.',
+      'Property tax assessment (complementary real-estate tax IIC) for each property.',
+      'Liegenschaftssteuerveranlagung (Ergänzungssteuer IIC) für jede Liegenschaft.',
+    ),
+    texteAide: tx('Document annuel de l’administration fiscale pour chaque bien immobilier.', 'Annual tax authority document for each property.', 'Jährliches Dokument der Steuerbehörde für jede Liegenschaft.'),
   },
 
   // ─────────── A. Déductions ───────────
@@ -355,7 +530,7 @@ export const PIECE_REFERENTIAL: PieceReferentialEntry[] = [
     code: 'RACHAT-LPP',
     category: 'DEDUCTIONS',
     profils: [T.RACHAT_LPP],
-    requiredByDefault: true,
+    requiredByDefault: false,
     modeValidation: 'HUMAIN_REQUIS',
     acceptedFormats: PDF,
     expectedYearOffset: 0,
@@ -371,11 +546,11 @@ export const PIECE_REFERENTIAL: PieceReferentialEntry[] = [
     modeValidation: 'HUMAIN_REQUIS',
     acceptedFormats: PDF,
     expectedYearOffset: 0,
-    nom: tx('Attestation primes assurance-maladie', 'Health insurance premium statement', 'Krankenkassenprämienbescheinigung'),
+    nom: tx('Décompte assurance maladie et accident (LAMal/LAA)', 'Health and accident insurance statement (LAMal/LAA)', 'Kranken- und Unfallversicherungsabrechnung (KVG/UVG)'),
     description: tx(
-      'Attestation primes LAMal et complémentaires (subsides éventuels).',
-      'LAMal and supplementary premium statement (any subsidies).',
-      'Bescheinigung KVG- und Zusatzprämien (allfällige Subventionen).',
+      'Attestation des primes LAMal/LAA et complémentaires payées dans l’année.',
+      'Statement of LAMal/LAA and supplementary premiums paid during the year.',
+      'Bescheinigung der im Jahr bezahlten KVG/UVG- und Zusatzprämien.',
     ),
     texteAide: tx('Attestation fiscale annuelle de votre caisse maladie.', 'Annual tax statement from your health insurer.', 'Jährliche Steuerbescheinigung Ihrer Krankenkasse.'),
   },
@@ -383,7 +558,7 @@ export const PIECE_REFERENTIAL: PieceReferentialEntry[] = [
     code: 'FRAIS-MEDICAUX',
     category: 'DEDUCTIONS',
     profils: [T.FRAIS_MEDICAUX],
-    requiredByDefault: true,
+    requiredByDefault: false,
     modeValidation: 'HUMAIN_REQUIS',
     acceptedFormats: PDF_IMG,
     expectedYearOffset: 0,
@@ -447,23 +622,39 @@ export const PIECE_REFERENTIAL: PieceReferentialEntry[] = [
     code: 'PENSIONS',
     category: 'DEDUCTIONS',
     profils: [T.PENSIONS],
+    requiredByDefault: true,
+    modeValidation: 'HUMAIN_REQUIS',
+    acceptedFormats: PDF,
+    expectedYearOffset: 0,
+    nom: tx('Pensions alimentaires versées', 'Alimony paid', 'Geleistete Unterhaltsbeiträge'),
+    description: tx(
+      'Pensions alimentaires versées (justificatifs de versement, identité du bénéficiaire).',
+      'Alimony paid (payment proof, beneficiary identity).',
+      'Geleistete Unterhaltsbeiträge (Zahlungsbelege, Identität des Empfängers).',
+    ),
+    texteAide: tx('Justificatifs de versement et coordonnées du bénéficiaire.', 'Payment proof and beneficiary details.', 'Zahlungsbelege und Angaben zum Empfänger.'),
+  },
+  {
+    code: 'COTIS-AVS',
+    category: 'DEDUCTIONS',
+    profils: [T.RETRAITE],
     requiredByDefault: false,
     modeValidation: 'HUMAIN_REQUIS',
     acceptedFormats: PDF,
     expectedYearOffset: 0,
-    nom: tx('Pensions alimentaires', 'Alimony payments', 'Unterhaltsbeiträge'),
+    nom: tx('Cotisations AVS (personnes sans activité)', 'AVS contributions (non-employed)', 'AHV-Beiträge (Nichterwerbstätige)'),
     description: tx(
-      'Pensions alimentaires versées/reçues (justificatifs, identité du bénéficiaire).',
-      'Alimony paid/received (proof, beneficiary identity).',
-      'Geleistete/erhaltene Unterhaltsbeiträge (Belege, Identität des Empfängers).',
+      'Attestation des cotisations AVS/AI/APG versées à titre personnel (non-actifs, retraités anticipés).',
+      'Statement of AVS/AI/APG contributions paid personally (non-employed, early retirees).',
+      'Bescheinigung der persönlich entrichteten AHV/IV/EO-Beiträge (Nichterwerbstätige, Frührentner).',
     ),
-    texteAide: tx('Justificatifs de versement et coordonnées du bénéficiaire.', 'Payment proof and beneficiary details.', 'Zahlungsbelege und Angaben zum Empfänger.'),
+    texteAide: tx('Décompte de la caisse de compensation.', 'Statement from the compensation fund.', 'Abrechnung der Ausgleichskasse.'),
   },
   {
     code: 'DETTES',
     category: 'DEDUCTIONS',
     profils: [T.DETTES],
-    requiredByDefault: false,
+    requiredByDefault: true,
     modeValidation: 'HUMAIN_REQUIS',
     acceptedFormats: PDF,
     expectedYearOffset: 0,
