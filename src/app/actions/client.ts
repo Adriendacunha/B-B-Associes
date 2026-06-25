@@ -90,6 +90,68 @@ export async function createClient(formData: FormData): Promise<void> {
   redirect(`/${uiLocale}/clients?created=${clientCode}`);
 }
 
+const CLIENT_TYPES = new Set(['PARTICULIER', 'INDEPENDANT', 'SOCIETE', 'HOIRIE']);
+
+/**
+ * Création « minimale » d'un client depuis le wizard de campagne (sans redirection,
+ * renvoie le client créé). Champs essentiels uniquement ; la fiche peut être
+ * complétée ensuite.
+ */
+export async function createClientQuick(input: {
+  uiLocale: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  locale: string;
+  canton?: string;
+  type?: string;
+}): Promise<{ ok: true; clientCode: string; displayName: string } | { ok: false; error: string }> {
+  const staff = await requireStaff(input.uiLocale);
+  const lastName = input.lastName.trim();
+  const firstName = input.firstName.trim();
+  const email = input.email.trim().toLowerCase();
+  const locale = (input.locale || 'FR').toUpperCase();
+  const type = (input.type || 'PARTICULIER').toUpperCase();
+  if (!lastName || !firstName || !email) return { ok: false, error: 'champs' };
+  if (!LOCALES.has(locale) || !CLIENT_TYPES.has(type)) return { ok: false, error: 'valeurs' };
+
+  const displayName = `${lastName} ${firstName}`.trim();
+  const clientCode = await generateClientCode(lastName);
+  const activationToken = randomBytes(24).toString('base64url');
+  try {
+    const client = await prisma.client.create({
+      data: {
+        clientCode,
+        displayName,
+        firstName,
+        lastName,
+        email,
+        locale: locale as Prisma.ClientCreateInput['locale'],
+        type: type as Prisma.ClientCreateInput['type'],
+        canton: input.canton?.trim() || null,
+        niveauDeService: 'EXPERT',
+        gestionnaireId: staff.id,
+        activationToken,
+      },
+    });
+    await appendAuditLog(prisma, {
+      actorType: staff.role === 'ADMIN' ? 'ADMIN' : 'COLLABORATEUR',
+      actorId: staff.id,
+      action: 'CLIENT_CREATED',
+      entityType: 'Client',
+      entityId: client.id,
+      metadata: { clientCode, email, via: 'wizard' },
+      createdAt: new Date(),
+    });
+    return { ok: true, clientCode, displayName };
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+      return { ok: false, error: 'existe' };
+    }
+    throw e;
+  }
+}
+
 /**
  * Mise à jour des informations d'identité d'un client (compléter / corriger la
  * fiche). Ne touche ni au code client, ni à l'activation, ni aux campagnes.

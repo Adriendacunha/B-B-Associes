@@ -1,6 +1,6 @@
 import { setRequestLocale } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { CampaignCreator } from '@/components/CampaignCreator';
+import { CampaignWizard } from '@/components/CampaignWizard';
 import { requireStaff } from '@/lib/auth/session';
 import type { AppLocale } from '@/lib/i18n/locales';
 
@@ -21,6 +21,6 @@ export default async function ProfilagePage({ params }: { params: Promise<{ loca
   const defaultFiscalYear = new Date().getUTCFullYear() - 1;
 
   return (
-    <CampaignCreator locale={locale as AppLocale} clients={clients} defaultFiscalYear={defaultFiscalYear} />
+    <CampaignWizard locale={locale as AppLocale} clients={clients} defaultFiscalYear={defaultFiscalYear} />
   );
 }

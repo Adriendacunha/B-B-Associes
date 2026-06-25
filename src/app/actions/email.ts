@@ -10,11 +10,8 @@ import { clientLink, activationLink, formatDate, missingItems, loadCampaignConte
 import { runDueReminders } from '@/lib/reminders/run';
 import { requireStaff } from '@/lib/auth/session';
 
-/** Envoi de l'e-mail d'invitation + ouverture de la campagne (§6, J0). */
-export async function sendInvitation(formData: FormData): Promise<void> {
-  const campaignId = String(formData.get('campaignId') ?? '');
-  const uiLocale = String(formData.get('locale') ?? 'fr');
-  await requireStaff(uiLocale);
+/** Cœur réutilisable : envoie l'invitation et ouvre la campagne (§6, J0). */
+export async function sendInvitationFor(campaignId: string, uiLocale: string): Promise<void> {
   const c = await loadCampaignContext(campaignId);
   if (!c) throw new Error('Campagne introuvable.');
 
@@ -41,6 +38,14 @@ export async function sendInvitation(formData: FormData): Promise<void> {
 
   revalidatePath(`/${uiLocale}/campagne/${campaignId}`);
   revalidatePath(`/${uiLocale}/emails`);
+}
+
+/** Envoi de l'e-mail d'invitation + ouverture de la campagne (§6, J0). */
+export async function sendInvitation(formData: FormData): Promise<void> {
+  const campaignId = String(formData.get('campaignId') ?? '');
+  const uiLocale = String(formData.get('locale') ?? 'fr');
+  await requireStaff(uiLocale);
+  await sendInvitationFor(campaignId, uiLocale);
 }
 
 const RELANCE_SEQUENCE: EmailTemplateKey[] = ['RELANCE_1', 'RELANCE_2', 'RELANCE_3'];
