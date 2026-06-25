@@ -86,16 +86,15 @@ export default async function AnalyticsPage({ params }: { params: Promise<{ loca
       <header className="space-y-1">
         <h1 className="text-2xl font-bold text-slate-900">{t('aiUsage')}</h1>
         <p className="text-sm text-slate-600">
-          Consommation de tokens des analyses IA (vérification & classification). Coûts <em>estimés</em> —
-          tarifs paramétrables (<code>src/lib/ai/pricing.ts</code> ou <code>AI_PRICE_IN/OUT</code>).
+          Suivi des coûts <em>estimés</em> des analyses automatiques (contrôle et tri des documents).
+          Les tarifs sont configurés par l’administrateur.
         </p>
       </header>
 
       {isEmpty ? (
         <div className="card text-sm text-slate-600">
-          Aucune consommation enregistrée pour l’instant. Les appels au modèle sont comptabilisés
-          uniquement lorsque <code>ANTHROPIC_API_KEY</code> est configurée (sinon l’analyseur de
-          démonstration local est utilisé, sans coût ni token).
+          Aucune analyse enregistrée pour l’instant. Les coûts s’affichent dès que des documents sont
+          analysés automatiquement.
         </div>
       ) : (
         <>

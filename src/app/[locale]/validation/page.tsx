@@ -81,9 +81,12 @@ export default async function ValidationPage({ params }: { params: Promise<{ loc
                         {t('readability')} : {Math.round(v.scoreLisibilite * 100)}%
                       </span>
                     )}
-                    <span className="text-xs text-slate-400">
-                      {t('model')} : {v.model}
-                    </span>
+                    {/* Modèle technique : utile au debug, masqué en production. */}
+                    {process.env.NODE_ENV !== 'production' && (
+                      <span className="text-xs text-slate-400">
+                        {t('model')} : {v.model}
+                      </span>
+                    )}
                   </div>
                   {Array.isArray(v.anomalies) && (v.anomalies as string[]).length > 0 && (
                     <p className="mt-1 text-xs text-amber-700">

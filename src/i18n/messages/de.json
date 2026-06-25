@@ -9,18 +9,18 @@
     "subtitle": "Laden Sie Ihre Unterlagen sicher für die Vorbereitung Ihrer Steuererklärung hoch.",
     "clientSpace": "Mein Kundenbereich",
     "dashboard": "Kanzlei-Dashboard",
-    "validation": "Validierungswarteschlange",
+    "validation": "Zu prüfende Dokumente",
     "clientsDesc": "Betatester-Kunden erstellen und verfolgen, Aktivierungslinks senden.",
-    "newCampaignDesc": "Einen Kunden profilieren und seine dynamische Checkliste erstellen.",
-    "clientSpaceDesc": "Kundenseitiger Upload-Bereich, durch die KI geprüft.",
-    "validationDesc": "KI-Urteile prüfen und Dokumente freigeben (Mensch in der Schleife).",
-    "dashboardDesc": "Dossierfortschritt, KI-Zuverlässigkeit und Erinnerungen verfolgen.",
-    "aiUsage": "KI-Verbrauch",
+    "newCampaignDesc": "Eine Kampagne erstellen und die Checkliste der anzufordernden Dokumente erzeugen.",
+    "clientSpaceDesc": "Kundenbereich zum Hochladen von Dokumenten.",
+    "validationDesc": "Von Kunden hochgeladene Dokumente prüfen und freigeben.",
+    "dashboardDesc": "Fortschritt der Dossiers und Erinnerungen verfolgen.",
+    "aiUsage": "Analysekosten",
     "baremes": "Steuertarife"
   },
   "clients": {
     "title": "Kunden / Betatester",
-    "subtitle": "Erstellen Sie einen Kunden und senden Sie ihm seinen Aktivierungslink (§15.2).",
+    "subtitle": "Erstellen Sie einen Kunden und übermitteln Sie ihm seinen Aktivierungslink.",
     "new": "Neuer Kunde",
     "code": "Kundencode",
     "name": "Anzeigename",
@@ -95,7 +95,7 @@
   "upload": {
     "deposit": "Datei hochladen",
     "send": "Senden",
-    "aiProposes": "Vorgeschlagenes KI-Urteil",
+    "aiProposes": "Vorgeschlagene Analyse",
     "conforme": "konform",
     "nonConforme": "nicht konform",
     "depositedAs": "In OneDrive abgelegt:",
@@ -108,18 +108,19 @@
     "uploading": "Hochladen & Analyse…",
     "multiHint": "Mehrere Dateien möglich (zu einem PDF zusammengefügt).",
     "dropzone": "Ziehen Sie eine neue Datei hierher oder klicken Sie auf den Pfeil, um eine Datei zu importieren",
-    "bulkTitle": "Massen-Upload — automatische KI-Sortierung",
-    "bulkHint": "Laden Sie alle Dokumente auf einmal hoch: Die KI erkennt jedes und ordnet es dem richtigen Posten zu. Nicht erkannte landen unter „Zu sortieren\".",
+    "bulkTitle": "Sammel-Upload — automatische Sortierung",
+    "bulkHint": "Laden Sie alle Dokumente auf einmal hoch: Das System erkennt jedes Dokument und ordnet es dem richtigen Posten zu. Nicht Erkanntes landet unter „Zu sortieren“.",
     "bulkDropzone": "Ziehen Sie alle Ihre Dokumente hierher oder klicken Sie auf den Pfeil, um sie zu importieren",
-    "bulkSend": "Hochladen & sortieren"
+    "bulkSend": "Hochladen & sortieren",
+    "ai": "Automatische Analyse"
   },
   "validation": {
-    "title": "Validierungswarteschlange",
-    "subtitle": "Prüfen Sie das von der KI vorgeschlagene Urteil und entscheiden Sie (Mensch in der Schleife, §15.1).",
+    "title": "Zu prüfende Dokumente",
+    "subtitle": "Prüfen Sie hochgeladene Dokumente und geben Sie sie frei oder fordern Sie eine Korrektur an.",
     "empty": "Kein Dokument zur Validierung ausstehend.",
     "client": "Kunde",
     "piece": "Posten",
-    "ai": "KI-Analyse",
+    "ai": "Automatische Analyse",
     "anomalies": "Anomalien",
     "readability": "Lesbarkeit",
     "model": "Modell",
@@ -163,7 +164,7 @@
     "client": "Kunde",
     "manager": "Sachbearbeiter",
     "completude": "Vollständigkeit",
-    "newCampaign": "Kampagne eröffnen",
+    "newCampaign": "Kampagne erstellen",
     "declarationLabel": "Kundenerklärung",
     "declNone": "Keine Antwort",
     "declNon": "In Bearbeitung (nicht abgeschlossen)",
@@ -171,11 +172,11 @@
     "declNonConcerne": "Kunde diese Übung nicht betroffen"
   },
   "dashboard": {
-    "title": "Dashboard — Dossierverfolgung",
+    "title": "B&B Associés — Dokumentensammlung",
     "demoNote": "Veranschaulichende Kennzahlen auf Basis von Demonstrationsdaten.",
     "metrics": {
       "autonomy": "Autonome Fertigstellung",
-      "reliability": "KI-Zuverlässigkeit (Schwelle 90%)",
+      "reliability": "Analysezuverlässigkeit",
       "timeSaved": "Eingesparte Kanzleizeit",
       "complete": "Vollständige Dossiers"
     },
@@ -202,6 +203,9 @@
       "A_VALIDER": "Zu prüfen",
       "COMPLET": "Bereit zur Bearbeitung",
       "SUSPENDU": "Ausgesetzt"
-    }
+    },
+    "subtitle": "Erstellen Sie eine Kampagne, senden Sie einen sicheren Link und verfolgen Sie fehlende Dokumente.",
+    "viewCases": "Laufende Dossiers ansehen",
+    "indicators": "Kennzahlen"
   }
 }

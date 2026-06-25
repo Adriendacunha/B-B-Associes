@@ -9,18 +9,18 @@
     "subtitle": "Securely upload your documents for the preparation of your tax return.",
     "clientSpace": "My client area",
     "dashboard": "Firm dashboard",
-    "validation": "Validation queue",
+    "validation": "Documents to review",
     "clientsDesc": "Create and track your beta-tester clients, share activation links.",
-    "newCampaignDesc": "Profile a client and generate their dynamic document checklist.",
-    "clientSpaceDesc": "Client-side upload area for documents, checked by AI.",
-    "validationDesc": "Review AI verdicts and approve documents (human in the loop).",
-    "dashboardDesc": "Track file progress, AI reliability and reminders.",
-    "aiUsage": "AI usage",
+    "newCampaignDesc": "Create a campaign and generate the checklist of documents to request.",
+    "clientSpaceDesc": "Client area to upload documents.",
+    "validationDesc": "Review and validate the documents uploaded by clients.",
+    "dashboardDesc": "Track case progress and reminders.",
+    "aiUsage": "Analysis costs",
     "baremes": "Tax thresholds"
   },
   "clients": {
     "title": "Clients / beta testers",
-    "subtitle": "Create a client and send them their activation link (§15.2).",
+    "subtitle": "Create a client and share their activation link.",
     "new": "New client",
     "code": "Client code",
     "name": "Display name",
@@ -95,7 +95,7 @@
   "upload": {
     "deposit": "Upload a file",
     "send": "Send",
-    "aiProposes": "Proposed AI verdict",
+    "aiProposes": "Suggested analysis",
     "conforme": "compliant",
     "nonConforme": "non-compliant",
     "depositedAs": "Deposited to OneDrive:",
@@ -108,18 +108,19 @@
     "uploading": "Uploading & analysing…",
     "multiHint": "Multiple files allowed (merged into a single PDF).",
     "dropzone": "Drag and drop a new file here, or click the arrow to import a file",
-    "bulkTitle": "Bulk upload — automatic AI sorting",
-    "bulkHint": "Upload all your documents at once: the AI identifies each one and files it under the right item. Unrecognised ones go to “To sort”.",
+    "bulkTitle": "Bulk upload — automatic sorting",
+    "bulkHint": "Upload all your documents at once: the system identifies each one and files it under the right item. Anything unrecognised goes to “To sort”.",
     "bulkDropzone": "Drag and drop all your documents here, or click the arrow to import them",
-    "bulkSend": "Upload & sort"
+    "bulkSend": "Upload & sort",
+    "ai": "Automatic analysis"
   },
   "validation": {
-    "title": "Validation queue",
-    "subtitle": "Review the AI's proposed verdict and decide (human in the loop, §15.1).",
+    "title": "Documents to review",
+    "subtitle": "Review uploaded documents and validate them, or request a correction.",
     "empty": "No document awaiting validation.",
     "client": "Client",
     "piece": "Item",
-    "ai": "AI analysis",
+    "ai": "Automatic analysis",
     "anomalies": "Anomalies",
     "readability": "Readability",
     "model": "Model",
@@ -163,7 +164,7 @@
     "client": "Client",
     "manager": "Manager",
     "completude": "Completeness",
-    "newCampaign": "Open a campaign",
+    "newCampaign": "Create a campaign",
     "declarationLabel": "Client declaration",
     "declNone": "No answer",
     "declNon": "In progress (not finished)",
@@ -171,11 +172,11 @@
     "declNonConcerne": "Client not concerned this exercise"
   },
   "dashboard": {
-    "title": "Dashboard — file tracking",
+    "title": "B&B Associés — document collection",
     "demoNote": "Illustrative indicators computed on demonstration data.",
     "metrics": {
       "autonomy": "Autonomous completion",
-      "reliability": "AI reliability (90% threshold)",
+      "reliability": "Analysis reliability",
       "timeSaved": "Firm time saved",
       "complete": "Complete files"
     },
@@ -202,6 +203,9 @@
       "A_VALIDER": "To review",
       "COMPLET": "Ready to process",
       "SUSPENDU": "Suspended"
-    }
+    },
+    "subtitle": "Create a campaign, send a secure link, track missing documents.",
+    "viewCases": "View ongoing cases",
+    "indicators": "Indicators"
   }
 }
