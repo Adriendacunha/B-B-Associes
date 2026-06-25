@@ -144,7 +144,7 @@ async function seedCampaignTemplates() {
   for (const t of CAMPAIGN_TEMPLATES) {
     await prisma.campaignTemplate.upsert({
       where: { key: t.key },
-      update: { name: t.name, description: t.description, engine: t.engine, sortOrder: t.sortOrder },
+      update: { name: t.name, description: t.description, engine: t.engine, active: t.active, sortOrder: t.sortOrder },
       create: { key: t.key, name: t.name, description: t.description, engine: t.engine, active: t.active, sortOrder: t.sortOrder },
     });
   }
