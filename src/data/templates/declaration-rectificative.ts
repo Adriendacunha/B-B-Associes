@@ -19,9 +19,9 @@ const OUI_NON = [
 
 export const RECTIFICATIVE_TEMPLATE: Template = {
   id: 'declaration-rectificative',
-  title: 'Déclaration rectificative',
+  title: 'Déclaration fiscale (ordinaire ou rectificative)',
   description:
-    'Assistant de collecte conditionnelle pour une rectification fiscale (impôt à la source DRIS ou déclaration ordinaire TOU).',
+    'Assistant de collecte conditionnelle : déclaration ordinaire de l’année (pré-remplie à compléter) ou rectification / réclamation. Branches impôt à la source (DRIS) et taxation ordinaire (TOU).',
   sections: [
     // ─────────────── Niveau 1 : orientation (qualification) ───────────────
     {
@@ -40,13 +40,18 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
           bbInternalNote: 'Oui → branche DRIS. Non → branche déclaration ordinaire rectificative (TOU).',
         },
         {
-          id: 'dejaDeposee',
-          question: 'La déclaration initiale a-t-elle déjà été déposée ?',
-          clientLabel: 'Une première déclaration a-t-elle déjà été déposée pour cette année ?',
+          id: 'typeDeclaration',
+          question: 'Type de démarche',
+          clientLabel: 'De quelle démarche s’agit-il ?',
+          helpText:
+            'En Suisse, vous recevez chaque année une déclaration pré-remplie à compléter. « Ordinaire » = la déclaration de l’année. « Rectification » = corriger une déclaration déjà déposée, ou contester une taxation déjà reçue.',
           answerType: 'single',
-          choices: OUI_NON,
+          choices: [
+            { value: 'ordinaire', label: 'Déclaration ordinaire de l’année' },
+            { value: 'rectification', label: 'Rectification / réclamation (déjà déposée ou taxée)' },
+          ],
           riskLevel: 'high',
-          bbInternalNote: 'Non → ce n’est pas une rectification : ouvrir une campagne de déclaration standard.',
+          bbInternalNote: 'ordinaire → déclaration annuelle (pré-remplie). rectification → correction d’une déclaration soumise / réclamation contre une taxation.',
         },
         {
           id: 'decisionTaxation',
@@ -54,9 +59,9 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
           clientLabel: 'Avez-vous reçu une décision de taxation (bordereau) de l’administration ?',
           answerType: 'single',
           choices: OUI_NON,
-          visibilityCondition: { q: 'dejaDeposee', eq: 'oui' },
+          visibilityCondition: { q: 'typeDeclaration', eq: 'rectification' },
           requiredDocuments: ['decision-taxation', 'bordereau', 'copie-declaration-initiale'],
-          bbInternalNote: 'Oui → décision + bordereau + date de notification + motif de contestation. Non → copie de la déclaration transmise / sauvegarde fiscale.',
+          bbInternalNote: 'Oui → décision + bordereau + date de notification + motif de contestation (réclamation). Non → copie de la déclaration transmise / sauvegarde fiscale.',
         },
         {
           id: 'dateNotification',
@@ -74,7 +79,7 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
           question: 'Quel est le motif principal de rectification ?',
           clientLabel: 'Que faut-il corriger ? (plusieurs choix possibles)',
           answerType: 'multi',
-          visibilityCondition: { q: 'dejaDeposee', eq: 'oui' },
+          visibilityCondition: { q: 'typeDeclaration', eq: 'rectification' },
           choices: [
             { value: 'erreur_revenu', label: 'Erreur de revenu' },
             { value: 'bareme_taux', label: 'Barème / taux d’impôt à la source' },
@@ -96,7 +101,7 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
       id: 'identification',
       title: 'Identification du dossier',
       clientTitle: 'Vos informations',
-      visibilityCondition: { q: 'dejaDeposee', eq: 'oui' },
+      visibilityCondition: { q: 'typeDeclaration', answered: true },
       questions: [
         { id: 'nomPrenom', question: 'Nom et prénom', clientLabel: 'Nom et prénom', answerType: 'text', clientData: true },
         { id: 'dateNaissance', question: 'Date de naissance', clientLabel: 'Date de naissance', answerType: 'date', clientData: true },
@@ -170,7 +175,8 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
       id: 'dris',
       title: 'Rectification impôt à la source (DRIS)',
       clientTitle: 'Votre impôt à la source',
-      visibilityCondition: { all: [{ q: 'source', eq: 'oui' }, { q: 'dejaDeposee', eq: 'oui' }] },
+      // Rectifier l'impôt à la source : source = oui ET démarche de rectification.
+      visibilityCondition: { all: [{ q: 'source', eq: 'oui' }, { q: 'typeDeclaration', eq: 'rectification' }] },
       questions: [
         { id: 'drisEmployeurs', question: 'Employeur(s) durant l’année', clientLabel: 'Quel(s) employeur(s) avez-vous eu durant l’année ?', answerType: 'text' },
         { id: 'drisSalaireCorrect', question: 'Le salaire imposé à la source est-il correct ?', clientLabel: 'Le salaire retenu est-il correct ?', answerType: 'single', choices: OUI_NON },
@@ -215,9 +221,10 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
     // ─────────────── Branche TOU (déclaration rectificative complète) ───────────────
     {
       id: 'tou',
-      title: 'Déclaration ordinaire rectificative (TOU)',
+      title: 'Taxation ordinaire (TOU)',
       clientTitle: 'Votre situation fiscale complète',
-      visibilityCondition: { all: [{ q: 'source', eq: 'non' }, { q: 'dejaDeposee', eq: 'oui' }] },
+      // Taxation ordinaire : résident (source = non) OU déclaration ordinaire de l'année.
+      visibilityCondition: { any: [{ q: 'source', eq: 'non' }, { q: 'typeDeclaration', eq: 'ordinaire' }] },
       questions: [
         {
           id: 'touQuasiResident',
@@ -276,7 +283,7 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
       reason: 'Pour repartir de ce qui a déjà été déclaré et cibler précisément la correction.',
       acceptedFormats: ['pdf'],
       reminderMessage: 'Merci de nous transmettre une copie (ou la sauvegarde) de la déclaration déjà déposée.',
-      condition: { q: 'dejaDeposee', eq: 'oui' },
+      condition: { q: 'typeDeclaration', eq: 'rectification' },
     },
     {
       id: 'decision-taxation',
@@ -306,7 +313,7 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
       reason: 'Tout courrier de l’administration peut contenir des délais ou demandes à respecter.',
       acceptedFormats: ['pdf', 'jpg', 'png'],
       reminderMessage: 'Si vous avez reçu un courrier de l’administration, merci de nous le transmettre.',
-      condition: { q: 'dejaDeposee', eq: 'oui' },
+      condition: { q: 'typeDeclaration', eq: 'rectification' },
     },
     {
       id: 'mandat-procuration',
@@ -592,7 +599,7 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
       reason: 'Identifie le contribuable au dossier.',
       acceptedFormats: ['pdf', 'jpg', 'png'],
       reminderMessage: 'Merci de déposer une copie de votre pièce d’identité.',
-      condition: { q: 'dejaDeposee', eq: 'oui' },
+      condition: { q: 'typeDeclaration', answered: true },
     },
     {
       id: 'tou-primes-maladie',
@@ -758,7 +765,7 @@ export const RECTIFICATIVE_TEMPLATE: Template = {
 };
 
 /** Questions d'orientation (qualification) qui pilotent la génération. */
-export const QUALIFYING_IDS = ['source', 'dejaDeposee', 'decisionTaxation', 'motif'];
+export const QUALIFYING_IDS = ['source', 'typeDeclaration', 'decisionTaxation', 'motif'];
 
 /**
  * Alerte de bascule DRIS → TOU : à Genève, les déductions effectives (3e pilier,
@@ -769,11 +776,6 @@ export function drisToTouAlert(answers: Answers): boolean {
     evalCondition({ q: 'source', eq: 'oui' }, answers) &&
     evalCondition({ q: 'drisDeductionsEffectives', answered: true }, answers)
   );
-}
-
-/** Le dossier n'est en réalité pas une rectification (déclaration initiale non déposée). */
-export function notRectificativeAlert(answers: Answers): boolean {
-  return evalCondition({ q: 'dejaDeposee', eq: 'non' }, answers);
 }
 
 /**

@@ -61,8 +61,8 @@ export function RectificativeCreatorView() {
             (3e pilier, rachat LPP, garde, formation…), alerter le client : la demande relève d’une TOU.
           </li>
           <li>
-            <strong>Pas une rectification</strong> : si <code>dejaDeposee = Non</code>, orienter vers une campagne de
-            déclaration standard.
+            <strong>Quasi-résident non éligible</strong> : si <code>statutResidence = non_resident</code> et{' '}
+            <code>touQuasiResident = Non</code> (&lt; 90 % en CH), rabattre sur l’impôt à la source (DRIS).
           </li>
         </ul>
       </div>

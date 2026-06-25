@@ -49,12 +49,11 @@ function documentsTable(): string {
 }
 
 const MERMAID = `flowchart TD
-  START([Début]) --> DEJA{{"dejaDeposee ?<br/>Déclaration déjà déposée ?"}}
-  DEJA -- non --> STOP["⛔ Pas une rectification<br/>→ déclaration standard"]:::stop
-  DEJA -- oui --> SRC{{"source ?<br/>Imposé à la source ?"}}
+  START([Début]) --> TYPE{{"typeDeclaration ?<br/>Ordinaire ou rectification ?"}}
+  TYPE --> SRC{{"source ?<br/>Imposé à la source ?"}}
 
-  SRC -- oui --> DRIS["🟦 Branche DRIS"]:::branch
-  SRC -- non --> TOU["🟩 Branche TOU"]:::branch
+  SRC -- "oui ET rectification" --> DRIS["🟦 Branche DRIS<br/>(rectifier l'impôt à la source)"]:::branch
+  SRC -- "non, OU ordinaire" --> TOU["🟩 Branche TOU<br/>(taxation ordinaire)"]:::branch
 
   TOU --> QR{{"touQuasiResident ?<br/>(si non-résident) ≥ 90 % en CH ?"}}
   QR -- non --> NELIG["⛔ Quasi-résident non éligible<br/>→ DRIS standard (stop)"]:::stop

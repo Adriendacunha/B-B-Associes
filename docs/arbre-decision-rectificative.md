@@ -14,12 +14,11 @@ Total : **48 pièces** (7 obligatoires · 35 conditionnelles · 6 recommandées)
 
 ```mermaid
 flowchart TD
-  START([Début]) --> DEJA{{"dejaDeposee ?<br/>Déclaration déjà déposée ?"}}
-  DEJA -- non --> STOP["⛔ Pas une rectification<br/>→ déclaration standard"]:::stop
-  DEJA -- oui --> SRC{{"source ?<br/>Imposé à la source ?"}}
+  START([Début]) --> TYPE{{"typeDeclaration ?<br/>Ordinaire ou rectification ?"}}
+  TYPE --> SRC{{"source ?<br/>Imposé à la source ?"}}
 
-  SRC -- oui --> DRIS["🟦 Branche DRIS"]:::branch
-  SRC -- non --> TOU["🟩 Branche TOU"]:::branch
+  SRC -- "oui ET rectification" --> DRIS["🟦 Branche DRIS<br/>(rectifier l'impôt à la source)"]:::branch
+  SRC -- "non, OU ordinaire" --> TOU["🟩 Branche TOU<br/>(taxation ordinaire)"]:::branch
 
   TOU --> QR{{"touQuasiResident ?<br/>(si non-résident) ≥ 90 % en CH ?"}}
   QR -- non --> NELIG["⛔ Quasi-résident non éligible<br/>→ DRIS standard (stop)"]:::stop
@@ -44,14 +43,14 @@ flowchart TD
 | Question (id) | Type | Visible si | Déclenche |
 | --- | --- | --- | --- |
 | Votre demande concerne-t-elle une personne imposée à la source ? `(source)` | single | — | — |
-| La déclaration initiale a-t-elle déjà été déposée ? `(dejaDeposee)` | single | — | — |
-| Avez-vous reçu une décision de taxation ? `(decisionTaxation)` | single | `dejaDeposee` = oui | `decision-taxation`, `bordereau`, `copie-declaration-initiale` |
+| Type de démarche `(typeDeclaration)` | single | — | — |
+| Avez-vous reçu une décision de taxation ? `(decisionTaxation)` | single | `typeDeclaration` = rectification | `decision-taxation`, `bordereau`, `copie-declaration-initiale` |
 | Date de notification de la décision `(dateNotification)` | date | `decisionTaxation` = oui | — |
-| Quel est le motif principal de rectification ? `(motif)` | multi | `dejaDeposee` = oui | — |
+| Quel est le motif principal de rectification ? `(motif)` | multi | `typeDeclaration` = rectification | — |
 
 ### Section « Identification du dossier »  `(identification)`
 
-_Visible si : `dejaDeposee` = oui_
+_Visible si : `typeDeclaration` répondu_
 
 | Question (id) | Type | Visible si | Déclenche |
 | --- | --- | --- | --- |
@@ -70,7 +69,7 @@ _Visible si : `dejaDeposee` = oui_
 
 ### Section « Rectification impôt à la source (DRIS) »  `(dris)`
 
-_Visible si : `source` = oui ET `dejaDeposee` = oui_
+_Visible si : `source` = oui ET `typeDeclaration` = rectification_
 
 | Question (id) | Type | Visible si | Déclenche |
 | --- | --- | --- | --- |
@@ -83,9 +82,9 @@ _Visible si : `source` = oui ET `dejaDeposee` = oui_
 | Garde alternée, concubinage, PACS, séparation ou divorce ? `(drisGarde)` | single | — | `jugement-garde` |
 | Souhaitez-vous faire valoir des déductions effectives ? `(drisDeductionsEffectives)` | multi | — | — |
 
-### Section « Déclaration ordinaire rectificative (TOU) »  `(tou)`
+### Section « Taxation ordinaire (TOU) »  `(tou)`
 
-_Visible si : `source` = non ET `dejaDeposee` = oui_
+_Visible si : `source` = non OU `typeDeclaration` = ordinaire_
 
 | Question (id) | Type | Visible si | Déclenche |
 | --- | --- | --- | --- |
@@ -114,10 +113,10 @@ _Visible si : `source` = non ET `dejaDeposee` = oui_
 
 | Pièce (id) | Catégorie | Obligation | Demandée si |
 | --- | --- | --- | --- |
-| Copie de la déclaration initiale déposée `(copie-declaration-initiale)` | Identification du dossier | recommandé | `dejaDeposee` = oui |
+| Copie de la déclaration initiale déposée `(copie-declaration-initiale)` | Identification du dossier | recommandé | `typeDeclaration` = rectification |
 | Décision de taxation `(decision-taxation)` | Identification du dossier | **obligatoire** | `decisionTaxation` = oui |
 | Bordereau d’impôt `(bordereau)` | Identification du dossier | **obligatoire** | `decisionTaxation` = oui |
-| Courrier de l’administration fiscale `(courrier-admin)` | Identification du dossier | recommandé | `dejaDeposee` = oui |
+| Courrier de l’administration fiscale `(courrier-admin)` | Identification du dossier | recommandé | `typeDeclaration` = rectification |
 | Mandat / procuration B&B `(mandat-procuration)` | Pièces administratives | conditionnel | `mandatBB` = oui |
 | Vos certificats de salaire suisses `(dris-certificats-salaire)` | Revenus | **obligatoire** | `source` = oui |
 | Vos décomptes de salaire mensuels `(dris-decomptes-mensuels)` | Revenus | conditionnel | `drisSalaireCorrect` = non |
@@ -145,7 +144,7 @@ _Visible si : `source` = non ET `dejaDeposee` = oui_
 | Pensions alimentaires versées ou reçues `(pensions)` | Déductions | conditionnel | `motif` ∈ {changement_familial, enfant_charge} OU `drisGarde` ∈ {separation, divorce} |
 | Justificatifs de vos revenus mondiaux `(revenus-mondiaux)` | Revenus | conditionnel | `touQuasiResident` = oui |
 | Avis d’imposition / déclaration fiscale étrangère `(avis-imposition-etranger)` | Pièces administratives | conditionnel | `statutResidence` = non_resident |
-| Pièce d’identité (passeport / carte d’identité) `(piece-identite)` | Pièces administratives | **obligatoire** | `dejaDeposee` = oui |
+| Pièce d’identité (passeport / carte d’identité) `(piece-identite)` | Pièces administratives | **obligatoire** | `typeDeclaration` répondu |
 | Attestation des primes d’assurance-maladie (LAMal + complémentaires) `(tou-primes-maladie)` | Assurances et prévoyance | **obligatoire** | `source` = non |
 | Attestation du revenu étranger du conjoint `(attestation-revenu-etranger-conjoint)` | Revenus | conditionnel | `touConjointEtranger` = oui |
 | Attestation de charge / acte de naissance (par enfant) `(attestation-charge-enfant)` | Événements familiaux | conditionnel | `touEnfants` = oui |

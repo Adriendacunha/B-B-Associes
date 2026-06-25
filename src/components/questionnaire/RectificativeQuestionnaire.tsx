@@ -1,14 +1,13 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
-import { AlertTriangle, Info, FileText } from 'lucide-react';
+import { AlertTriangle, FileText } from 'lucide-react';
 import type { Answers, DocObligation, Section } from '@/lib/questionnaire/types';
 import { groupByCategory, isAnswered, qualificationComplete, requestedDocuments, visibleSections } from '@/lib/questionnaire/engine';
 import {
   RECTIFICATIVE_TEMPLATE as T,
   QUALIFYING_IDS,
   drisToTouAlert,
-  notRectificativeAlert,
   notEligibleTouAlert,
 } from '@/data/templates/declaration-rectificative';
 import { createRectificativeCampaign } from '@/app/actions/campaign';
@@ -53,7 +52,6 @@ export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear 
   const docs = useMemo(() => requestedDocuments(T, answers), [answers]);
   const grouped = useMemo(() => groupByCategory(docs), [docs]);
 
-  const notRectificative = notRectificativeAlert(answers);
   const touAlert = drisToTouAlert(answers);
   const notEligibleTou = notEligibleTouAlert(answers);
 
@@ -117,19 +115,8 @@ export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear 
         </section>
       )}
 
-      {/* Aiguillage : pas une rectification */}
-      {notRectificative && (
-        <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          <Info className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={1.75} />
-          <p>
-            La déclaration initiale n’a pas encore été déposée : il ne s’agit pas d’une rectification. Ouvrez plutôt une
-            <strong> campagne de déclaration standard</strong>.
-          </p>
-        </div>
-      )}
-
-      {/* Étapes suivantes : seulement une fois qualifié, et si c'est bien une rectification */}
-      {!notRectificative && qualified && (
+      {/* Étapes suivantes : une fois la qualification renseignée. */}
+      {qualified && (
         <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
           {/* Colonne questionnaire détaillé */}
           <div className="space-y-6">
@@ -218,7 +205,7 @@ export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear 
       )}
 
       {/* Invitation à finir la qualification : on indique ce qui reste à répondre. */}
-      {!notRectificative && !qualified && (
+      {!qualified && (
         <div className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-600">
           {missingQualif.length > 0 ? (
             <>
@@ -236,7 +223,7 @@ export function RectificativeQuestionnaire({ locale, clients, defaultFiscalYear 
       )}
 
       {/* Création de la campagne (persistance) */}
-      {!notRectificative && qualified && (
+      {qualified && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-sm text-slate-600">
             {docs.length} document(s) seront demandés à <span className="font-medium text-slate-800">{clientCode}</span> pour {fiscalYear}.
