@@ -10,6 +10,17 @@ export function intakeQuestions(template: Template, answers: Answers): Question[
   return visibleQuestions(template, answers).filter((q) => q.clientData);
 }
 
+/** Questions visibles que le client peut renseigner (non verrouillées par le cabinet). */
+export function clientQuestions(template: Template, answers: Answers, lockedIds: string[]): Question[] {
+  const locked = new Set(lockedIds);
+  return visibleQuestions(template, answers).filter((q) => !locked.has(q.id));
+}
+
+/** Parmi celles-ci, celles encore sans réponse (à poser au client pour générer sa liste). */
+export function pendingClientQuestions(template: Template, answers: Answers, lockedIds: string[]): Question[] {
+  return clientQuestions(template, answers, lockedIds).filter((q) => !isAnswered(answers[q.id]));
+}
+
 /** Toutes les questions d'intake visibles ont-elles une réponse ? */
 export function intakeComplete(template: Template, answers: Answers): boolean {
   const qs = intakeQuestions(template, answers);
