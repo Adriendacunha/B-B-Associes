@@ -82,6 +82,13 @@ export async function CampaignChecklist({
   });
   if (!campaign) notFound();
 
+  // Titre cohérent avec l'aperçu / l'espace client : « {modèle} {année} »
+  // (ex. « Déclaration d'impôt 2025 »), sinon titre générique.
+  const template = campaign.templateId
+    ? await prisma.campaignTemplate.findUnique({ where: { key: campaign.templateId }, select: { name: true } })
+    : null;
+  const campaignTitle = template ? `${template.name} ${campaign.fiscalYear}` : t('title');
+
   const items = campaign.checklistItems;
   const requiredItems = items.filter((i) => i.required);
   // Une pièce « non concernée » est résolue (au même titre que validée).
@@ -157,7 +164,7 @@ export async function CampaignChecklist({
     <div className="space-y-6">
       {showMeta && (
         <header className="space-y-2">
-          <h1 className="text-2xl font-bold text-slate-900">{t('title')}</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{campaignTitle}</h1>
           <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-slate-600">
             <span>
               <span className="text-slate-400">{t('client')} :</span>{' '}
