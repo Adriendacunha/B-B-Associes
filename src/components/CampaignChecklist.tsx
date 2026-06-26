@@ -8,7 +8,7 @@ import { uploadDocument, renameDocument, bulkUpload } from '@/app/actions/docume
 import { setClientDeclaration, setItemConcern } from '@/app/actions/campaign';
 import { setItemRequired, deleteItem, updateItemDetails, addItemFromCatalogue } from '@/app/actions/checklist';
 import { formatAnomalies } from '@/lib/ai/anomalies';
-import { intakeSummary } from '@/lib/questionnaire/intake';
+import { intakeSummary, pendingClientQuestions } from '@/lib/questionnaire/intake';
 import { baseUrl } from '@/lib/url';
 import { RECTIFICATIVE_TEMPLATE } from '@/data/templates/declaration-rectificative';
 import { Dropzone } from '@/components/Dropzone';
@@ -119,9 +119,20 @@ export async function CampaignChecklist({
       : null;
 
   // Informations fournies par le client (intake) — vue cabinet, lecture seule.
+  const profileBlob = (campaign.profile as { answers?: Record<string, unknown>; cabinetKeys?: string[] } | null) ?? {};
   const intakeRows =
     showMeta && campaign.templateId === RECTIFICATIVE_TEMPLATE.id
-      ? intakeSummary(RECTIFICATIVE_TEMPLATE, ((campaign.profile as { answers?: Record<string, unknown> } | null)?.answers ?? {}) as never)
+      ? intakeSummary(RECTIFICATIVE_TEMPLATE, (profileBlob.answers ?? {}) as never)
+      : [];
+  // Questions de qualification encore à poser au client (le cabinet ne les a pas
+  // remplies) : le client y répondra dans son espace pour générer sa liste.
+  const pendingQuestions =
+    showMeta && campaign.templateId === RECTIFICATIVE_TEMPLATE.id
+      ? pendingClientQuestions(
+          RECTIFICATIVE_TEMPLATE,
+          (profileBlob.answers ?? {}) as never,
+          profileBlob.cabinetKeys ?? Object.keys(profileBlob.answers ?? {}),
+        )
       : [];
 
   // Compteurs relances (vue cabinet uniquement).
@@ -265,6 +276,19 @@ export async function CampaignChecklist({
           />
         </div>
       </div>
+
+      {/* Qualification à compléter par le client : le cabinet n'a pas répondu à
+          certaines questions → le client les renseignera pour générer sa liste. */}
+      {showMeta && pendingQuestions.length > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-semibold">Qualification à compléter par le client</p>
+          <p className="mt-0.5 text-amber-800">
+            {pendingQuestions.length} question(s) lui seront posées dans son espace pour générer sa liste de documents :{' '}
+            {pendingQuestions.slice(0, 4).map((q) => q.clientLabel).join(' · ')}
+            {pendingQuestions.length > 4 ? '…' : ''}. Vous pouvez aussi y répondre vous-même en « mode avancé ».
+          </p>
+        </div>
+      )}
 
       {/* Synthèse du dossier (cabinet) : statuts réels des documents. */}
       {showMeta && (

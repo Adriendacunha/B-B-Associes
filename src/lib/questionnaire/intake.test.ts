@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { intakeQuestions, intakeComplete, intakeSummary } from './intake';
+import { intakeQuestions, intakeComplete, intakeSummary, pendingClientQuestions } from './intake';
 import { RECTIFICATIVE_TEMPLATE as T } from '@/data/templates/declaration-rectificative';
 
 const base = { source: 'oui', typeDeclaration: 'rectification', decisionTaxation: 'oui', motif: ['bareme_taux'] };
@@ -29,5 +29,22 @@ describe('intake (données du dossier remplies par le client)', () => {
     const rows = intakeSummary(T, { ...base, canton: 'GE' });
     const canton = rows.find((r) => r.label.includes('Canton'));
     expect(canton?.value).toBe('Genève');
+  });
+
+  it('pendingClientQuestions : cabinet vide → le client doit qualifier (source, type)', () => {
+    const empty = pendingClientQuestions(T, {} as never, []).map((q) => q.id);
+    expect(empty).toContain('source');
+    expect(empty).toContain('typeDeclaration');
+  });
+
+  it('pendingClientQuestions : questions verrouillées par le cabinet exclues', () => {
+    const ids = pendingClientQuestions(
+      T,
+      { source: 'non', typeDeclaration: 'ordinaire' } as never,
+      ['source', 'typeDeclaration'],
+    ).map((q) => q.id);
+    expect(ids).not.toContain('source');
+    expect(ids).not.toContain('typeDeclaration');
+    expect(ids.length).toBeGreaterThan(0); // questions TOU / identification restant à poser
   });
 });

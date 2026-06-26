@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from 'react';
 import type { Answers, Section } from '@/lib/questionnaire/types';
-import { visibleSections } from '@/lib/questionnaire/engine';
+import { requestedDocuments, visibleSections } from '@/lib/questionnaire/engine';
 import { RECTIFICATIVE_TEMPLATE as T } from '@/data/templates/declaration-rectificative';
 import { QuestionField } from '@/components/questionnaire/QuestionField';
 import { saveClientQuestionnaire } from '@/app/actions/campaign';
@@ -51,15 +51,21 @@ export function ClientDeclarationForm({
       setSaved(true);
     });
 
+  const docCount = useMemo(() => requestedDocuments(T, answers).length, [answers]);
+
   if (sections.length === 0) return null;
 
   return (
-    <section className="card space-y-5">
-      <div>
-        <h2 className="text-sm font-semibold text-slate-900">Compléter votre déclaration</h2>
-        <p className="text-xs text-slate-500">
-          Répondez à ces questions : elles déterminent la liste des documents à fournir. Votre identité reste saisie
-          dans « Mes informations ».
+    <section className="card space-y-5 border-brand/40 bg-brand/5">
+      <div className="space-y-1">
+        <span className="badge bg-brand/10 text-brand">À faire en premier</span>
+        <h2 className="text-base font-semibold text-slate-900">Quelques questions pour générer votre liste de documents</h2>
+        <p className="text-xs text-slate-600">
+          Vos réponses déterminent les pièces à fournir.{' '}
+          {docCount > 0
+            ? `${docCount} document(s) demandé(s) à ce stade — la liste se complète au fil de vos réponses.`
+            : 'Répondez à ces questions pour faire apparaître votre liste.'}{' '}
+          Votre identité reste saisie dans « Mes informations ».
         </p>
       </div>
 
