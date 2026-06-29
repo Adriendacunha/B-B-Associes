@@ -1,0 +1,41 @@
+name: Fonctionnalite MVP
+description: Cadrer une fonctionnalite utile au MVP 39 Collect by Codex
+title: "[MVP] "
+labels: []
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objectif
+      description: Quel probleme utilisateur ou cabinet veut-on resoudre ?
+    validations:
+      required: true
+  - type: textarea
+    id: expected-outcome
+    attributes:
+      label: Resultat attendu
+      description: Comment saura-t-on que c'est termine ?
+    validations:
+      required: true
+  - type: dropdown
+    id: mvp-impact
+    attributes:
+      label: Impact principal
+      options:
+        - Simplicite client
+        - Reduction des allers-retours
+        - Gain de temps cabinet
+        - Conformite / LPD / securite
+        - Rapidite MVP
+    validations:
+      required: true
+  - type: textarea
+    id: data
+    attributes:
+      label: Donnees traitees
+      description: Donnees personnelles, fiscales ou techniques concernees.
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependances ou arbitrages
+      description: Decisions, acces, integrations ou validations necessaires.
