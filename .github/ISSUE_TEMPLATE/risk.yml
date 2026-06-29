@@ -1,0 +1,40 @@
+name: Risque projet
+description: Documenter un risque produit, planning, securite ou conformite
+title: "[Risque] "
+labels: []
+body:
+  - type: textarea
+    id: cause
+    attributes:
+      label: Cause
+      description: Pourquoi ce risque existe-t-il ?
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: Que se passe-t-il si rien n'est fait ?
+    validations:
+      required: true
+  - type: dropdown
+    id: urgency
+    attributes:
+      label: Urgence
+      options:
+        - Haute
+        - Moyenne
+        - Basse
+    validations:
+      required: true
+  - type: textarea
+    id: immediate-action
+    attributes:
+      label: Recommandation immediate
+    validations:
+      required: true
+  - type: textarea
+    id: owner-decision
+    attributes:
+      label: Decision humaine attendue
+      description: Indiquer si un arbitrage du chef de projet ou du cabinet est necessaire.
