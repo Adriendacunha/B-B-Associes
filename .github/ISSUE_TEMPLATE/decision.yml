@@ -1,0 +1,31 @@
+name: Decision a arbitrer
+description: Preparer une decision produit, technique, conformite ou planning
+title: "[Decision] "
+labels: []
+body:
+  - type: textarea
+    id: decision
+    attributes:
+      label: Decision a prendre
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options realistes
+      description: Lister les options avec avantages et inconvenients.
+    validations:
+      required: true
+  - type: textarea
+    id: recommendation
+    attributes:
+      label: Recommandation proposee
+      description: Recommandation argumentee, sans presenter l'arbitrage comme deja valide.
+  - type: textarea
+    id: no-action
+    attributes:
+      label: Consequence en cas d'inaction
+  - type: textarea
+    id: sources
+    attributes:
+      label: Sources ou elements utilises
