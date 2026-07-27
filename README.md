@@ -1,3 +1,6 @@
+> ⚠️ **Dépôt archivé** (v0 de 39 Collect) — lire [AUTOPSIE.md](./AUTOPSIE.md) :
+> pourquoi ce projet s'arrête, ce qui est récupérable, et où il continue.
+
 # B&B Associés — Espace client de collecte documentaire
 
 Application web de collecte de documents fiscaux pour la fiduciaire **B&B Associés**
